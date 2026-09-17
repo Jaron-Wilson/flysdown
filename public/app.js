@@ -40,6 +40,7 @@ const state = {
   selectedKey: null,
   paused: false,
   coverage: null,
+  viewRadiusNm: 0,
   feeds: { aircraft: { state: 'idle' }, vessels: { state: 'idle' } },
   evaluation: { alerts: [], byTarget: new Map(), zoneAlertCounts: new Map() },
   pendingGeometry: null,
@@ -117,6 +118,7 @@ function selectTarget(key) {
   state.selectedKey = key;
   const target = key ? store.get(key) : null;
   ui.renderDetail(target, target ? state.evaluation.byTarget.get(target.id) : null);
+  ui.focusDetail(Boolean(target));
   render();
 }
 
@@ -125,6 +127,8 @@ ui.on('selectTarget', (key) => {
   const target = store.get(key);
   if (target) mapView.panTo(target.lon, target.lat);
 });
+
+ui.on('clearSelection', () => selectTarget(null));
 
 ui.on('centreTarget', (key) => {
   const target = store.get(key);
@@ -173,7 +177,10 @@ function handleViewChange(viewport) {
       radiusNm: Number(query.vessels.radius) / 1.852,
     });
   }
-  if (aircraftChanged || vesselsChanged) tick();
+  // The visible set is a function of the viewport, so re-evaluate on every
+  // view change, not only when the upstream query changes.
+  state.viewRadiusNm = viewport.radiusNm;
+  tick();
 
   if (state.paused) return;
   if (aircraftChanged) feeds.aircraft.poll();
@@ -193,15 +200,46 @@ function updateStatusLine() {
 
 /* ---------- the tick: evaluate then render ---------- */
 
+/**
+ * A predicate for "inside the part of the world currently on screen".
+ *
+ * The upstreams are queried with a centre and a radius, which is the smallest
+ * circle covering the viewport and therefore always pulls in more than the
+ * visible rectangle. Everything outside that rectangle is dropped here, so the
+ * map, the counts, the alerts and the table all describe exactly what is being
+ * looked at.
+ */
+function viewportFilter() {
+  const bounds = mapView.map.getBounds();
+  const west = bounds.getWest();
+  const east = bounds.getEast();
+  const south = bounds.getSouth();
+  const north = bounds.getNorth();
+
+  // A view straddling the antimeridian has east < west; do not filter rather
+  // than filter wrongly.
+  if (east < west) return () => true;
+
+  // A little margin so an icon straddling the edge does not flicker.
+  const padLat = (north - south) * 0.03;
+  const padLon = (east - west) * 0.03;
+  return (target) =>
+    target.lat >= south - padLat &&
+    target.lat <= north + padLat &&
+    target.lon >= west - padLon &&
+    target.lon <= east + padLon;
+}
+
 function visibleTargets() {
-  const targets = store.all().filter((target) => {
+  const inView = viewportFilter();
+  return store.all().filter((target) => {
+    if (!inView(target)) return false;
     if (target.kind === 'aircraft' && !state.filters.aircraft) return false;
     if (target.kind === 'vessel' && !state.filters.vessels) return false;
     if (!state.filters.ground && target.kind === 'aircraft' && target.onGround) return false;
     if (state.filters.military && target.kind === 'aircraft' && !(target.military || target.interesting)) return false;
     return true;
   });
-  return targets;
 }
 
 function tick() {
@@ -262,12 +300,20 @@ function render(candidates = visibleTargets()) {
     projections: buildProjections(shown),
     alerts: state.evaluation.alerts,
     selectedKey: state.selectedKey,
-    coverage: state.filters.aircraft ? state.coverage : null,
+    // Only worth drawing when the upstream radius cap actually cuts into the
+    // view; otherwise it is an off-screen circle explaining nothing.
+    coverage: state.filters.aircraft && state.coverage && state.viewRadiusNm > state.coverage.radiusNm * 1.02
+      ? state.coverage
+      : null,
     showLabels: state.filters.labels,
   });
 
+  const shownKeys = new Set(shown.map((t) => t.key));
   mapView.setData('trails', state.filters.trails
-    ? [...(state.filters.aircraft ? store.trailFeatures('aircraft') : []), ...(state.filters.vessels ? store.trailFeatures('vessel') : [])]
+    ? [
+        ...(state.filters.aircraft ? store.trailFeatures('aircraft') : []),
+        ...(state.filters.vessels ? store.trailFeatures('vessel') : []),
+      ].filter((feature) => shownKeys.has(feature.properties.key))
     : []);
 
   ui.renderStats({
@@ -501,4 +547,4 @@ zones.onChange(() => {
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, mapView, tick };
+window.flysdown = { state, store, zones, feeds, mapView, ui, tick };

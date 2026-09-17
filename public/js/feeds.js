@@ -17,6 +17,29 @@ const DROP_AFTER_MS = 3 * 60 * 1000;
 const GRACE_MS = 45 * 1000;
 const MAX_BACKOFF_MS = 60000;
 
+/**
+ * Upstreams answer refusals with whole HTML error pages, and the endpoint
+ * passes those through for diagnostics. They must never reach the UI verbatim:
+ * a nginx 429 page rendered into a status chip is unreadable. Reduce each one
+ * to a few words and keep the full text on the error object for the console.
+ */
+export function summariseUpstreamFailure(json, status) {
+  const details = Array.isArray(json?.detail) ? json.detail : json?.detail ? [String(json.detail)] : [];
+
+  const reasons = details.map((entry) => {
+    const text = String(entry);
+    const name = text.split(':')[0].trim() || 'source';
+    if (/\b429\b|too many requests/i.test(text)) return `${name} rate limited`;
+    if (/\b40[13]\b|forbidden|unauthori[sz]ed/i.test(text)) return `${name} blocked`;
+    if (/timeout|\b52[0-9]\b|timed out/i.test(text)) return `${name} not responding`;
+    if (/\b5\d\d\b/.test(text)) return `${name} erroring`;
+    return name;
+  });
+
+  if (!reasons.length) return json?.error || `HTTP ${status}`;
+  return `no source available: ${reasons.join(', ')}`;
+}
+
 export class Feed {
   constructor({ name, endpoint, intervalMs, onData, onStatus }) {
     this.name = name;
@@ -57,7 +80,11 @@ export class Feed {
       const url = `${this.endpoint}?${new URLSearchParams(this.query)}`;
       const res = await fetch(url, { headers: { accept: 'application/json' } });
       const json = await res.json();
-      if (!res.ok || json.ok === false) throw new Error(json.detail || json.error || `HTTP ${res.status}`);
+      if (!res.ok || json.ok === false) {
+        const error = new Error(summariseUpstreamFailure(json, res.status));
+        error.detail = json.detail;
+        throw error;
+      }
 
       this.failures = 0;
       this.report({

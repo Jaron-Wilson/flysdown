@@ -79,6 +79,30 @@ const summary = await page.evaluate(() => {
 console.log(JSON.stringify(summary, null, 2));
 await page.screenshot({ path: `${outDir}/01-dashboard.png` });
 
+step('checking that only the current view is tracked');
+const viewCheck = await page.evaluate(() => {
+  const map = window.flysdown.mapView.map;
+  const bounds = map.getBounds();
+  const rendered = [
+    ...map.querySourceFeatures('aircraft'),
+    ...map.querySourceFeatures('vessels'),
+  ];
+  const outside = rendered.filter((f) => {
+    const [lon, lat] = f.geometry.coordinates;
+    const padLat = (bounds.getNorth() - bounds.getSouth()) * 0.06;
+    const padLon = (bounds.getEast() - bounds.getWest()) * 0.06;
+    return (
+      lat < bounds.getSouth() - padLat ||
+      lat > bounds.getNorth() + padLat ||
+      lon < bounds.getWest() - padLon ||
+      lon > bounds.getEast() + padLon
+    );
+  });
+  return { held: window.flysdown.store.all().length, rendered: rendered.length, outside: outside.length };
+});
+console.log(`  store holds ${viewCheck.held}, rendered ${viewCheck.rendered}, outside the view ${viewCheck.outside}`);
+if (viewCheck.outside > 0) errors.push(`${viewCheck.outside} rendered targets are outside the current view`);
+
 step('selecting the first target');
 const selected = await page.evaluate(() => {
   const target = window.flysdown.store.byKind('aircraft')[0] || window.flysdown.store.all()[0];
@@ -102,6 +126,52 @@ const gof = await page.evaluate(() => ({
 }));
 console.log(`  gulf of finland: ${gof.vessels} vessels, ${gof.aircraft} aircraft`);
 await page.screenshot({ path: `${outDir}/03-vessels.png` });
+
+step('selecting a vessel and checking the detail becomes visible');
+const vesselCheck = await page.evaluate(async () => {
+  const store = window.flysdown.store;
+  if (!store.byKind('vessel').length) return 'no vessels in this view';
+  const vessel = store.byKind('vessel')[0];
+  window.flysdown.state.selectedKey = vessel.key;
+  window.flysdown.tick();
+  const block = document.getElementById('detail-block');
+  const rect = block.getBoundingClientRect();
+  return {
+    label: vessel.label,
+    hasSpeedRow: document.getElementById('detail').textContent.includes('Speed over ground'),
+    onScreen: rect.top < window.innerHeight && rect.bottom > 0,
+  };
+});
+console.log(`  vessel detail: ${JSON.stringify(vesselCheck)}`);
+if (typeof vesselCheck === 'object' && (!vesselCheck.hasSpeedRow || !vesselCheck.onScreen)) {
+  errors.push(`vessel detail did not render visibly: ${JSON.stringify(vesselCheck)}`);
+}
+
+
+step('checking a feed error cannot break the layout');
+const layoutCheck = await page.evaluate(() => {
+  // The exact shape that used to push the right hand panel off screen: the
+  // upstream's whole nginx error page arriving as a feed status.
+  const nasty = 'adsb.lol: HTTP 429 - <html> <head><title>429 Too Many Requests</title></head> <body> <center><h1>429 Too Many Requests</h1></center> <hr><center>nginx</center> </body> </html>,adsb.fi: HTTP 403 - <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]> <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]> <html class="no-,opensky: timeout';
+  window.flysdown.ui.renderFeedChips({
+    aircraft: { state: 'down', lastError: nasty, count: 0 },
+    vessels: { state: 'live', lastError: null, count: 12, latencyMs: 200 },
+  });
+  const panel = document.querySelector('.panel-right');
+  const rect = panel.getBoundingClientRect();
+  return {
+    documentOverflowPx: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    panelRight: Math.round(rect.right),
+    windowWidth: window.innerWidth,
+    panelVisible: rect.width > 40 && rect.right <= window.innerWidth + 2,
+    chipText: document.querySelector('.feed-chips .chip')?.textContent.trim().slice(0, 70),
+  };
+});
+console.log(`  ${JSON.stringify(layoutCheck)}`);
+if (!layoutCheck.panelVisible || layoutCheck.documentOverflowPx > 2) {
+  errors.push(`a feed error broke the layout: ${JSON.stringify(layoutCheck)}`);
+}
+await page.screenshot({ path: `${outDir}/03b-feed-error.png` });
 
 step('drawing a circular zone');
 await page.click('#draw-circle');

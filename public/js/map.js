@@ -275,10 +275,34 @@ export class MapView {
     });
 
     const pickable = ['aircraft-icons', 'vessel-icons'];
+
+    /**
+     * In a busy harbour or a stack of arrivals several icons overlap the same
+     * pixel. queryRenderedFeatures returns them in draw order, which means the
+     * topmost wins and that is not necessarily the one under the cursor. Pick
+     * the closest one instead, so clicking does what it looks like it will do.
+     */
+    const nearestHit = (point) => {
+      const hits = this.map.queryRenderedFeatures(point, { layers: pickable });
+      if (hits.length < 2) return hits[0];
+      let best = hits[0];
+      let bestDistance = Infinity;
+      for (const hit of hits) {
+        const [lon, lat] = hit.geometry.coordinates;
+        const projected = this.map.project([lon, lat]);
+        const distance = (projected.x - point.x) ** 2 + (projected.y - point.y) ** 2;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = hit;
+        }
+      }
+      return best;
+    };
+
     this.map.on('click', (event) => {
-      const hits = this.map.queryRenderedFeatures(event.point, { layers: pickable });
-      if (hits.length) {
-        this.onSelect?.(hits[0].properties.key);
+      const hit = nearestHit(event.point);
+      if (hit) {
+        this.onSelect?.(hit.properties.key);
         return;
       }
       const zoneHits = this.map.queryRenderedFeatures(event.point, { layers: ['zone-fill'] });
@@ -290,9 +314,9 @@ export class MapView {
     });
 
     this.map.on('mousemove', (event) => {
-      const hits = this.map.queryRenderedFeatures(event.point, { layers: pickable });
-      this.map.getCanvas().style.cursor = hits.length ? 'pointer' : '';
-      this.onHover?.(hits.length ? hits[0].properties : null, event.point);
+      const hit = nearestHit(event.point);
+      this.map.getCanvas().style.cursor = hit ? 'pointer' : '';
+      this.onHover?.(hit ? hit.properties : null, event.point);
     });
   }
 
@@ -323,10 +347,13 @@ export class MapView {
       type: 'Feature',
       properties: {
         key: t.key,
+        kind: 'aircraft',
         label: t.label,
         icon: iconForAircraft(t),
         rotation: t.track ?? 0,
         alt: t.alt ?? null,
+        onGround: t.onGround,
+        speed: t.groundSpeed ?? null,
       },
       geometry: { type: 'Point', coordinates: [t.lon, t.lat] },
     })));
@@ -335,9 +362,13 @@ export class MapView {
       type: 'Feature',
       properties: {
         key: t.key,
+        kind: 'vessel',
         label: t.label,
         icon: iconForVessel(t),
         rotation: t.heading ?? t.cog ?? 0,
+        speed: t.sog ?? null,
+        typeDesc: t.typeDesc || null,
+        navStatus: t.navStatusDesc || null,
       },
       geometry: { type: 'Point', coordinates: [t.lon, t.lat] },
     })));

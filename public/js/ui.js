@@ -255,9 +255,13 @@ export class UI {
         ${rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('')}
       </dl>
       ${zoneRows ? `<h3 class="block-title">Zone checks</h3><ul class="detail-zones">${zoneRows}</ul>` : '<p class="hint">No zone interaction projected within the horizon.</p>'}
-      <button class="btn btn-sm" type="button" id="detail-centre">Centre map on target</button>`;
+      <div class="form-actions">
+        <button class="btn btn-sm" type="button" id="detail-centre">Centre map on target</button>
+        <button class="btn btn-sm" type="button" id="detail-clear">Close</button>
+      </div>`;
 
     $('detail-centre')?.addEventListener('click', () => this.handlers.centreTarget?.(target.key));
+    $('detail-clear')?.addEventListener('click', () => this.handlers.clearSelection?.());
   }
 
   /* ---------- zones ---------- */
@@ -353,6 +357,26 @@ export class UI {
       .join('');
   }
 
+  /**
+   * Make the detail panel visible wherever it currently sits: at the top of
+   * the right rail on a wide screen, or below the map on a phone.
+   */
+  focusDetail(hasSelection) {
+    const panel = document.querySelector('.panel-right');
+    panel?.classList.toggle('has-selection', Boolean(hasSelection));
+    if (!hasSelection) return;
+    const block = document.getElementById('detail-block');
+    if (!block) return;
+    // Below this width the detail becomes a fixed sheet over the map, which
+    // needs no scrolling at all.
+    if (window.matchMedia('(max-width: 1040px)').matches) return;
+
+    const rect = block.getBoundingClientRect();
+    const offScreen = rect.top > window.innerHeight - 160 || rect.bottom < 80;
+    if (offScreen) block.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    else panel?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   setStatus(text) {
     this.refs.statusText.textContent = text;
   }
@@ -366,11 +390,24 @@ export class UI {
       return;
     }
     node.hidden = false;
-    node.innerHTML = `<b>${escapeHtml(props.label)}</b><span>${
-      props.alt === null || props.alt === undefined || props.alt === 'null'
-        ? 'click for detail'
-        : `${int(props.alt)} ft`
-    }</span>`;
+
+    // Feature properties come back from the map as strings or nulls, so be
+    // defensive about types here.
+    const speed = Number(props.speed);
+    const alt = Number(props.alt);
+    let line;
+    if (props.kind === 'vessel') {
+      line = [
+        props.typeDesc,
+        Number.isFinite(speed) ? (speed < 0.5 ? 'stopped' : `${speed.toFixed(1)} kt`) : null,
+      ].filter(Boolean).join(' \u00b7 ') || 'click for detail';
+    } else {
+      line = [
+        props.onGround === true || props.onGround === 'true' ? 'on the ground' : Number.isFinite(alt) ? `${int(alt)} ft` : null,
+        Number.isFinite(speed) ? `${int(speed)} kt` : null,
+      ].filter(Boolean).join(' \u00b7 ') || 'click for detail';
+    }
+    node.innerHTML = `<b>${escapeHtml(props.label)}</b><span>${escapeHtml(line)}</span>`;
     const wrap = node.parentElement.getBoundingClientRect();
     const left = Math.min(point.x + 14, wrap.width - node.offsetWidth - 10);
     const top = Math.min(point.y + 14, wrap.height - node.offsetHeight - 10);

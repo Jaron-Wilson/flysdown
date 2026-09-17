@@ -80,6 +80,14 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
+  /*
+   * Nothing in the header may widen the page. A feed error used to arrive as a
+   * few hundred characters of upstream HTML, and with nowrap chips that pushed
+   * the layout wide enough to shove the right hand panel off screen.
+   */
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .brand { display: flex; align-items: center; gap: 12px; }
@@ -103,7 +111,7 @@ body {
 
 .topbar-controls { display: flex; align-items: flex-end; gap: 10px; margin-left: auto; }
 
-.feed-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.feed-chips { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; max-width: 100%; overflow: hidden; }
 
 .chip {
   display: inline-flex;
@@ -116,6 +124,16 @@ body {
   font-size: 12px;
   color: var(--ink-2);
   white-space: nowrap;
+  /* Clip rather than stretch; the full text is on the title attribute. */
+  max-width: min(420px, 100%);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chip .dot {
@@ -195,6 +213,8 @@ input[type="range"] { accent-color: var(--aircraft); width: 100%; }
   display: grid;
   grid-template-columns: var(--panel-w-left) 1fr var(--panel-w-right);
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .panel {
@@ -204,7 +224,20 @@ input[type="range"] { accent-color: var(--aircraft); width: 100%; }
   padding: 4px 0 24px;
   min-height: 0;
 }
-.panel-right { border-right: 0; border-left: 1px solid var(--border); }
+.panel-right {
+  border-right: 0;
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.panel-right > .block { flex: 0 0 auto; }
+
+/*
+ * A click has to produce a visible result. With a long alert list the target
+ * detail sat below the fold, so selecting something looked like nothing
+ * happened. While a target is selected its detail moves to the top of the rail.
+ */
+.panel-right.has-selection #detail-block { order: -1; }
 
 .block { padding: 16px 16px 4px; border-bottom: 1px solid var(--border); }
 .block:last-child { border-bottom: 0; }
@@ -407,6 +440,9 @@ input[type="range"] { accent-color: var(--aircraft); width: 100%; }
 
 .statusbar {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   align-items: center;
   gap: 16px;
   padding: 7px 18px;
@@ -448,6 +484,25 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 @media (max-width: 1040px) {
+  /*
+   * On a phone the panels sit below the map, so a selected target's detail
+   * would land off the bottom of the page. Show it as a sheet over the map
+   * instead, which is where a tap expects its answer to appear.
+   */
+  .panel-right.has-selection #detail-block {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    max-height: 52vh;
+    overflow-y: auto;
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border-strong);
+    box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.55);
+    padding-bottom: 20px;
+  }
+
   body { overflow: auto; }
   .layout { grid-template-columns: 1fr; }
   .panel { border: 0; border-top: 1px solid var(--border); overflow: visible; }
