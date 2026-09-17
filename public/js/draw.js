@@ -1,11 +1,15 @@
 /**
- * Zone drawing. Two modes, both click-driven so they work on a touchscreen:
+ * Shape drawing. Three modes, all click-driven so they work on a touchscreen:
  *
  *   polygon - click each vertex, then Finish (or double-click) to close
- *   circle  - click the centre, then click once more to set the radius
+ *   circle  - click the center, then click once more to set the radius
+ *   box     - click one corner, then the opposite corner
  *
- * The drawing preview lives in its own source and is thrown away on finish or
- * cancel; the committed zone goes to the ZoneStore.
+ * The same drawer serves two purposes, passed through to the completion
+ * handler: 'zone' for a geofence and 'tracking' for a pinned area that keeps
+ * loading data regardless of where the map is scrolled.
+ *
+ * The preview lives in its own source and is thrown away on finish or cancel.
  */
 
 import { circleRing, distanceNm } from './geo.js';
@@ -21,7 +25,7 @@ export class ZoneDrawer {
     this.onModeChange = onModeChange;
     this.mode = null;
     this.vertices = [];
-    this.centre = null;
+    this.center = null;
     this.installed = false;
   }
 
@@ -60,10 +64,11 @@ export class ZoneDrawer {
     this.installed = true;
   }
 
-  setMode(mode) {
+  setMode(mode, purpose = 'zone') {
     this.install();
     this.cancel({ silent: true });
     this.mode = mode;
+    this.purpose = purpose;
     if (mode) {
       this.map.getCanvas().style.cursor = 'crosshair';
       this.map.on('click', this.clickHandler);
@@ -71,7 +76,7 @@ export class ZoneDrawer {
       this.map.on('dblclick', this.dblHandler);
       this.map.doubleClickZoom.disable();
     }
-    this.onModeChange?.(this.mode);
+    this.onModeChange?.(this.mode, this.purpose);
   }
 
   handleClick(event) {
@@ -82,11 +87,11 @@ export class ZoneDrawer {
       return;
     }
     if (this.mode === 'circle') {
-      if (!this.centre) {
-        this.centre = { lat, lon: lng };
+      if (!this.center) {
+        this.center = { lat, lon: lng };
         this.renderPreview();
       } else {
-        const radiusNm = distanceNm(this.centre.lat, this.centre.lon, lat, lng);
+        const radiusNm = distanceNm(this.center.lat, this.center.lon, lat, lng);
         this.commitCircle(Math.max(0.1, radiusNm));
       }
     }
@@ -115,33 +120,51 @@ export class ZoneDrawer {
         features.push({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: v } });
       }
     }
-    if (this.mode === 'circle' && this.centre) {
+    if (this.mode === 'box' && this.corner) {
+      const to = this.cursor || [this.corner.lon, this.corner.lat];
+      const north = Math.max(this.corner.lat, to[1]);
+      const south = Math.min(this.corner.lat, to[1]);
+      const east = Math.max(this.corner.lon, to[0]);
+      const west = Math.min(this.corner.lon, to[0]);
       features.push({
         type: 'Feature',
         properties: {},
-        geometry: { type: 'Point', coordinates: [this.centre.lon, this.centre.lat] },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[west, south], [east, south], [east, north], [west, north], [west, south]]],
+        },
+      });
+      features.push({ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [this.corner.lon, this.corner.lat] } });
+    }
+
+    if (this.mode === 'circle' && this.center) {
+      features.push({
+        type: 'Feature',
+        properties: {},
+        geometry: { type: 'Point', coordinates: [this.center.lon, this.center.lat] },
       });
       const radiusNm = this.cursor
-        ? Math.max(0.05, distanceNm(this.centre.lat, this.centre.lon, this.cursor[1], this.cursor[0]))
+        ? Math.max(0.05, distanceNm(this.center.lat, this.center.lon, this.cursor[1], this.cursor[0]))
         : 0.05;
       features.push({
         type: 'Feature',
         properties: {},
-        geometry: { type: 'Polygon', coordinates: [circleRing(this.centre.lat, this.centre.lon, radiusNm)] },
+        geometry: { type: 'Polygon', coordinates: [circleRing(this.center.lat, this.center.lon, radiusNm)] },
       });
     }
     this.map.getSource('draw')?.setData({ type: 'FeatureCollection', features });
   }
 
-  /** Vertex count and, for a circle in progress, the live radius. */
+  /** What the drawing looks like right now, for the hint text. */
   progress() {
     if (this.mode === 'polygon') return { mode: 'polygon', vertices: this.vertices.length };
     if (this.mode === 'circle') {
-      const radiusNm = this.centre && this.cursor
-        ? distanceNm(this.centre.lat, this.centre.lon, this.cursor[1], this.cursor[0])
+      const radiusNm = this.center && this.cursor
+        ? distanceNm(this.center.lat, this.center.lon, this.cursor[1], this.cursor[0])
         : null;
-      return { mode: 'circle', centre: this.centre, radiusNm };
+      return { mode: 'circle', center: this.center, radiusNm };
     }
+    if (this.mode === 'box') return { mode: 'box', corner: this.corner };
     return { mode: null };
   }
 
@@ -149,19 +172,21 @@ export class ZoneDrawer {
     if (this.mode !== 'polygon' || this.vertices.length < 3) return;
     const ring = [...this.vertices, this.vertices[0]];
     const geometry = { shape: 'polygon', ring };
+    const purpose = this.purpose;
     this.cancel();
-    this.onComplete?.(geometry);
+    this.onComplete?.(geometry, purpose);
   }
 
   commitCircle(radiusNm) {
-    const geometry = { shape: 'circle', centre: this.centre, radiusNm };
+    const geometry = { shape: 'circle', center: this.center, radiusNm };
     this.cancel();
     this.onComplete?.(geometry);
   }
 
   cancel({ silent = false } = {}) {
     this.vertices = [];
-    this.centre = null;
+    this.center = null;
+    this.corner = null;
     this.cursor = null;
     if (this.installed) {
       this.map.getSource('draw')?.setData(EMPTY);
@@ -172,6 +197,7 @@ export class ZoneDrawer {
       this.map.getCanvas().style.cursor = '';
     }
     this.mode = null;
-    if (!silent) this.onModeChange?.(null);
+    this.purpose = null;
+    if (!silent) this.onModeChange?.(null, null);
   }
 }

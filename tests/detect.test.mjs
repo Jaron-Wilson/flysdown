@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 
 import { distanceNm, destination, bearingTo, pointInRing, secondsToGround } from '../public/js/geo.js';
 import { prepareZone } from '../public/js/zones.js';
-import { evaluateAll, evaluateTarget, firstEntry, zoneContains, inAltitudeBand, detectOrbit } from '../public/js/detect.js';
+import { evaluateAll, evaluateTarget, firstEntry, zoneContains, inAltitudeBand, detectOrbit, closestApproach, detectCloseApproaches } from '../public/js/detect.js';
 
 const P56B = prepareZone({
   type: 'Feature',
@@ -28,21 +28,21 @@ const MALL = prepareZone({
   },
 });
 
-const HARBOUR = prepareZone({
+const HARBOR = prepareZone({
   type: 'Feature',
-  properties: { id: 'harbour', name: 'Harbour watch', kind: 'custom', shape: 'circle', radiusNm: 8, floorFt: 0, ceilingFt: 60000, appliesTo: ['vessel'] },
+  properties: { id: 'harbor', name: 'Harbor watch', kind: 'custom', shape: 'circle', radiusNm: 8, floorFt: 0, ceilingFt: 60000, appliesTo: ['vessel'] },
   geometry: { type: 'Point', coordinates: [24.96, 60.12] },
 });
 
 /**
- * Place a target `rangeNm` away from a zone centre and aim it straight at that
- * centre. The inbound track must come from bearingTo, not the reciprocal of
+ * Place a target `rangeNm` away from a zone center and aim it straight at that
+ * center. The inbound track must come from bearingTo, not the reciprocal of
  * the outbound bearing: great circles converge, so a target 60 NM west of a
  * point and tracking 090 misses it by nearly a mile.
  */
 const inboundTo = (zone, rangeNm, fromBearing = 270) => {
-  const start = destination(zone.centre.lat, zone.centre.lon, fromBearing, rangeNm);
-  return { lat: start.lat, lon: start.lon, track: bearingTo(start.lat, start.lon, zone.centre.lat, zone.centre.lon) };
+  const start = destination(zone.center.lat, zone.center.lon, fromBearing, rangeNm);
+  return { lat: start.lat, lon: start.lon, track: bearingTo(start.lat, start.lon, zone.center.lat, zone.center.lon) };
 };
 
 const aircraft = (over) => ({
@@ -71,7 +71,7 @@ test('a target already inside a prohibited zone raises a critical alert', () => 
 });
 
 test('projected entry ETA matches time = distance / speed', () => {
-  // 20 NM west of the zone centre, inbound at 300 kt => 19 NM to the edge of a
+  // 20 NM west of the zone center, inbound at 300 kt => 19 NM to the edge of a
   // 1 NM zone => 228 seconds.
   const target = aircraft({ ...inboundTo(P56B, 20), groundSpeed: 300 });
   const entry = firstEntry(target, P56B);
@@ -155,12 +155,12 @@ test('orbit detection needs both a full turn and a small footprint', () => {
 
 test('zone appliesTo keeps maritime zones off aircraft and vice versa', () => {
   const vessel = { id: '123', kind: 'vessel', label: 'MV TEST', lat: 60.12, lon: 24.96, sog: 10, cog: 90, alt: null };
-  const { alerts } = evaluateTarget(vessel, [HARBOUR, P56B]);
+  const { alerts } = evaluateTarget(vessel, [HARBOR, P56B]);
   assert.equal(alerts.length, 1);
-  assert.equal(alerts[0].zoneId, 'harbour');
+  assert.equal(alerts[0].zoneId, 'harbor');
 
   const plane = aircraft({ lat: 60.12, lon: 24.96 });
-  const planeAlerts = evaluateTarget(plane, [HARBOUR]).alerts;
+  const planeAlerts = evaluateTarget(plane, [HARBOR]).alerts;
   assert.equal(planeAlerts.length, 0, 'aircraft must not match a vessel-only zone');
 });
 
@@ -212,4 +212,104 @@ test('real FAA zone data loads and keeps its published limits', async () => {
 
   const mall = zones.find((z) => z.name.startsWith('P-56A'));
   assert.equal(zoneContains(mall, 38.8977, -77.0365), true, 'the White House is inside P-56A');
+});
+
+/* ---------- vessel close approach (CPA / TCPA) ---------- */
+
+const ship = (over) => ({
+  id: 'm1', kind: 'vessel', label: 'SHIP ONE', lat: 60, lon: 24,
+  sog: 10, cog: 90, heading: 90, navStatus: 0, alt: null, ...over,
+});
+
+/** n NM east of longitude 24 at the given latitude. */
+const eastOf = (lat, nm) => 24 + nm / (60 * Math.cos((lat * Math.PI) / 180));
+
+test('head-on pair: CPA is zero and TCPA is range over closing speed', () => {
+  const a = ship({ id: 'a', cog: 90 });
+  const b = ship({ id: 'b', label: 'SHIP TWO', lon: eastOf(60, 10), cog: 270 });
+  const { cpaNm, tcpaSec, rangeNm, closing } = closestApproach(a, b);
+  assert.ok(Math.abs(rangeNm - 10) < 0.01, `range ${rangeNm}`);
+  assert.equal(closing, true);
+  // 10 NM closing at 20 kt is half an hour.
+  assert.ok(Math.abs(tcpaSec - 1800) < 5, `tcpa ${tcpaSec}`);
+  assert.ok(cpaNm < 0.01, `cpa ${cpaNm}`);
+});
+
+test('parallel pair at the same speed never closes', () => {
+  const a = ship({ id: 'a', cog: 90 });
+  const b = ship({ id: 'b', lon: eastOf(60, 3), cog: 90 });
+  const { closing, cpaNm, tcpaSec } = closestApproach(a, b);
+  assert.equal(closing, false);
+  assert.equal(tcpaSec, 0);
+  assert.ok(Math.abs(cpaNm - 3) < 0.01, 'CPA is simply the current range');
+});
+
+test('crossing pair keeps its offset as the closest approach', () => {
+  const a = ship({ id: 'a', cog: 90 });
+  const b = ship({ id: 'b', lat: 60 + 5 / 60, lon: eastOf(60, 10), cog: 270 });
+  const { cpaNm, tcpaSec } = closestApproach(a, b);
+  assert.ok(Math.abs(tcpaSec - 1800) < 30, `tcpa ${tcpaSec}`);
+  assert.ok(Math.abs(cpaNm - 5) < 0.1, `cpa ${cpaNm} should be the 5 NM offset`);
+});
+
+test('a pair that has already passed is not closing', () => {
+  const a = ship({ id: 'a', cog: 270 });
+  const b = ship({ id: 'b', lon: eastOf(60, 5), cog: 90 });
+  assert.equal(closestApproach(a, b).closing, false);
+});
+
+test('close approach raises one alert per pair, not two', () => {
+  const a = ship({ id: 'a', cog: 90 });
+  const b = ship({ id: 'b', label: 'SHIP TWO', lon: eastOf(60, 4), cog: 270 });
+  const alerts = detectCloseApproaches([a, b]);
+  assert.equal(alerts.length, 1);
+  assert.equal(alerts[0].rule, 'close-approach');
+  assert.ok(alerts[0].detail.includes('NM apart'));
+  assert.deepEqual([alerts[0].targetId, alerts[0].otherId], ['a', 'b']);
+  // Order of the input must not change the alert identity.
+  assert.equal(detectCloseApproaches([b, a])[0].id, alerts[0].id);
+});
+
+test('a harbor full of moored ships raises nothing', () => {
+  const moored = Array.from({ length: 30 }, (_, i) => ship({
+    id: `moored${i}`,
+    lat: 60 + i * 0.0004,
+    lon: 24 + i * 0.0004,
+    sog: 0,
+    navStatus: 5,
+  }));
+  assert.equal(detectCloseApproaches(moored).length, 0);
+
+  // Anchored and drifting-slow vessels are excluded the same way.
+  assert.equal(detectCloseApproaches([ship({ id: 'x', sog: 0.2 }), ship({ id: 'y', sog: 0.1, lon: eastOf(60, 0.05) })]).length, 0);
+});
+
+test('close approach severity follows how close and how soon', () => {
+  const severityFor = (missNm, closingKt) => {
+    const a = ship({ id: 'a', cog: 90, sog: closingKt / 2 });
+    const b = ship({
+      id: 'b',
+      lat: 60 + missNm / 60,
+      lon: eastOf(60, 6),
+      cog: 270,
+      sog: closingKt / 2,
+    });
+    return detectCloseApproaches([a, b])[0]?.severity;
+  };
+  // 6 NM apart closing at 40 kt is 9 minutes: urgent.
+  assert.equal(severityFor(0.05, 40), 'critical');
+  assert.equal(severityFor(0.2, 40), 'serious');
+  // Same geometry closing at 10 kt is 36 minutes out, beyond the horizon.
+  assert.equal(severityFor(0.05, 10), undefined);
+  // A comfortable pass raises nothing at all.
+  assert.equal(severityFor(3, 40), undefined);
+});
+
+test('evaluateAll includes pairwise vessel risk alongside per-target rules', () => {
+  const a = ship({ id: 'a', cog: 90 });
+  const b = ship({ id: 'b', label: 'SHIP TWO', lon: eastOf(60, 4), cog: 270 });
+  const { alerts, approaches } = evaluateAll([a, b], []);
+  assert.equal(approaches.length, 1);
+  assert.ok(alerts.some((x) => x.rule === 'close-approach'));
+  assert.equal(evaluateAll([a, b], [], { closeApproaches: false }).approaches.length, 0);
 });

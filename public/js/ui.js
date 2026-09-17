@@ -1,12 +1,15 @@
 /**
  * Panel rendering. Takes state, writes DOM. No fetching, no geometry.
  *
- * Every status colour in here is accompanied by a glyph and a word, and the
+ * Every status color in here is accompanied by a glyph and a word, and the
  * altitude ramp is repeated in the legend, so nothing depends on hue alone.
  */
 
 import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
 import { targetAgeSec } from './feeds.js';
+import { INK } from './palette.js';
+
+const INK_SECONDARY = INK.secondary;
 
 const $ = (id) => document.getElementById(id);
 
@@ -75,6 +78,9 @@ export class UI {
       banner: $('map-banner'),
       tableWrap: $('table-wrap'),
       drawHint: $('draw-hint'),
+      trackList: $('track-list'),
+      trackNote: $('track-note'),
+      feedToggles: $('feed-toggles'),
     };
     this.handlers = {};
     this.renderLegend();
@@ -178,7 +184,7 @@ export class UI {
               <span class="alert-sev">${sev.label}</span>
               <div class="alert-title">${escapeHtml(alert.title)}</div>
               <div class="alert-detail">${escapeHtml(alert.detail)}</div>
-              ${alert.etaSec ? `<div class="alert-eta">Time to boundary: ${fmt.eta(alert.etaSec)}</div>` : ''}
+              ${alert.etaSec ? `<div class="alert-eta">${alert.rule === 'close-approach' ? 'Time to closest approach' : 'Time to boundary'}: ${fmt.eta(alert.etaSec)}${alert.cpaNm !== undefined ? ` \u00b7 ${alert.cpaNm.toFixed(2)} NM` : ''}</div>` : ''}
             </span>
           </button>
         </li>`;
@@ -192,7 +198,7 @@ export class UI {
 
   /* ---------- target detail ---------- */
 
-  renderDetail(target, evaluation) {
+  renderDetail(target, evaluation, approaches = []) {
     if (!target) {
       this.refs.detail.innerHTML = `<p class="hint">Select an aircraft or vessel on the map.</p>`;
       return;
@@ -222,7 +228,7 @@ export class UI {
           ['Type', target.typeDesc || 'unknown'],
           ['Destination', target.destination || 'not reported'],
           ['Reported ETA', target.eta || 'not reported'],
-          ['Draught', target.draughtM ? `${target.draughtM.toFixed(1)} m` : 'not reported'],
+          ['Draft', target.draftM ? `${target.draftM.toFixed(1)} m` : 'not reported'],
           ['Length', target.lengthM ? `${target.lengthM} m` : 'not reported'],
           ['MMSI', target.mmsi],
           ['Call sign', target.callsign || 'not reported'],
@@ -253,6 +259,20 @@ export class UI {
       })
       .join('');
 
+    const pairRisk = approaches
+      .filter((a) => a.targetId === target.id || a.otherId === target.id)
+      .sort((a, b) => a.cpaNm - b.cpaNm)
+      .slice(0, 3)
+      .map((a) => {
+        const other = a.targetId === target.id ? a.otherLabel : a.targetLabel;
+        return `<li>
+            <span class="zone-swatch" style="color:${SEVERITY[a.severity].color};background:${SEVERITY[a.severity].color}33"></span>
+            <span>${escapeHtml(other)}</span>
+            <span class="z-eta">${a.cpaNm.toFixed(2)} NM in ${fmt.eta(a.etaSec)}</span>
+          </li>`;
+      })
+      .join('');
+
     this.refs.detail.innerHTML = `
       <div class="detail-head">
         <h3>${escapeHtml(target.label)}</h3>
@@ -267,12 +287,13 @@ export class UI {
         ${rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join('')}
       </dl>
       ${zoneRows ? `<h3 class="block-title">Zone checks</h3><ul class="detail-zones">${zoneRows}</ul>` : '<p class="hint">No zone interaction projected within the horizon.</p>'}
+      ${pairRisk ? `<h3 class="block-title">Closest approaches</h3><ul class="detail-zones">${pairRisk}</ul>` : ''}
       <div class="form-actions">
-        <button class="btn btn-sm" type="button" id="detail-centre">Centre map on target</button>
+        <button class="btn btn-sm" type="button" id="detail-center">Center map on target</button>
         <button class="btn btn-sm" type="button" id="detail-clear">Close</button>
       </div>`;
 
-    $('detail-centre')?.addEventListener('click', () => this.handlers.centreTarget?.(target.key));
+    $('detail-center')?.addEventListener('click', () => this.handlers.centerTarget?.(target.key));
     $('detail-clear')?.addEventListener('click', () => this.handlers.clearSelection?.());
   }
 
@@ -354,7 +375,7 @@ export class UI {
     this.refs.feedChips.innerHTML = Object.entries(feeds)
       .map(([name, status]) => {
         const state = status.state || 'idle';
-        const colour = { live: SEVERITY.good.color, degraded: SEVERITY.warning.color, down: SEVERITY.critical.color, paused: SEVERITY.notice.color }[state] || SEVERITY.notice.color;
+        const color = { live: SEVERITY.good.color, degraded: SEVERITY.warning.color, down: SEVERITY.critical.color, paused: SEVERITY.notice.color }[state] || SEVERITY.notice.color;
         const glyph = { live: '●', degraded: '△', down: '!', paused: '‖' }[state] || '●';
         const detail = state === 'live'
           ? `<b>${int(status.count)}</b> targets · ${fmt.ago(status.lastSuccess)}`
@@ -365,7 +386,7 @@ export class UI {
               ? `<b>${int(status.count)}</b> targets · stale ${Math.round(status.ageMs / 1000)}s`
               : escapeHtml(status.lastError || state);
         return `<span class="chip" title="${escapeHtml(name)}: ${escapeHtml(status.lastError || state)}">
-            <span class="glyph" style="color:${colour}" aria-hidden="true">${glyph}</span>
+            <span class="glyph" style="color:${color}" aria-hidden="true">${glyph}</span>
             <span>${escapeHtml(name)}</span>
             <span>${detail}</span>
           </span>`;
@@ -391,6 +412,67 @@ export class UI {
     const offScreen = rect.top > window.innerHeight - 160 || rect.bottom < 80;
     if (offScreen) block.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     else panel?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ---------- tracking areas ---------- */
+
+  renderTracking(areas, max) {
+    this.refs.trackNote.textContent = areas.length
+      ? `${areas.length} of ${max} pinned`
+      : 'following the map view';
+
+    if (!areas.length) {
+      this.refs.trackList.innerHTML =
+        '<li class="hint">Loading whatever is on screen. Pin an area to keep loading it while you scroll elsewhere.</li>';
+      return;
+    }
+
+    this.refs.trackList.innerHTML = areas
+      .map((area) => {
+        const size = area.shape === 'box'
+          ? `box, ${Math.round((area.bounds.north - area.bounds.south) * 60)} x ${Math.round((area.bounds.east - area.bounds.west) * 60 * Math.cos((area.center.lat * Math.PI) / 180))} NM`
+          : `circle, ${area.radiusNm < 10 ? area.radiusNm.toFixed(1) : Math.round(area.radiusNm)} NM radius`;
+        return `
+        <li class="zone-item">
+          <span class="zone-swatch" style="color:${INK_SECONDARY};background:transparent"></span>
+          <span class="zone-name">
+            <button type="button" data-track-zoom="${escapeHtml(area.id)}">${escapeHtml(size)}</button>
+            <div class="zone-meta">${area.center.lat.toFixed(2)}, ${area.center.lon.toFixed(2)}</div>
+          </span>
+          <span class="zone-actions">
+            <button class="zone-delete" type="button" data-track-remove="${escapeHtml(area.id)}" aria-label="Remove tracking area">&times;</button>
+          </span>
+        </li>`;
+      })
+      .join('');
+
+    for (const button of this.refs.trackList.querySelectorAll('[data-track-zoom]')) {
+      button.addEventListener('click', () => this.handlers.zoomTrackingArea?.(button.dataset.trackZoom));
+    }
+    for (const button of this.refs.trackList.querySelectorAll('[data-track-remove]')) {
+      button.addEventListener('click', () => this.handlers.removeTrackingArea?.(button.dataset.trackRemove));
+    }
+  }
+
+  /** One pause control per feed, so planes and ships stop independently. */
+  renderFeedToggles(paused, feeds) {
+    this.refs.feedToggles.innerHTML = [
+      ['aircraft', 'Planes'],
+      ['vessels', 'Ships'],
+    ]
+      .map(([kind, label]) => {
+        const isPaused = Boolean(paused[kind]);
+        const state = feeds[kind]?.state || 'idle';
+        const dot = isPaused ? SEVERITY.notice.color : state === 'live' ? SEVERITY.good.color : state === 'down' ? SEVERITY.critical.color : SEVERITY.warning.color;
+        return `<button class="btn btn-sm feed-toggle" type="button" data-feed="${kind}" aria-pressed="${isPaused}" title="${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed">
+            <span class="dot" style="background:${dot}"></span>${label}: ${isPaused ? 'paused' : 'live'}
+          </button>`;
+      })
+      .join('');
+
+    for (const button of this.refs.feedToggles.querySelectorAll('[data-feed]')) {
+      button.addEventListener('click', () => this.handlers.toggleFeed?.(button.dataset.feed));
+    }
   }
 
   setStatus(text) {

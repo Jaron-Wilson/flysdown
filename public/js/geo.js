@@ -13,11 +13,11 @@ export const EARTH_RADIUS_NM = 3440.065;
 const toRad = (deg) => (deg * Math.PI) / 180;
 const toDeg = (rad) => (rad * 180) / Math.PI;
 
-export const normaliseBearing = (deg) => ((deg % 360) + 360) % 360;
+export const normalizeBearing = (deg) => ((deg % 360) + 360) % 360;
 
 /** Smallest signed difference between two bearings, in (-180, 180]. */
 export function bearingDelta(from, to) {
-  let d = normaliseBearing(to) - normaliseBearing(from);
+  let d = normalizeBearing(to) - normalizeBearing(from);
   if (d > 180) d -= 360;
   if (d <= -180) d += 360;
   return d;
@@ -40,10 +40,10 @@ export function bearingTo(lat1, lon1, lat2, lon2) {
   const dLon = toRad(lon2 - lon1);
   const y = Math.sin(dLon) * Math.cos(p2);
   const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dLon);
-  return normaliseBearing(toDeg(Math.atan2(y, x)));
+  return normalizeBearing(toDeg(Math.atan2(y, x)));
 }
 
-/** Point reached by travelling distNm along a great circle on the given bearing. */
+/** Point reached by traveling distNm along a great circle on the given bearing. */
 export function destination(lat, lon, bearing, distNm) {
   const d = distNm / EARTH_RADIUS_NM;
   const b = toRad(bearing);

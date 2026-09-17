@@ -31,18 +31,18 @@ export function prepareZone(feature) {
   const isCircle = p.shape === 'circle' || feature.geometry?.type === 'Point';
 
   let ring;
-  let centre;
+  let center;
   let radiusNm;
 
   if (isCircle) {
     const [lon, lat] = feature.geometry.coordinates;
     radiusNm = Number(p.radiusNm) || 1;
-    centre = { lat, lon };
+    center = { lat, lon };
     ring = circleRing(lat, lon, radiusNm);
   } else {
     ring = feature.geometry.coordinates[0].slice();
     const bounds = ringBoundingCircle(ring);
-    centre = { lat: bounds.lat, lon: bounds.lon };
+    center = { lat: bounds.lat, lon: bounds.lon };
     radiusNm = bounds.radiusNm;
   }
 
@@ -62,7 +62,7 @@ export function prepareZone(feature) {
     userDrawn: Boolean(p.userDrawn),
     enabled: p.enabled !== false,
     ring,
-    centre,
+    center,
     radiusNm,
   };
 }
@@ -90,7 +90,7 @@ export function zoneToFeature(zone) {
     return {
       type: 'Feature',
       properties,
-      geometry: { type: 'Point', coordinates: [zone.centre.lon, zone.centre.lat] },
+      geometry: { type: 'Point', coordinates: [zone.center.lon, zone.center.lat] },
     };
   }
   const ring = zone.ring.slice();
@@ -237,6 +237,6 @@ export class ZoneStore {
 
 /** Convenience used by the detail panel: distance from a point to a zone edge. */
 export function distanceToZoneNm(zone, lat, lon) {
-  const toCentre = distanceNm(lat, lon, zone.centre.lat, zone.centre.lon);
-  return zone.shape === 'circle' ? toCentre - zone.radiusNm : toCentre - zone.radiusNm;
+  const toCenter = distanceNm(lat, lon, zone.center.lat, zone.center.lon);
+  return zone.shape === 'circle' ? toCenter - zone.radiusNm : toCenter - zone.radiusNm;
 }

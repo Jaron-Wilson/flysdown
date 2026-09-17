@@ -21,12 +21,12 @@ const body = marked.parse(source, { gfm: true, mangle: false, headerIds: true })
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>flysdown</title>
 <style>
-  @page { size: letter; margin: 0.65in 0.75in 0.6in; }
+  @page { size: letter; margin: 0.6in 0.7in 0.55in; }
 
-  html { font-size: 9.2pt; }
+  html { font-size: 9pt; }
   body {
     font-family: Georgia, "Times New Roman", serif;
-    line-height: 1.28;
+    line-height: 1.26;
     color: #15171a;
     margin: 0;
     hyphens: auto;
@@ -44,8 +44,8 @@ const html = `<!doctype html>
   h1 { font-size: 17pt; margin: 0 0 3pt; letter-spacing: -0.01em; }
   h1 + p strong { font-size: 11pt; }
   h2 {
-    font-size: 11pt;
-    margin: 10pt 0 3pt;
+    font-size: 10.6pt;
+    margin: 9pt 0 3pt;
     padding-bottom: 2pt;
     border-bottom: 0.6pt solid #c8ccd2;
   }
@@ -114,10 +114,10 @@ await page.pdf({
   displayHeaderFooter: true,
   headerTemplate: '<div></div>',
   footerTemplate:
-    '<div style="width:100%;font:8pt system-ui,sans-serif;color:#7b8189;padding:0 0.75in;display:flex;justify-content:space-between;">' +
+    '<div style="width:100%;font:8pt system-ui,sans-serif;color:#7b8189;padding:0 0.7in;display:flex;justify-content:space-between;">' +
     '<span>flysdown: live ADS-B and AIS dashboard with geofence projection</span>' +
     '<span class="pageNumber"></span></div>',
-  margin: { top: '0.65in', bottom: '0.6in', left: '0.75in', right: '0.75in' },
+  margin: { top: '0.6in', bottom: '0.55in', left: '0.7in', right: '0.7in' },
 });
 
 await browser.close();

@@ -1,7 +1,7 @@
 /**
  * GET /api/aircraft?lat=<deg>&lon=<deg>&dist=<nm>
  *
- * One normalised aircraft feed, assembled from whichever path can actually
+ * One normalized aircraft feed, assembled from whichever path can actually
  * deliver it. In order of preference:
  *
  *   1. the edge cache, if a recent answer is already there
@@ -76,7 +76,7 @@ function distanceNm(lat1, lon1, lat2, lon2) {
  *
  * An exact region match is ideal, but the request area changes every time the
  * map is zoomed or panned, while the relay only covers the handful of regions
- * people have recently asked for. A snapshot for a larger area centred nearby
+ * people have recently asked for. A snapshot for a larger area centered nearby
  * still contains every aircraft the caller wants, so it is used and then
  * filtered down to the requested radius. Without this, panning to a new area
  * returned nothing at all until the relay caught up.

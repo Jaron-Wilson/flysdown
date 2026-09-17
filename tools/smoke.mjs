@@ -148,6 +148,64 @@ if (typeof vesselCheck === 'object' && (!vesselCheck.hasSpeedRow || !vesselCheck
 }
 
 
+step('vessel close-approach detection');
+const approachCheck = await page.evaluate(async () => {
+  const { detectCloseApproaches } = await import('./js/detect.js');
+  const vessels = window.flysdown.store.byKind('vessel');
+  return {
+    vessels: vessels.length,
+    atDefaultLimit: detectCloseApproaches(vessels).length,
+    atFiveMiles: detectCloseApproaches(vessels, { cpaAlertNm: 5 }).length,
+  };
+});
+// Whether any pair is genuinely close right now is a property of the sea, not
+// of the code, so only the plumbing is asserted here; the maths has unit tests.
+console.log(`  ${JSON.stringify(approachCheck)}`);
+if (approachCheck.vessels > 20 && approachCheck.atFiveMiles === 0) {
+  errors.push('no converging vessel pairs found at a 5 NM limit among many vessels, which suggests the detector is not running');
+}
+
+
+step('pausing the plane feed on its own');
+const pauseCheck = await page.evaluate(async () => {
+  document.querySelector('[data-feed="aircraft"]').click();
+  await new Promise((r) => setTimeout(r, 400));
+  const paused = {
+    planes: window.flysdown.feeds.aircraft.paused,
+    ships: window.flysdown.feeds.vessels.paused,
+    labels: [...document.querySelectorAll('.feed-toggle')].map((b) => b.textContent.trim()),
+  };
+  document.querySelector('[data-feed="aircraft"]').click();
+  await new Promise((r) => setTimeout(r, 200));
+  return { ...paused, resumed: !window.flysdown.feeds.aircraft.paused };
+});
+console.log(`  ${JSON.stringify(pauseCheck)}`);
+if (!pauseCheck.planes || pauseCheck.ships || !pauseCheck.resumed) {
+  errors.push(`per-feed pause did not behave: ${JSON.stringify(pauseCheck)}`);
+}
+
+step('pinning a tracking area and scrolling away from it');
+await page.click('#track-view');
+await page.waitForTimeout(2500);
+const pinnedQueries = await page.evaluate(() => JSON.stringify(window.flysdown.feeds.aircraft.queries));
+const drawnWhileOnScreen = await page.evaluate(() => window.flysdown.mapView.map.querySourceFeatures('tracking').length > 0);
+if (!drawnWhileOnScreen) errors.push('the pinned area was not drawn on the map');
+await page.evaluate(() => window.flysdown.mapView.map.jumpTo({ center: [2.35, 48.86], zoom: 8 }));
+await page.waitForTimeout(6000);
+const pinCheck = await page.evaluate((before) => ({
+  queriesHeld: JSON.stringify(window.flysdown.feeds.aircraft.queries) === before,
+  areas: window.flysdown.state.tracking.length,
+  stillHoldingTargets: window.flysdown.store.all().length > 0,
+  banner: document.getElementById('map-banner').hidden ? null : document.getElementById('map-banner').textContent.trim().slice(0, 60),
+}), pinnedQueries);
+console.log(`  ${JSON.stringify(pinCheck)}`);
+if (!pinCheck.queriesHeld || pinCheck.areas !== 1) {
+  errors.push(`a pinned area did not survive scrolling: ${JSON.stringify(pinCheck)}`);
+}
+await page.screenshot({ path: `${outDir}/03c-pinned-area.png` });
+await page.click('#track-clear');
+await page.waitForTimeout(1500);
+
 step('checking a feed error cannot break the layout');
 const layoutCheck = await page.evaluate(() => {
   // The exact shape that used to push the right hand panel off screen: the

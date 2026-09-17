@@ -21,7 +21,7 @@ npm run paper
 
 ## What it does
 
-- Plots live aircraft and ships on one dark map. Aircraft are coloured by
+- Plots live aircraft and ships on one dark map. Aircraft are colored by
   altitude on a single-hue ramp, vessels by whether they are under way.
 - Runs a rules engine over every target on every update:
   - **Zone incursion**: already inside a restricted zone, with altitude checked
@@ -37,10 +37,19 @@ npm run paper
 - Lets you draw your own watch zones (circle or polygon) in the browser, set
   their floor, ceiling and whether they apply to aircraft, vessels or both,
   then export or import them as GeoJSON. Drawn zones persist in localStorage.
-- Tracks only the area on screen. The upstreams are queried with a centre and
-  a radius, which always covers more than the visible rectangle, so everything
-  outside the viewport is filtered out of the map, the counts, the alerts and
-  the table.
+- Tracks only the area on screen by default. The upstreams are queried with a
+  center and a radius, which always covers more than the visible rectangle, so
+  everything outside the viewport is filtered out of the map, the counts, the
+  alerts and the table.
+- Or pins the tracking area. Draw up to four circles or boxes and those areas
+  keep loading while you scroll the map anywhere else, with their contacts
+  staying in the counts and the alerts even when off screen.
+- Pauses each feed on its own, so the aircraft picture can be frozen for
+  inspection while the ships keep moving.
+- Warns when two vessels are converging: the projected Closest Point of
+  Approach and the time to it, with a settable CPA limit, the same alarm model
+  ARPA radar uses. Moored and anchored ships are excluded, so a harbor does not
+  drown the feed.
 - Timestamps every contact. Each target's age combines how long ago the
   receiver network last heard from it with how long ago we fetched that answer,
   so nothing claims to be fresher than it is. Contacts fade as their position
@@ -55,7 +64,7 @@ npm run paper
 browser (public/)                     Cloudflare edge (functions/)         upstreams
 -----------------                     ----------------------------         ---------
 app.js        orchestration           /api/aircraft                        adsb.lol
-  js/feeds    polling + history  -->    normalise, quantise, cache   -->    adsb.fi
+  js/feeds    polling + history  -->    normalize, quantize, cache   -->    adsb.fi
   js/detect   rules engine              stale-while-error                   opensky
   js/geo      geodesy                 /api/vessels                         Digitraffic
   js/zones    zone store        -->     merge positions + vessel     -->   (Fintraffic)
@@ -119,7 +128,7 @@ upstream at all, which is both reliable and considerably politer.
 browser ---> /api/aircraft ---> D1 snapshot (fresh)         <--- relay pushes
                  |                                               every 8 s
                  +--> aggregators directly (usually refused)
-                 +--> last known good, labelled stale with its age
+                 +--> last known good, labeled stale with its age
 ```
 
 ### Running it
@@ -238,11 +247,11 @@ and alerting on it buried the genuine incursions.
 **Not for navigation.** Nothing here is a source of truth for flight or
 maritime operations.
 
-## Colour
+## Color
 
 Palette choices are in `public/js/palette.js` with the reasoning attached. The
-altitude ramp, the aircraft/vessel identity colours and the zone kind colours
-were each run through a contrast and colour-vision validator against this
+altitude ramp, the aircraft/vessel identity colors and the zone kind colors
+were each run through a contrast and color-vision validator against this
 page's dark surface. Zone kind is carried by outline dash pattern as well as
-hue, and every alert pairs its status colour with a glyph and the severity word,
-because red against green is the one pair colour vision cannot be relied on.
+hue, and every alert pairs its status color with a glyph and the severity word,
+because red against green is the one pair color vision cannot be relied on.

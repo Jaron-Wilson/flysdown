@@ -1,5 +1,5 @@
 /**
- * Colour decisions, in one place, with the reasoning attached.
+ * Color decisions, in one place, with the reasoning attached.
  *
  * Every palette below was run through the data-viz validator against this
  * page's dark surface (#141416) rather than picked by eye:
@@ -7,12 +7,12 @@
  * - ALTITUDE_BANDS is an ordinal ramp on a single hue (blue), monotone in
  *   lightness, and passes every ordinal check. Altitude is a magnitude, so it
  *   gets a one-hue ramp and never a rainbow.
- * - Aircraft blue vs vessel orange vs inactive grey passes all-pairs CVD
- *   separation. Grey is reserved for "no data / not moving / stale" and is
- *   always labelled, never used as an identity colour.
+ * - Aircraft blue vs vessel orange vs inactive gray passes all-pairs CVD
+ *   separation. Gray is reserved for "no data / not moving / stale" and is
+ *   always labeled, never used as an identity color.
  * - SEVERITY uses the reserved status palette. Red vs green is inherently
  *   weak under deuteranopia, which is exactly why every alert in the UI ships
- *   a glyph and the severity word next to the colour.
+ *   a glyph and the severity word next to the color.
  * - ZONE_KIND_STYLE clears the normal-vision floor (worst pair 24.6) but sits
  *   in the CVD warn band (7.2), which is only legal with secondary encoding.
  *   So zone kind is *also* carried by outline dash pattern and by a direct
@@ -62,7 +62,7 @@ export const SEVERITY = {
 };
 
 /**
- * Zone kind: colour plus the dash pattern that carries the same information
+ * Zone kind: color plus the dash pattern that carries the same information
  * for anyone who cannot separate the hues.
  */
 export const ZONE_KIND_STYLE = {

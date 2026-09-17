@@ -116,7 +116,7 @@ export class MapView {
   }
 
   installLayers() {
-    for (const id of ['zones', 'zone-labels', 'coverage', 'trails', 'projections', 'entry-points', 'alert-rings', 'vessels', 'aircraft', 'selection']) {
+    for (const id of ['zones', 'zone-labels', 'coverage', 'tracking', 'tracking-labels', 'approaches', 'trails', 'projections', 'entry-points', 'alert-rings', 'vessels', 'aircraft', 'selection']) {
       this.addSource(id);
     }
 
@@ -154,6 +154,50 @@ export class MapView {
       type: 'line',
       source: 'coverage',
       paint: { 'line-color': INK.muted, 'line-width': 1, 'line-dasharray': [4, 4], 'line-opacity': 0.7 },
+    });
+
+    // Pinned tracking areas: deliberately neutral, so they never read as a
+    // restriction. They are an instruction to the loader, not a hazard.
+    this.map.addLayer({
+      id: 'tracking-fill',
+      type: 'fill',
+      source: 'tracking',
+      paint: { 'fill-color': INK.secondary, 'fill-opacity': 0.05 },
+    });
+
+    this.map.addLayer({
+      id: 'tracking-outline',
+      type: 'line',
+      source: 'tracking',
+      paint: { 'line-color': INK.secondary, 'line-width': 1.6, 'line-dasharray': [5, 3], 'line-opacity': 0.85 },
+    });
+
+    this.map.addLayer({
+      id: 'tracking-label-text',
+      type: 'symbol',
+      source: 'tracking-labels',
+      layout: {
+        'text-field': ['get', 'label'],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 10,
+        'text-anchor': 'top',
+        'text-offset': [0, 0.4],
+        'text-allow-overlap': false,
+      },
+      paint: { 'text-color': INK.secondary, 'text-halo-color': INK.page, 'text-halo-width': 1.4 },
+    });
+
+    // Vessel close approaches: a line between the pair at risk.
+    this.map.addLayer({
+      id: 'approach-lines',
+      type: 'line',
+      source: 'approaches',
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': 2,
+        'line-dasharray': [1, 1.5],
+        'line-opacity': 0.95,
+      },
     });
 
     this.map.addLayer({
@@ -293,7 +337,7 @@ export class MapView {
     const pickable = ['aircraft-icons', 'vessel-icons'];
 
     /**
-     * In a busy harbour or a stack of arrivals several icons overlap the same
+     * In a busy harbor or a stack of arrivals several icons overlap the same
      * pixel. queryRenderedFeatures returns them in draw order, which means the
      * topmost wins and that is not necessarily the one under the cursor. Pick
      * the closest one instead, so clicking does what it looks like it will do.
@@ -337,16 +381,16 @@ export class MapView {
   }
 
   viewport() {
-    const centre = this.map.getCenter();
+    const center = this.map.getCenter();
     const bounds = this.map.getBounds();
     const corner = bounds.getNorthEast();
     const R = 3440.065;
     const toRad = (d) => (d * Math.PI) / 180;
-    const dLat = toRad(corner.lat - centre.lat);
-    const dLon = toRad(corner.lng - centre.lng);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(centre.lat)) * Math.cos(toRad(corner.lat)) * Math.sin(dLon / 2) ** 2;
+    const dLat = toRad(corner.lat - center.lat);
+    const dLon = toRad(corner.lng - center.lng);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(center.lat)) * Math.cos(toRad(corner.lat)) * Math.sin(dLon / 2) ** 2;
     const radiusNm = 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
-    return { centre, radiusNm, zoom: this.map.getZoom() };
+    return { center, radiusNm, zoom: this.map.getZoom() };
   }
 
   setData(id, features) {
@@ -357,7 +401,7 @@ export class MapView {
   /** One render pass. Everything here is derived state handed in by app.js. */
   render(state) {
     if (!this.ready) return;
-    const { aircraft, vessels, zones, zoneAlertCounts, projections, alerts, selectedKey, coverage, showLabels } = state;
+    const { aircraft, vessels, zones, zoneAlertCounts, projections, alerts, approaches, trackingAreas, selectedKey, coverage, showLabels } = state;
 
     this.setData('aircraft', aircraft.map((t) => ({
       type: 'Feature',
@@ -417,7 +461,7 @@ export class MapView {
           color: style.color,
           label: hit ? `${zone.name}  (${hit.count})` : zone.name,
         },
-        geometry: { type: 'Point', coordinates: [zone.centre.lon, zone.centre.lat] },
+        geometry: { type: 'Point', coordinates: [zone.center.lon, zone.center.lat] },
       });
     }
     this.setData('zones', zoneFeatures);
@@ -459,6 +503,47 @@ export class MapView {
       ? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: [selected.lon, selected.lat] } }]
       : []);
 
+    const trackingFeatures = [];
+    const trackingLabels = [];
+    for (const area of trackingAreas || []) {
+      const ring = area.shape === 'box'
+        ? [
+            [area.bounds.west, area.bounds.south],
+            [area.bounds.east, area.bounds.south],
+            [area.bounds.east, area.bounds.north],
+            [area.bounds.west, area.bounds.north],
+            [area.bounds.west, area.bounds.south],
+          ]
+        : circleRing(area.center.lat, area.center.lon, area.radiusNm, 96);
+
+      trackingFeatures.push({
+        type: 'Feature',
+        properties: { id: area.id },
+        geometry: { type: 'Polygon', coordinates: [ring] },
+      });
+      trackingLabels.push({
+        type: 'Feature',
+        properties: {
+          id: area.id,
+          label: area.shape === 'box'
+            ? 'tracking area'
+            : `tracking area, ${area.radiusNm < 10 ? area.radiusNm.toFixed(1) : Math.round(area.radiusNm)} NM`,
+        },
+        geometry: { type: 'Point', coordinates: [area.center.lon, area.center.lat] },
+      });
+    }
+    this.setData('tracking', trackingFeatures);
+    this.setData('tracking-labels', trackingLabels);
+
+    this.setData('approaches', (approaches || []).map((approach) => ({
+      type: 'Feature',
+      properties: { id: approach.id, color: SEVERITY[approach.severity]?.color || INK.muted },
+      geometry: {
+        type: 'LineString',
+        coordinates: approach.pair.map((p) => [p.lon, p.lat]),
+      },
+    })));
+
     this.setData('coverage', coverage
       ? [{
           type: 'Feature',
@@ -468,8 +553,8 @@ export class MapView {
       : []);
   }
 
-  flyTo(centre, zoom) {
-    this.map.flyTo({ center: centre, zoom, speed: 1.4 });
+  flyTo(center, zoom) {
+    this.map.flyTo({ center: center, zoom, speed: 1.4 });
   }
 
   panTo(lon, lat) {

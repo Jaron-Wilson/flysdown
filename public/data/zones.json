@@ -7,7 +7,7 @@
    "14 CFR 93 subpart V (DC SFRA)",
    "FDC 9/3799 (standing Disney TFRs)"
   ],
-  "disclaimer": "NOT FOR NAVIGATION. Prohibited-area geometry is the FAA published boundary, simplified for the browser, but activation times, NOTAMs and temporary restrictions are not modelled. Always use current charts and NOTAMs.",
+  "disclaimer": "NOT FOR NAVIGATION. Prohibited-area geometry is the FAA published boundary, simplified for the browser, but activation times, NOTAMs and temporary restrictions are not modeled. Always use current charts and NOTAMs.",
   "altitudeNote": "floorFt/ceilingFt are compared against barometric altitude in feet MSL. Zones whose published limits are AGL are marked agl:true; over terrain that comparison is approximate."
  },
  "features": [
@@ -2437,7 +2437,7 @@
      "aircraft"
     ],
     "approx": true,
-    "note": "Demonstration watch area on the Helsinki to Tallinn shipping lane, not an official restriction. Sited on open water rather than over a harbour so it shows vessels transiting rather than a list of moored ships.",
+    "note": "Demonstration watch area on the Helsinki to Tallinn shipping lane, not an official restriction. Sited on open water rather than over a harbor so it shows vessels transiting rather than a list of moored ships.",
     "source": "flysdown demo"
    },
    "geometry": {

@@ -1,5 +1,5 @@
 /**
- * ADS-B fetching and normalising, shared by two callers that must agree
+ * ADS-B fetching and normalizing, shared by two callers that must agree
  * exactly on the output shape:
  *
  *   functions/api/aircraft.js  runs at the Cloudflare edge
@@ -9,7 +9,7 @@
  * addresses shared with every other Cloudflare customer, so the edge is
  * refused most of the time while the same request from a normal connection
  * always succeeds. The relay exists to close that gap; keeping the
- * normalisation here means a relayed snapshot is byte-for-byte the same shape
+ * normalization here means a relayed snapshot is byte-for-byte the same shape
  * as a live one.
  */
 
@@ -26,7 +26,7 @@ const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const flag = (dbFlags, bit) => Boolean(num(dbFlags) && (dbFlags & bit));
 
 /** readsb/tar1090 JSON, shared by adsb.fi, adsb.lol and friends. */
-export function normaliseReadsb(raw, sourceName) {
+export function normalizeReadsb(raw, sourceName) {
   const lat = num(raw.lat);
   const lon = num(raw.lon);
   if (lat === null || lon === null) return null;
@@ -71,7 +71,7 @@ export function normaliseReadsb(raw, sourceName) {
 }
 
 /** OpenSky returns positional arrays in SI units. */
-export function normaliseOpenSky(row, sourceName, now = Date.now()) {
+export function normalizeOpenSky(row, sourceName, now = Date.now()) {
   const [icao24, callsign, , timePosition, lastContact, lon, lat, baroAltM, onGround, velocityMs, trueTrack, vsMs, , geoAltM, squawk] = row;
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
@@ -140,14 +140,14 @@ export function boundingBox(lat, lon, distNm) {
  * has never once succeeded there. It is relay-only by design, not by accident.
  *
  * Endpoint choice: adsb.fi's own documentation marks v2/lat/lon/dist as
- * deprecated in favour of v3, which returns the same `ac` shape as the other
+ * deprecated in favor of v3, which returns the same `ac` shape as the other
  * v2 endpoints rather than the `aircraft` shape.
  */
 export const SOURCES = [
   {
     name: 'adsb.lol',
     url: (lat, lon, dist) => `https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/${dist}`,
-    parse: (json, name) => (json.ac || []).map((raw) => normaliseReadsb(raw, name)),
+    parse: (json, name) => (json.ac || []).map((raw) => normalizeReadsb(raw, name)),
     timeoutMs: 9000,
     retries: 4,
     usableFrom: ['edge', 'relay'],
@@ -156,7 +156,7 @@ export const SOURCES = [
   {
     name: 'adsb.fi',
     url: (lat, lon, dist) => `https://opendata.adsb.fi/api/v3/lat/${lat}/lon/${lon}/dist/${dist}`,
-    parse: (json, name) => (json.ac || []).map((raw) => normaliseReadsb(raw, name)),
+    parse: (json, name) => (json.ac || []).map((raw) => normalizeReadsb(raw, name)),
     timeoutMs: 9000,
     usableFrom: ['relay'],
     attribution: 'adsb.fi (personal, non-commercial use; citation required)',
@@ -167,7 +167,7 @@ export const SOURCES = [
       const box = boundingBox(Number(lat), Number(lon), dist);
       return `https://opensky-network.org/api/states/all?lamin=${box.lamin.toFixed(4)}&lomin=${box.lomin.toFixed(4)}&lamax=${box.lamax.toFixed(4)}&lomax=${box.lomax.toFixed(4)}`;
     },
-    parse: (json, name) => (json.states || []).map((row) => normaliseOpenSky(row, name)),
+    parse: (json, name) => (json.states || []).map((row) => normalizeOpenSky(row, name)),
     timeoutMs: 6000,
     usableFrom: ['relay'],
     attribution: 'The OpenSky Network',
@@ -194,7 +194,7 @@ export async function throttle(spacingMs = MIN_REQUEST_SPACING_MS) {
 /** Relay-side ordering: richest data first, since nothing is blocking us. */
 export const RELAY_SOURCE_ORDER = ['adsb.fi', 'adsb.lol', 'opensky'];
 
-export const quantise = (value, step) => Math.round(value / step) * step;
+export const quantize = (value, step) => Math.round(value / step) * step;
 
 export function clampNumber(value, min, max, fallback) {
   const n = Number(value);
@@ -203,17 +203,17 @@ export function clampNumber(value, min, max, fallback) {
 }
 
 /**
- * Canonical request area. Quantising means nearby viewers share one cache
+ * Canonical request area. Quantizing means nearby viewers share one cache
  * entry and one relay region instead of each pulling their own.
  */
 export function canonicalRegion(params) {
-  const lat = quantise(clampNumber(params.get('lat'), -90, 90, 38.9), 0.1).toFixed(1);
-  const lon = quantise(clampNumber(params.get('lon'), -180, 180, -77.0), 0.1).toFixed(1);
-  const dist = Math.max(25, quantise(clampNumber(params.get('dist'), 1, MAX_DIST_NM, 150), 25));
+  const lat = quantize(clampNumber(params.get('lat'), -90, 90, 38.9), 0.1).toFixed(1);
+  const lon = quantize(clampNumber(params.get('lon'), -180, 180, -77.0), 0.1).toFixed(1);
+  const dist = Math.max(25, quantize(clampNumber(params.get('dist'), 1, MAX_DIST_NM, 150), 25));
   return { lat, lon, dist, key: `aircraft:${lat}:${lon}:${dist}` };
 }
 
-/** Fetch one source with a jittered retry on 429. Returns normalised aircraft. */
+/** Fetch one source with a jittered retry on 429. Returns normalized aircraft. */
 export async function fetchSource(source, lat, lon, dist, { fetchImpl = fetch, spaceRequests = false } = {}) {
   let response = null;
   const attempts = source.retries ?? 1;

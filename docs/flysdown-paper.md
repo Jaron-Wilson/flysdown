@@ -30,7 +30,7 @@ published standard or regulation. Section 10 collects the load-bearing claims in
 ## 1. Scope
 
 The system shows live aircraft (ADS-B) and ships (AIS) on one dark map, aircraft
-coloured by altitude and ships by whether they are under way, and runs a rules
+colored by altitude and ships by whether they are under way, and runs a rules
 engine on every update: already inside a restricted zone, projected to enter one
 with a time to the boundary, emergency transponder codes, rapid descent, and
 orbiting or holding. It carries the FAA's published prohibited areas with their
@@ -38,15 +38,17 @@ real boundaries and limits, plus the statutory Washington DC Special Flight
 Rules Area and the two standing Disney restrictions. An operator can draw
 further watch zones (circle or polygon), set their floor, ceiling and whether
 they apply to aircraft, ships or both, and export or import them as GeoJSON. It
-tracks only the area on screen, timestamps every contact, and reports which path
-served its data and how old that data is.
+By default it tracks only the area on screen, or an
+operator can pin circles and boxes that keep loading while the map is scrolled
+anywhere else. Each feed pauses independently, every contact is timestamped,
+and the interface reports which path served its data and how old that data is.
 
 It is not a navigation tool and says so on every screen. The projection is
 straight-line dead reckoning: no turns, no wind, no flight plan, no controller
-instruction. Zone activation by NOTAM is not modelled, so a restricted area
+instruction. Zone activation by NOTAM is not modeled, so a restricted area
 that is cold today is still drawn.
 
-The system is 4,565 lines across browser modules, edge functions, the shared
+The system is 5,254 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -68,11 +70,11 @@ readsb JSON reference **[documented]**. Three quirks are load-bearing:
 
 1. **`alt_baro` is not always a number.** For a target on the ground it is the
    string `"ground"`. Unchecked arithmetic produces `NaN` altitudes that poison
-   every downstream comparison. The normaliser converts it to an explicit
+   every downstream comparison. The normalizer converts it to an explicit
    `onGround: true` at altitude zero.
 2. **`track` is often absent:** 27 of 115 aircraft over Washington in one
    sample **[measured]**, typically surface or otherwise limited targets. The
-   normaliser falls back to `true_heading`, then `mag_heading`, but never to
+   normalizer falls back to `true_heading`, then `mag_heading`, but never to
    `nav_heading`, which is the heading the autopilot is steering towards rather
    than the one being flown.
 3. **`dbFlags` is a bitmask**, not a value to compare: bit 1 military, 2
@@ -92,7 +94,7 @@ they are quoted rather than paraphrased.
 
 **adsb.lol** publishes API data under the Open Data Commons Open Database
 License 1.0 and states "The API is available to everyone" **[documented]**.
-ODbL is an attribution licence, so the map credits it.
+ODbL is an attribution license, so the map credits it.
 
 **adsb.fi** is stricter. It states that "The public endpoints are rate limited
 to 1 request per second", that invalid requests (400, 401, 403, 404, 429) count
@@ -104,7 +106,7 @@ region; adsb.fi is never called from the edge, where it returns a 403 bot
 challenge every time (Section 4) and those 403s would accumulate strikes
 against a shared address for a call that has never once succeeded; and the map
 attribution cites adsb.fi with a link to its home page. adsb.fi also documents
-`v2/lat/lon/dist` as deprecated in favour of `v3`, which returns the same
+`v2/lat/lon/dist` as deprecated in favor of `v3`, which returns the same
 `ac`-keyed shape as its other v2 endpoints **[documented]**; the system now
 uses v3, with the response shape re-verified before the switch **[measured]**.
 
@@ -115,7 +117,7 @@ uses v3, with the response shape re-verified before the switch **[measured]**.
 
 ### 2.3 AIS
 
-AIS is the maritime analogue: transponders broadcast position, course, speed
+AIS is the maritime analog: transponders broadcast position, course, speed
 and identity on VHF, with encodings specified in ITU-R Recommendation M.1371
 **[standard]**. Three details matter:
 
@@ -160,7 +162,7 @@ positions, because a ship's name changes less often than its position.
 ```
 browser (public/)                    Cloudflare edge (functions/)      upstreams
 app.js      orchestration            /api/aircraft                     adsb.lol
- js/feeds   polling, history  --->     normalise, quantise, cache  ---> (adsb.fi and
+ js/feeds   polling, history  --->     normalize, quantize, cache  ---> (adsb.fi and
  js/detect  rules engine               relay lookup, stale fallback      OpenSky are
  js/geo     geodesy                                                      relay-only)
  js/zones   zone store        --->    /api/vessels                 ---> Digitraffic
@@ -171,7 +173,7 @@ app.js      orchestration            /api/aircraft                     adsb.lol
 
 The browser is plain ES modules, no framework, no build step. That was decided
 explicitly: a live map is overwhelmingly client-side rendering work, and the
-only thing a server must do is proxy two feeds, normalise them and hide rate
+only thing a server must do is proxy two feeds, normalize them and hide rate
 limits behind a shared cache. A JVM or Python service would need an always-on
 host for no functional gain. The detection engine and its geodesy are pure
 functions with no DOM or map dependency, specifically so they can move into a
@@ -180,19 +182,18 @@ scheduled Worker or another language later without rewriting the rules.
 The edge layer is two Cloudflare Pages Functions **[documented]**, one per
 feed, plus a relay endpoint. They exist because the upstreams send no CORS
 headers so a browser cannot call them; secrets stay server-side; parameters can
-be quantised so many viewers collapse onto one cache entry; and one cache entry
+be quantized so many viewers collapse onto one cache entry; and one cache entry
 serves every viewer instead of each viewer generating upstream load.
 
-**Normalisation is a contract.** Both endpoints emit one schema whatever
+**Normalization is a contract.** Both endpoints emit one schema whatever
 answered, so an aircraft is the same object whether it came from adsb.lol's `ac`
 array, adsb.fi's v3 `ac` array or OpenSky's positional arrays in SI units
 (conversions in one place: 3.28084 ft/m, 1.943844 kt per m/s, 196.8504 ft/min
-per m/s). The same normalisation runs at the edge and in the relay, both
-importing `shared/adsb.js`, so a relayed snapshot cannot drift in shape from a
-directly fetched one: separate copies would drift into a field that is
-`undefined` only on one path, which is a bug that survives a long time.
+per m/s). The same code runs at the edge and in the relay, both importing
+`shared/adsb.js`, so a relayed snapshot cannot drift in shape from a directly
+fetched one.
 
-**Quantisation and caching.** Latitude and longitude are rounded to 0.1 degrees
+**Quantization and caching.** Latitude and longitude are rounded to 0.1 degrees
 (about 6 nautical miles) and radius to 25 nautical mile steps, so two people
 looking at the same city produce the same region key and share one upstream
 request. Responses are cached in the Cloudflare Cache API **[documented]** for
@@ -247,11 +248,11 @@ out: OpenSky does not answer the edge at all, so authentication would not help.
 Whenever the relay is not running, the endpoint serves the last known good
 answer from the 5 minute cache entry, annotated `stale: true` with its age, and
 the interface says so in three places: the feed chip, the status bar and a map
-banner. Verified in production by polling one region repeatedly: polls 1 to 4
-refused, poll 5 returned 323 aircraft fresh, polls 7 and 8 returned the same
-323 marked stale at 17 and 29 seconds old **[measured]**. The property that
-matters is honesty. A dashboard silently showing five minute old positions as
-current is worse than one showing nothing, because the viewer cannot tell.
+banner. Verified in production by polling one region repeatedly: four
+refusals, then 323 aircraft fresh, then the same 323 marked stale at 17 and 29
+seconds old **[measured]**. The property that matters is honesty: a dashboard
+silently showing five minute old positions as current is worse than one
+showing nothing, because the viewer cannot tell.
 
 ### 4.4 The relay
 
@@ -277,7 +278,7 @@ request for them returned nothing. Requests are now answered by any snapshot
 that fully *contains* the requested area: the endpoint picks the tightest
 containing snapshot and filters its aircraft to the requested radius. Verified
 in production: a 25 nautical mile request served from the 75 nautical mile
-snapshot, filtered from 181 aircraft to 71, and an off-centre 50 nautical mile
+snapshot, filtered from 181 aircraft to 71, and an off-center 50 nautical mile
 request from the same snapshot giving 117 **[measured]**.
 
 **Write budget.** D1's free allowance is 5 million rows read and 100,000
@@ -291,7 +292,7 @@ plan **[documented]**; this endpoint uses at most three.
 
 **When the relay stops**, nothing breaks: the endpoint falls back to the
 aggregators, then an older relay snapshot, then the last known good cache
-entry, then a 502 with a summarised reason. The banner distinguishes "the
+entry, then a 502 with a summarized reason. The banner distinguishes "the
 aggregators are rate-limiting the edge" from "the relay has stopped pushing",
 because those have different remedies.
 
@@ -342,7 +343,7 @@ minutes, adjustable 2 to 20). Naively that is hundreds of targets times a dozen
 zones times hundreds of steps, five times a minute. Three things make it cheap.
 
 **A reachability prefilter.** Maximum travel is speed times horizon; if the
-distance to the zone centre less its radius exceeds that, the zone is skipped
+distance to the zone center less its radius exceeds that, the zone is skipped
 with no stepping at all. For a typical view this eliminates almost every pair.
 
 **A step tied to the zone, not the clock.** The step is
@@ -358,7 +359,7 @@ bisection between the last clear and first inside sample narrow the crossing to
 roughly one four-thousandth of a step. That is what lets the interface say
 "reaches P-40 Thurmont in 7m 52s" instead of rounding to the sample interval.
 
-Containment is analytic for circles (distance to centre) and ray casting for
+Containment is analytic for circles (distance to center) and ray casting for
 polygons (count edge crossings; odd is inside), verified against two known
 truths: the White House is inside P-56A, Dulles is not.
 
@@ -373,6 +374,7 @@ truths: the White House is inside P-56A, Dulles is not.
 | Emergency flag | ADS-B `emergency` field set | Critical |
 | Rapid descent | Below -4,000 ft/min, or -3,000 ft/min under 10,000 ft | Warning; serious when low |
 | Orbit or hold | Over 270 degrees cumulative turn inside a 12 NM footprint over 150 s | Notice |
+| Close approach (vessels) | Projected CPA within the limit (default 1 NM) and TCPA inside 30 min | By CPA band, reduced one step beyond 15 min |
 
 Severity is computed, not stored: zone kind gives a base rank and the projected
 time reduces it, so an aircraft escalates from warning to serious to critical as
@@ -398,10 +400,54 @@ carry an `advisory` flag, default true for special-flight-rules zones: such a
 zone is still drawn, still tested and still reported in a selected target's zone
 checks, but never raises an alert. The same view then produced 3 alerts, all
 genuine: a projected entry into P-40 at Camp David and two into P-56A over the
-National Mall **[measured]**. A detector that fires on authorised behaviour
+National Mall **[measured]**. A detector that fires on authorised behavior
 trains its operator to ignore it.
 
-### 5.6 A worked example
+### 5.6 Vessel close approach
+
+Every rule above looks at one target at a time, which cannot see the risk that
+matters most at sea: two ships converging on each other. That needs a pairwise
+pass, and the marine standard for it is the Closest Point of Approach.
+
+Reduce the pair to relative motion. Convert both positions into a local tangent
+plane in nautical miles, take the relative position vector **r** and the
+relative velocity **v** (each vessel's speed over ground resolved onto its
+course over ground), and the time of closest approach is where the range stops
+shrinking:
+
+```
+TCPA = -(r . v) / |v|^2          CPA = | r + v * TCPA |
+```
+
+A negative or zero TCPA means the pair has already passed its closest point or
+is opening, in which case the closest approach is simply the present range. A
+relative speed near zero means two ships holding station on each other, so the
+range is not going to change either. Both are returned as "not closing" rather
+than as a spurious prediction.
+
+This is the quantity an ARPA radar computes, and the alarm model is the same
+too: IMO's performance standards for automatic radar plotting aids require
+alarms on "a preset minimum acceptable passing distance (CPA) and a preset
+advance warning time (TCPA)" **[standard]**. Both are exposed here, the CPA
+limit as a slider defaulting to 1 nautical mile and the horizon at 30 minutes,
+because the right limit depends entirely on the water: a mile is generous in a
+traffic separation scheme and tight in the open sea.
+
+Two guards keep the output worth reading. Both vessels must be making at least
+1 knot and neither may be reporting anchored or moored, because a harbor is
+full of ships lying within a cable of each other and none of it is a risk, the
+same lesson as the advisory zones in 5.5. And pairs are screened through a
+coarse spatial grid sized to the 20 nautical mile screening range, so the pass
+is linear in practice rather than quadratic in the contact count. Each pair
+yields exactly one alert, keyed on both identifiers in a stable order, so the
+same encounter is never reported twice from opposite ends.
+
+Measured against live Baltic traffic, 275 vessels produced 4 alerts at the 1
+nautical mile limit and 27 at 5, the tightest being two ships projected to pass
+0.32 NM apart in 2 minutes 14 seconds **[measured]**. Each pair is drawn on the
+map as a line between the two vessels, colored by severity.
+
+### 5.7 A worked example
 
 From the live system: `N9287Y`, west of Camp David at 5,000 feet, with track
 and ground speed from ADS-B. P-40 Thurmont is prohibited, surface to 5,000 feet
@@ -421,7 +467,7 @@ thickens, and a dashed projection line is drawn to the predicted entry point
 
 The first zone file was hand-drawn: P-56A as a rectangle over the National Mall,
 P-40 as a one mile circle, the DC flight restricted zone as a 15 nautical mile
-ring. It was labelled approximate and it generated false positives, because a
+ring. It was labeled approximate and it generated false positives, because a
 rectangle over the Mall includes the Potomac corridor that Reagan National
 arrivals actually fly, which the real prohibited area is shaped to exclude.
 
@@ -438,7 +484,7 @@ NOTAM or schedule and drawing them as always hot would mislead.
 reproducible; the FAA reissues the dataset on the 56 day chart cycle, so the
 script is re-run rather than its output edited. Three mapping details:
 `LOWER_VAL` and `UPPER_VAL` are strings with separate code fields where `SFC`
-means surface, normalised to numeric feet; the country field reads **"UNITED
+means surface, normalized to numeric feet; the country field reads **"UNITED
 STATES", not "USA"**, and an initial filter comparing against `USA` silently
 dropped all 13 features, which is why the script now prints every zone it wrote
 with its vertex count; and P-56 appears twice under one name, disambiguated by
@@ -450,7 +496,7 @@ Observatory and the Mall polygon section A.
 The FAA ships circular areas as densely sampled polygons: P-56B, a one nautical
 mile circle, arrives as 6,285 coordinate pairs, as does P-40 **[measured]**, and
 13 zones came to roughly 520 KB of JSON. The ingest applies Douglas-Peucker
-simplification **[standard]** at a tolerance of 0.0004 degrees (about 44 metres)
+simplification **[standard]** at a tolerance of 0.0004 degrees (about 44 meters)
 and rounds to five decimal places. P-56B becomes 17 points, P-40 33, P-56A 12,
 and the whole file including hand-added zones is 16 zones, 506 polygon vertices
 and 18.6 KB **[measured]**. The difference is not visible at any zoom the map
@@ -463,7 +509,7 @@ than approximate. The DC Special Flight Rules Area is defined in 14 CFR part 93
 subpart V as the airspace within 30 nautical miles of the Reagan National
 VOR/DME **[standard]**, so a circle is the true shape. The prohibited areas are
 established under 14 CFR part 73 **[standard]**, the authority behind the FAA
-geometry. The two Disney restrictions are permanent TFRs with published centres,
+geometry. The two Disney restrictions are permanent TFRs with published centers,
 3 nautical mile radius, surface to 3,000 feet AGL.
 
 The DC flight restricted zone was dropped rather than approximated: its real
@@ -480,10 +526,10 @@ model. This is stated in the zone metadata and in the interface.
 
 ## 7. Visual encoding
 
-### 7.1 Colour assigned by role, then validated
+### 7.1 Color assigned by role, then validated
 
-Colour here encodes data, so it was assigned by the job each colour does and
-then checked with a contrast and colour-vision validator against the page's
+Color here encodes data, so it was assigned by the job each color does and
+then checked with a contrast and color-vision validator against the page's
 actual dark surface (`#141416`) rather than judged by eye.
 
 **Altitude is a magnitude**, so it gets an ordinal ramp on a single hue,
@@ -491,39 +537,38 @@ monotone in lightness, dark low and light high: `#184f95`, `#256abf`, `#3987e5`,
 `#6da7ec`, `#9ec5f4`, `#cde2fb` for bands below 2,500 ft, to 10,000, 20,000,
 30,000, 40,000 and above. The validator passes all four ordinal checks, darkest
 step at 2.27:1 against the surface **[measured]**. A rainbow ramp, which several
-trackers use, was rejected: hue carries no order, so two colours cannot be
+trackers use, was rejected: hue carries no order, so two colors cannot be
 ranked without a legend.
 
 **Aircraft against vessels is identity**, so categorical hues: blue `#3987e5`
-and orange `#d95926`, a pair that passes all-pairs colour-vision separation
-**[measured]**. Grey `#898781` is reserved for "no data, not moving or stale",
-never an identity colour, and always labelled.
+and orange `#d95926`, a pair that passes all-pairs color-vision separation
+**[measured]**. Gray `#898781` is reserved for "no data, not moving or stale",
+never an identity color, and always labeled.
 
 **Alerts are status**, using a reserved four-step palette (`#d03b3b` critical,
-`#ec835a` serious, `#fab219` warning, grey notice) never reused for a data
+`#ec835a` serious, `#fab219` warning, gray notice) never reused for a data
 series. The validator reports red against green as inherently weak under
 deuteranopia at a difference of 4.1 **[measured]**, which is exactly why every
-alert pairs its colour with a glyph and the severity word. Status colour never
+alert pairs its color with a glyph and the severity word. Status color never
 carries meaning alone anywhere here.
 
 **Zone kind is identity with a safety-critical failure mode**, so it is encoded
 twice. The four hues clear the normal-vision floor comfortably (worst pair 24.6)
-but sit in the colour-vision warning band (7.2) **[measured]**, which is only
+but sit in the color-vision warning band (7.2) **[measured]**, which is only
 acceptable with a second channel, so zone kind is also carried by outline dash:
 prohibited solid, TFR short dash, restricted long dash, special flight rules
 dash-dot, custom dotted. Because MapLibre's `line-dasharray` cannot be data
 driven **[documented]**, this is one line layer per kind with a filter: more
-code, but the redundant channel survives. Every zone is also directly labelled.
+code, but the redundant channel survives. Every zone is also directly labeled.
 
-Icons are generated at runtime on a canvas, one pre-coloured image per altitude
-band and vessel state, at 44 by 44 pixels at device pixel ratio 2 with a dark
-casing stroke so a light icon stays legible over a light coastline; the
-alternative, one white icon tinted by data, needs signed distance fields and
-gives soft edges at small sizes.
+Icons are generated at runtime on a canvas, one pre-colored image per altitude
+band and vessel state, with a dark casing stroke so a light icon stays legible
+over a light coastline; the alternative, one white icon tinted by data, needs
+signed distance fields and gives soft edges at small sizes.
 
 ### 7.2 Only what is on screen, and how old it is
 
-The upstreams take a centre and radius, so the smallest circle covering a
+The upstreams take a center and radius, so the smallest circle covering a
 rectangular viewport always includes targets outside it. Those are fetched
 (they cost nothing) but filtered out of the map, counts, alerts, trails and
 table, so "105 aircraft in view" is literally true. The coverage ring is drawn
@@ -533,12 +578,22 @@ and immediately on a view change; without the second rule, switching from
 Washington to the Gulf of Finland displayed 241 aircraft where the feed reported
 1 **[measured]**.
 
+That default can be overridden by pinning up to four **tracking areas**, drawn
+as circles or boxes. Pinned areas replace the viewport as both the query set
+and the display filter, so the feeds keep loading them while the map is
+scrolled somewhere else entirely, and their contacts stay in the counts and the
+alerts even when off screen. Because the upstreams take a center and a radius,
+a box is queried by its bounding circle and then filtered back to the rectangle
+for display. Areas persist in localStorage, and the map says so when none of
+them is on screen. Each feed also pauses on its own, so the aircraft picture
+can be frozen for inspection while the ships keep moving.
+
 Every contact carries an age that sums two things: how long ago the receiver
 network last heard from it (`seen_pos`, or the AIS report timestamp) and how
 long ago this system fetched that answer. Reporting only the first would let a
 five minute old relay snapshot claim every contact in it was two seconds old.
 The age appears in the detail panel, in the tooltip past 20 seconds, as a table
-column, and on the map as opacity: contacts fade from full to 30 per cent
+column, and on the map as opacity: contacts fade from full to 30 percent
 between 45 and 240 seconds, so a stale picture looks stale.
 
 ### 7.3 One layout bug worth recording
@@ -548,27 +603,34 @@ detail, which is how the adsb.fi 403 was identified as a bot challenge rather
 than a plain refusal. That text reached the interface verbatim, and a few
 hundred characters of nginx error page in a `white-space: nowrap` status chip
 widened the header enough to push the entire right-hand panel off screen. The
-fix has two halves: failures are summarised to a few words ("no source
+fix has two halves: failures are summarized to a few words ("no source
 available: adsb.lol rate limited, adsb.fi blocked, opensky not responding") with
 the full text kept for the console, and the header, chips, layout grid and
 status bar are width-locked so no future content can widen the page whatever its
 origin. A regression test injects the exact string and asserts the panel is
 still on screen with zero document overflow. Any external text reaching page
-chrome is a layout hazard, and summarising it is not sufficient alone.
+chrome is a layout hazard, and summarizing it is not sufficient alone.
 
 ## 8. Verification
 
-**Unit tests (16, no network).** Haversine and destination round-tripping, ray
-casting against known points, inside and projected alerts, severity escalation
-with closing time, altitude band exclusion, a descending target entering the
-band mid-projection, the small-zone step-over case, a target tracking away
-raising nothing, emergency squawks, orbit detection requiring both a full turn
-and a small footprint, target-kind filtering, worst-first ordering, the ground
-clamp, the advisory-zone rule, and the real FAA zone file loading with its
-published limits intact. Two failed on first run and both were genuine: the
-unclamped altitude extrapolation of 5.2, and the great-circle convergence error
-in the test's own geometry in 5.1. A suite that passes entirely on first write
-is usually testing what the code does rather than what it should do.
+**Unit tests (24, no network).** The geometry and the rules: haversine and
+destination round-tripping, ray casting against known points, inside and
+projected alerts, severity escalation with closing time, altitude band
+exclusion, a descending target entering the band mid-projection, the small-zone
+step-over case, a target tracking away raising nothing, emergency squawks,
+orbit detection needing both a full turn and a small footprint, target-kind
+filtering, worst-first ordering, the ground clamp, the advisory-zone rule, and
+the real FAA zone file loading with its published limits intact. Eight cover
+the close-approach math: a head-on pair whose TCPA must equal range over
+closing speed, a parallel pair that never closes, a crossing pair whose CPA is
+its offset, a pair already past, one alert per pair regardless of input order,
+a harbor of 30 moored ships raising nothing, the severity bands, and the
+pairwise pass appearing in the combined result.
+
+Two failed on first run and both were genuine: the unclamped altitude
+extrapolation of 5.2, and the great-circle convergence error in the test's own
+geometry in 5.1. A suite that passes entirely on first write is usually testing
+what the code does rather than what it should do.
 
 **Browser smoke test (Playwright).** Loads the real page in headless Chromium,
 fails on any console or page error, waits for live targets, asserts nothing
@@ -578,7 +640,7 @@ survives, draws a zone and asserts it produces alerts, switches region, and
 captures desktop and phone screenshots, against local development or production
 by URL. Two refinements made it trustworthy: MapLibre cancels in-flight tile
 requests whenever the view moves, which surfaces as dozens of `ERR_ABORTED`
-failures that are normal behaviour, and a 502 from this system's own endpoint is
+failures that are normal behavior, and a 502 from this system's own endpoint is
 the documented upstream refusal the page is supposed to explain, so the test
 asserts the explanation appears rather than treating it as fatal.
 
@@ -594,15 +656,14 @@ relay runs as a long-lived process wherever there is an ordinary IP, kept alive
 by `forever`, with a systemd user unit documented for reboot persistence; its
 shared secret lives in a gitignored file the script reads itself, matching a
 Pages secret, and the relay endpoints compare the bearer token byte by byte
-after a length check rather than with a short-circuiting comparison. For
-diagnosis the interface comes first: the status bar names the path that served
-the data, its age and the last poll, and the banner distinguishes a
-rate-limited edge from a stopped relay.
+after a length check. For diagnosis the interface comes first: the status bar
+names the path that served the data, its age and the last poll, and the banner
+distinguishes a rate-limited edge from a stopped relay.
 
 Known limits: AIS coverage is the Baltic and Gulf of Finland only, because that
 is what a keyless live feed covers; the projection is a straight line, right for
-a geofence warning and wrong for predicting behaviour; NOTAM activation is not
-modelled, so a cold restricted area is still drawn and P-40's expansion during a
+a geofence warning and wrong for predicting behavior; NOTAM activation is not
+modeled, so a cold restricted area is still drawn and P-40's expansion during a
 presidential visit is not represented; AGL zones are compared against MSL
 altitude with terrain as the error; the relay is a dependency, and without it the
 aircraft feed degrades to intermittent; detection runs in the browser, so nothing
@@ -622,7 +683,7 @@ attention on redistribution.
 | Digitraffic needs gzip, 406 otherwise; `Digitraffic-User` raises limits; CC BY 4.0 | Digitraffic instructions **[documented]**; 406 reproduced across four `Accept` values **[measured]** |
 | adsb.lol is ODbL 1.0, open to everyone, limits load-dependent | adsb.lol open data documentation **[documented]** |
 | adsb.fi: 1 req/s, invalid responses may trigger IP blocks, non-commercial, citation required, v2 deprecated for v3 | adsb.fi opendata repository **[documented]**; v3 shape verified live **[measured]** |
-| Edge behaviour: adsb.lol 429s, adsb.fi 403 challenge, OpenSky 522 | Purpose-built diagnostic endpoint in production **[measured]** |
+| Edge behavior: adsb.lol 429s, adsb.fi 403 challenge, OpenSky 522 | Purpose-built diagnostic endpoint in production **[measured]** |
 | Success rates 1 in 8, 3 in 8 with retries, 1 in 6 later | Repeated polling of distinct viewports **[measured]** |
 | No aggregator sends CORS headers; six alternative aggregators unusable | `Origin`-bearing requests inspected, and each candidate probed directly **[measured]** |
 | D1 free tier: 5M read, 100k written per day; 50 queries per invocation | Cloudflare D1 pricing and limits **[documented]** |
@@ -630,10 +691,12 @@ attention on redistribution.
 | DC SFRA is 30 NM on the DCA VOR; prohibited areas under part 73 | 14 CFR 93 subpart V; 14 CFR 73 **[standard]** |
 | Simplification 6,285 to 17 points; 506 vertices, 18.6 KB | Output of the committed ingest script **[measured]** |
 | Haversine and destination formulas | Movable Type latitude/longitude reference **[documented]** |
-| Palette contrast and colour-vision figures | Validator run against the page's dark surface **[measured]** |
+| Palette contrast and color-vision figures | Validator run against the page's dark surface **[measured]** |
 | 55 alerts before advisory zones, 3 after | Same view, before and after **[measured]** |
 | 241 aircraft shown where the feed reported 1 | Region switch with pruning disabled **[measured]** |
 | End state: 446 to 496 aircraft, 2 to 12 s old, 281 vessels | Public endpoints polled directly **[measured]** |
+| CPA and TCPA are the standard measures, with alarms on a preset CPA limit and TCPA warning time | IMO Resolution A.823(19), ARPA performance standards **[standard]** |
+| 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
 ## 11. References
 
@@ -668,9 +731,12 @@ attention on redistribution.
 17. MapLibre GL JS API and style specification. <https://maplibre.org/maplibre-gl-js/docs/API/>, <https://maplibre.org/maplibre-style-spec/layers/>
 18. OpenFreeMap keyless OpenStreetMap vector tiles. <https://openfreemap.org/>
 19. OpenStreetMap contributors. <https://www.openstreetmap.org/copyright>
+20. IMO Resolution A.823(19), *Performance Standards for Automatic Radar
+    Plotting Aids (ARPAs)*, adopted 23 November 1995.
+    <https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.823(19).pdf>
 
 All URLs were retrieved and confirmed reachable on 17 September 2026. Two
 sources are cited from their own error responses rather than rendered
 documentation: adsb.fi's home page returns 403 to automated clients, which is
-the behaviour described in Section 4, and the historical OpenSky REST
-documentation URL now returns 404 in favour of reference 8.
+the behavior described in Section 4, and the historical OpenSky REST
+documentation URL now returns 404 in favor of reference 8.

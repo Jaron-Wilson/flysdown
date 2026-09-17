@@ -25,7 +25,7 @@ const STALE_AFTER_MS = 45000;
  * a nginx 429 page rendered into a status chip is unreadable. Reduce each one
  * to a few words and keep the full text on the error object for the console.
  */
-export function summariseUpstreamFailure(json, status) {
+export function summarizeUpstreamFailure(json, status) {
   const details = Array.isArray(json?.detail) ? json.detail : json?.detail ? [String(json.detail)] : [];
 
   const reasons = details.map((entry) => {
@@ -43,9 +43,10 @@ export function summariseUpstreamFailure(json, status) {
 }
 
 export class Feed {
-  constructor({ name, endpoint, intervalMs, onData, onStatus }) {
+  constructor({ name, endpoint, itemsKey, intervalMs, onData, onStatus }) {
     this.name = name;
     this.endpoint = endpoint;
+    this.itemsKey = itemsKey;
     this.intervalMs = intervalMs;
     this.onData = onData;
     this.onStatus = onStatus;
@@ -53,13 +54,18 @@ export class Feed {
     this.failures = 0;
     this.inFlight = false;
     this.status = { state: 'idle', lastSuccess: null, lastError: null, latencyMs: null, count: 0, source: null };
-    this.query = null;
+    this.queries = [];
     this.paused = false;
   }
 
-  setQuery(query) {
-    const changed = JSON.stringify(query) !== JSON.stringify(this.query);
-    this.query = query;
+  /**
+   * A feed can cover several areas at once: one per pinned tracking area, or
+   * a single one derived from the viewport. Returns whether the set changed.
+   */
+  setQueries(queries) {
+    const next = queries || [];
+    const changed = JSON.stringify(next) !== JSON.stringify(this.queries);
+    this.queries = next;
     return changed;
   }
 
@@ -68,45 +74,76 @@ export class Feed {
     this.onStatus?.(this.name, this.status);
   }
 
+  async fetchOne(query) {
+    const url = `${this.endpoint}?${new URLSearchParams(query)}`;
+    const res = await fetch(url, { headers: { accept: 'application/json' } });
+    const json = await res.json();
+    if (!res.ok || json.ok === false) {
+      const error = new Error(summarizeUpstreamFailure(json, res.status));
+      error.detail = json.detail;
+      throw error;
+    }
+    return json;
+  }
+
   async poll({ force = false } = {}) {
     if (this.inFlight || (this.paused && !force)) return;
-    if (!this.query) {
-      // The map has not reported a viewport yet. Try again rather than
-      // dropping the poll loop on the floor.
+    if (!this.queries.length) {
+      // The map has not reported an area yet. Try again rather than dropping
+      // the poll loop on the floor.
       this.schedule();
       return;
     }
+
     this.inFlight = true;
     const started = performance.now();
     try {
-      const url = `${this.endpoint}?${new URLSearchParams(this.query)}`;
-      const res = await fetch(url, { headers: { accept: 'application/json' } });
-      const json = await res.json();
-      if (!res.ok || json.ok === false) {
-        const error = new Error(summariseUpstreamFailure(json, res.status));
-        error.detail = json.detail;
-        throw error;
+      const settled = await Promise.allSettled(this.queries.map((query) => this.fetchOne(query)));
+      const ok = settled.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+      const failures = settled.filter((r) => r.status === 'rejected').map((r) => r.reason);
+      if (!ok.length) throw failures[0] || new Error('no areas answered');
+
+      // Merge the areas: dedupe by id, union the covered areas, and report the
+      // oldest data in the set rather than the newest, so age is never
+      // flattering.
+      const byId = new Map();
+      const coverages = [];
+      const sources = new Set();
+      let ageMs = 0;
+      let stale = false;
+
+      for (const json of ok) {
+        for (const item of json[this.itemsKey] || []) byId.set(item.id, item);
+        if (json.coverage) coverages.push(normalizeCoverage(json.coverage));
+        if (json.source) sources.add(json.source);
+        ageMs = Math.max(ageMs, json.ageMs || 0);
+        stale = stale || Boolean(json.stale);
       }
 
-      // Age decides whether this counts as live, not which code path served
-      // it: a relay snapshot from three seconds ago is live data.
-      const ageMs = json.ageMs || 0;
-      const reallyStale = Boolean(json.stale) && ageMs > STALE_AFTER_MS;
+      const partial = failures.length
+        ? `${failures.length} of ${this.queries.length} areas failed: ${failures[0].message}`
+        : null;
+      const reallyStale = stale && ageMs > STALE_AFTER_MS;
 
       this.failures = 0;
       this.report({
-        state: reallyStale ? 'degraded' : 'live',
+        state: reallyStale || partial ? 'degraded' : 'live',
         lastSuccess: Date.now(),
-        lastError: reallyStale ? `last good picture, ${Math.round(ageMs / 1000)}s old` : null,
+        lastError: reallyStale ? `last good picture, ${Math.round(ageMs / 1000)}s old` : partial,
         latencyMs: Math.round(performance.now() - started),
-        count: json.count ?? 0,
-        source: json.source || null,
-        via: json.via || 'edge',
+        count: byId.size,
+        source: [...sources].join(' + ') || null,
+        via: ok[0]?.via || 'edge',
+        areas: ok.length,
         stale: reallyStale,
         ageMs,
-        cache: res.headers.get('x-flysdown-cache'),
       });
-      this.onData?.(json);
+
+      this.onData?.({
+        items: [...byId.values()],
+        coverages: coverages.filter(Boolean),
+        fetchedAt: Date.now(),
+      });
     } catch (err) {
       this.failures += 1;
       this.report({ state: this.failures > 2 ? 'down' : 'degraded', lastError: String(err.message || err) });
@@ -135,6 +172,22 @@ export class Feed {
   }
 }
 
+/** Is this target inside any of the covered areas? */
+function insideAny(target, coverages) {
+  return coverages.some((area) => distanceNm(target.lat, target.lon, area.lat, area.lon) <= area.radiusNm);
+}
+
+/** Coverage comes back as nautical miles for aircraft and kilometers for AIS. */
+function normalizeCoverage(coverage) {
+  if (!Number.isFinite(coverage.lat) || !Number.isFinite(coverage.lon)) return null;
+  const radiusNm = Number.isFinite(coverage.distNm)
+    ? coverage.distNm
+    : Number.isFinite(coverage.radiusKm)
+      ? coverage.radiusKm / 1.852
+      : null;
+  return radiusNm ? { lat: coverage.lat, lon: coverage.lon, radiusNm } : null;
+}
+
 /**
  * Holds the current world: the latest state of every target plus its recent
  * track. Targets are keyed by ICAO hex (aircraft) or MMSI (vessel), which are
@@ -153,7 +206,7 @@ export class TargetStore {
    * to the Baltic, the old aircraft are not "still there", we simply have no
    * information about them.
    */
-  ingest(kind, incoming, fetchedAt = Date.now(), coverage = null) {
+  ingest(kind, incoming, fetchedAt = Date.now(), coverages = []) {
     const seen = new Set();
 
     for (const raw of incoming) {
@@ -185,9 +238,7 @@ export class TargetStore {
       if (target.kind !== kind) continue;
       if (seen.has(key)) continue;
 
-      const outsideCoverage = coverage
-        ? distanceNm(target.lat, target.lon, coverage.lat, coverage.lon) > coverage.radiusNm
-        : false;
+      const outsideCoverage = coverages.length ? !insideAny(target, coverages) : false;
       const unreportedFor = fetchedAt - target.updatedAt;
 
       // Outside the answered area: no information, so do not draw it.
@@ -203,12 +254,12 @@ export class TargetStore {
    * moves, so a refused poll for the new area cannot leave the previous
    * region's targets on the map pretending to be current.
    */
-  pruneToCoverage(kind, coverage) {
-    if (!coverage) return 0;
+  pruneToCoverage(kind, coverages) {
+    if (!coverages?.length) return 0;
     let removed = 0;
     for (const [key, target] of this.targets) {
       if (target.kind !== kind) continue;
-      if (distanceNm(target.lat, target.lon, coverage.lat, coverage.lon) > coverage.radiusNm) {
+      if (!insideAny(target, coverages)) {
         this.targets.delete(key);
         removed += 1;
       }
@@ -264,17 +315,20 @@ export function targetAgeSec(target, now = Date.now()) {
   return sinceFetch + (Number.isFinite(sinceHeard) ? sinceHeard : 0);
 }
 
-/** Viewport -> feed query. Aircraft upstreams cap the radius at 250 NM. */
-export function viewportQuery(centre, radiusNm) {
+/**
+ * One area becomes one query per feed. Aircraft upstreams cap the radius at
+ * 250 NM; the AIS service takes kilometers.
+ */
+export function areaQuery(lat, lon, radiusNm) {
   return {
     aircraft: {
-      lat: centre.lat.toFixed(3),
-      lon: centre.lng.toFixed(3),
+      lat: lat.toFixed(3),
+      lon: lon.toFixed(3),
       dist: String(Math.max(25, Math.min(250, Math.round(radiusNm)))),
     },
     vessels: {
-      lat: centre.lat.toFixed(3),
-      lon: centre.lng.toFixed(3),
+      lat: lat.toFixed(3),
+      lon: lon.toFixed(3),
       radius: String(Math.max(10, Math.min(800, Math.round(radiusNm * 1.852)))),
     },
   };

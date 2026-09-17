@@ -1,9 +1,9 @@
 /*
  * flysdown - dark operations console.
  *
- * Colour roles come from js/palette.js (validated against this page's dark
- * surface). Anything status-coloured here also carries a glyph and a word,
- * because red-vs-green is the one pair colour vision cannot be trusted on.
+ * Color roles come from js/palette.js (validated against this page's dark
+ * surface). Anything status-colored here also carries a glyph and a word,
+ * because red-vs-green is the one pair color vision cannot be trusted on.
  */
 
 :root {
@@ -192,6 +192,12 @@ input[type="range"] { accent-color: var(--aircraft); width: 100%; }
 .btn-primary { background: #1c5cab; border-color: #3987e5; }
 .btn[aria-pressed="true"] { background: #3a2f10; border-color: var(--warning); color: var(--ink); }
 .btn.active { background: #12352a; border-color: #199e70; }
+
+/* One pause control per feed, each showing that feed's own state. */
+.feed-toggles { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.feed-toggle { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.feed-toggle .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.btn.feed-toggle[aria-pressed="true"] { background: #26262a; border-color: var(--border-strong); color: var(--ink-2); }
 
 .check { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
 .check input { accent-color: var(--aircraft); width: 15px; height: 15px; }

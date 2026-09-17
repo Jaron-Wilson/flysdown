@@ -1,7 +1,7 @@
 /**
  * Detection engine.
  *
- * Pure functions over a normalised target plus the active zone list. Nothing in
+ * Pure functions over a normalized target plus the active zone list. Nothing in
  * here touches the map or the DOM, so the same rules can later run in a Worker
  * on a cron trigger to push alerts when nobody has the page open.
  *
@@ -18,6 +18,10 @@ export const SEVERITY_RANK = { notice: 0, warning: 1, serious: 2, critical: 3 };
 export const SEVERITY_BY_RANK = ['notice', 'warning', 'serious', 'critical'];
 
 export const DEFAULTS = {
+  cpaAlertNm: 1.0,          // closest approach that counts as too close (open-water practice is 0.5 to 2 NM)
+  cpaHorizonSec: 1800,      // how far ahead to look for a close approach
+  cpaScreenNm: 20,          // ignore pairs further apart than this right now
+  cpaMinSpeedKt: 1.0,       // both vessels must actually be moving
   horizonSec: 600,          // how far ahead to project
   imminentSec: 120,         // "about to happen" band
   soonSec: 360,             // "worth watching" band
@@ -35,7 +39,7 @@ const clampRank = (rank) => Math.max(0, Math.min(3, rank));
 /** Horizontal containment only. */
 export function zoneContains(zone, lat, lon) {
   if (zone.shape === 'circle') {
-    return distanceNm(lat, lon, zone.centre.lat, zone.centre.lon) <= zone.radiusNm;
+    return distanceNm(lat, lon, zone.center.lat, zone.center.lon) <= zone.radiusNm;
   }
   return pointInRing(lon, lat, zone.ring);
 }
@@ -75,7 +79,7 @@ export function firstEntry(target, zone, opts = DEFAULTS) {
   // Do not project a descending target past its own arrival on the ground.
   const horizonSec = Math.min(opts.horizonSec, secondsToGround(target));
   const maxTravelNm = (speed * horizonSec) / 3600;
-  const gapNm = distanceNm(target.lat, target.lon, zone.centre.lat, zone.centre.lon) - zone.radiusNm;
+  const gapNm = distanceNm(target.lat, target.lon, zone.center.lat, zone.center.lon) - zone.radiusNm;
   if (gapNm > maxTravelNm) return null; // cannot physically reach it in the horizon
 
   const stepNm = Math.max(0.05, Math.min(2, zone.radiusNm / 2, 0.5));
@@ -106,7 +110,7 @@ export function firstEntry(target, zone, opts = DEFAULTS) {
 export function zoneStatus(target, zone, opts = DEFAULTS) {
   const alt = typeof target.alt === 'number' ? target.alt : null;
   const insideNow = zoneContains(zone, target.lat, target.lon) && inAltitudeBand(zone, alt);
-  const edgeDistanceNm = distanceNm(target.lat, target.lon, zone.centre.lat, zone.centre.lon) - zone.radiusNm;
+  const edgeDistanceNm = distanceNm(target.lat, target.lon, zone.center.lat, zone.center.lon) - zone.radiusNm;
 
   if (insideNow) {
     return { state: 'inside', etaSec: 0, edgeDistanceNm, lat: target.lat, lon: target.lon, alt };
@@ -288,6 +292,138 @@ export function evaluateTarget(target, zones, options = {}) {
   return { alerts, zoneResults };
 }
 
+/**
+ * Closest Point of Approach between two vessels, by constant-velocity
+ * relative motion. This is the standard marine collision-risk calculation:
+ * reduce two moving ships to one relative track, then ask how close that
+ * track comes and when.
+ *
+ * Working in a local tangent plane in nautical miles keeps it to plain vector
+ * arithmetic, and at these ranges (tens of miles) the flat-earth error is far
+ * smaller than the uncertainty in assuming neither ship turns.
+ */
+export function closestApproach(a, b) {
+  const lat0 = (a.lat + b.lat) / 2;
+  const cosLat = Math.cos((lat0 * Math.PI) / 180);
+
+  // Positions relative to each other, in NM.
+  const rx = (b.lon - a.lon) * 60 * cosLat;
+  const ry = (b.lat - a.lat) * 60;
+
+  const velocity = (t) => {
+    const speed = t.sog ?? 0;
+    const course = t.cog ?? t.heading ?? 0;
+    const rad = (course * Math.PI) / 180;
+    return { x: speed * Math.sin(rad), y: speed * Math.cos(rad) };
+  };
+
+  const va = velocity(a);
+  const vb = velocity(b);
+  const vx = vb.x - va.x;
+  const vy = vb.y - va.y;
+
+  const rangeNm = Math.hypot(rx, ry);
+  const closingSpeed = Math.hypot(vx, vy);
+
+  // Parallel or both stopped: the range is not going to change.
+  if (closingSpeed < 0.05) return { rangeNm, cpaNm: rangeNm, tcpaSec: 0, closing: false };
+
+  const tHours = -(rx * vx + ry * vy) / (closingSpeed * closingSpeed);
+  if (tHours <= 0) {
+    // Already past the closest point, or opening.
+    return { rangeNm, cpaNm: rangeNm, tcpaSec: 0, closing: false };
+  }
+
+  const cpaNm = Math.hypot(rx + vx * tHours, ry + vy * tHours);
+  return { rangeNm, cpaNm, tcpaSec: tHours * 3600, closing: true };
+}
+
+/**
+ * Pairwise close-approach detection over vessels.
+ *
+ * Two guards keep this useful rather than noisy. Both vessels must be making
+ * way: a harbor full of moored ships is all within a cable of each other and
+ * none of it is a risk. And pairs beyond the screening range are skipped via
+ * a coarse spatial grid, so this stays linear in practice rather than
+ * quadratic in the number of contacts.
+ */
+export function detectCloseApproaches(vessels, options = {}) {
+  const opts = { ...DEFAULTS, ...options };
+  const alerts = [];
+
+  const moving = vessels.filter(
+    (v) =>
+      typeof v.sog === 'number' &&
+      v.sog >= opts.cpaMinSpeedKt &&
+      (v.cog !== null || v.heading !== null) &&
+      v.navStatus !== 1 && // at anchor
+      v.navStatus !== 5 // moored
+  );
+  if (moving.length < 2) return alerts;
+
+  // Coarse spatial buckets, sized to the screening range.
+  const cell = Math.max(0.1, opts.cpaScreenNm / 60);
+  const buckets = new Map();
+  const keyFor = (lat, lon) => `${Math.floor(lat / cell)}:${Math.floor(lon / cell)}`;
+  for (const vessel of moving) {
+    const key = keyFor(vessel.lat, vessel.lon);
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(vessel);
+  }
+
+  const seen = new Set();
+  for (const vessel of moving) {
+    const gx = Math.floor(vessel.lat / cell);
+    const gy = Math.floor(vessel.lon / cell);
+
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (const other of buckets.get(`${gx + dx}:${gy + dy}`) || []) {
+          if (other.id === vessel.id) continue;
+
+          // One alert per pair, with a stable identity either way round.
+          const [first, second] = String(vessel.id) < String(other.id) ? [vessel, other] : [other, vessel];
+          const pairKey = `${first.id}:${second.id}`;
+          if (seen.has(pairKey)) continue;
+          seen.add(pairKey);
+
+          const approach = closestApproach(first, second);
+          if (approach.rangeNm > opts.cpaScreenNm) continue;
+          if (!approach.closing) continue;
+          if (approach.cpaNm > opts.cpaAlertNm) continue;
+          if (approach.tcpaSec > opts.cpaHorizonSec) continue;
+
+          const band = approach.cpaNm <= 0.1 ? 3 : approach.cpaNm <= 0.25 ? 2 : 1;
+          const urgency = approach.tcpaSec <= 900 ? 0 : 1;
+          const severity = SEVERITY_BY_RANK[clampRank(band - urgency)];
+
+          alerts.push({
+            id: `pair:${pairKey}`,
+            rule: 'close-approach',
+            severity,
+            targetId: first.id,
+            targetKind: 'vessel',
+            targetLabel: first.label,
+            otherId: second.id,
+            otherLabel: second.label,
+            etaSec: approach.tcpaSec,
+            cpaNm: approach.cpaNm,
+            rangeNm: approach.rangeNm,
+            pair: [
+              { id: first.id, lat: first.lat, lon: first.lon },
+              { id: second.id, lat: second.lat, lon: second.lon },
+            ],
+            title: `Close approach: ${first.label} and ${second.label}`,
+            detail: `Projected to pass ${approach.cpaNm.toFixed(2)} NM apart in ${mins(approach.tcpaSec)}, currently ${approach.rangeNm.toFixed(1)} NM apart.`,
+          });
+        }
+      }
+    }
+  }
+
+  return alerts;
+}
+
 /** Run the engine across every target. */
 export function evaluateAll(targets, zones, options = {}) {
   const alerts = [];
@@ -311,11 +447,17 @@ export function evaluateAll(targets, zones, options = {}) {
     }
   }
 
+  // Pairwise vessel risk, which no per-target pass can see.
+  const approaches = options.closeApproaches === false
+    ? []
+    : detectCloseApproaches(targets.filter((t) => t.kind === 'vessel'), options);
+  alerts.push(...approaches);
+
   alerts.sort((a, b) => {
     const bySeverity = SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity];
     if (bySeverity !== 0) return bySeverity;
     return (a.etaSec ?? 1e9) - (b.etaSec ?? 1e9);
   });
 
-  return { alerts, byTarget, zoneAlertCounts };
+  return { alerts, byTarget, zoneAlertCounts, approaches };
 }

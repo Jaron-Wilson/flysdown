@@ -1,7 +1,7 @@
 /**
  * GET /api/vessels?lat=<deg>&lon=<deg>&radius=<km>
  *
- * AIS proxy + normaliser. The only genuinely keyless live AIS feed is
+ * AIS proxy + normalizer. The only genuinely keyless live AIS feed is
  * Fintraffic's Digitraffic service (CC BY 4.0), which covers the Baltic /
  * Gulf of Finland. Everything below is written against a provider interface so
  * a global feed (e.g. aisstream.io, which needs a free key and a websocket)
@@ -50,7 +50,7 @@ function shipTypeLabel(code) {
   return 'Unknown';
 }
 
-/** Coarse class used for icon + colour choices on the client. */
+/** Coarse class used for icon + color choices on the client. */
 function shipClass(code) {
   if (typeof code !== 'number') return 'other';
   if (code >= 80 && code <= 89) return 'tanker';
@@ -67,8 +67,8 @@ const NAV_STATUS = {
   0: 'Under way using engine',
   1: 'At anchor',
   2: 'Not under command',
-  3: 'Restricted manoeuvrability',
-  4: 'Constrained by draught',
+  3: 'Restricted maneuverability',
+  4: 'Constrained by draft',
   5: 'Moored',
   6: 'Aground',
   7: 'Engaged in fishing',
@@ -165,7 +165,7 @@ export const onRequestGet = async (context) => {
           shipClass: shipClass(num(meta.shipType)),
           destination: (meta.destination || '').trim() || null,
           eta: decodeEta(meta.eta),
-          draughtM: num(meta.draught) ? meta.draught / 10 : null,
+          draftM: num(meta.draught) ? meta.draught / 10 : null,
           lengthM: num(meta.referencePointA) && num(meta.referencePointB)
             ? meta.referencePointA + meta.referencePointB
             : null,
