@@ -196,6 +196,14 @@ function normalizeCoverage(coverage) {
 export class TargetStore {
   constructor() {
     this.targets = new Map();
+    // A target the operator is looking at is never pruned. Framing a
+    // transatlantic route zooms far outside the feed's coverage radius, and
+    // dropping the very aircraft whose route is on screen would be absurd.
+    this.protectedKey = null;
+  }
+
+  protect(key) {
+    this.protectedKey = key;
   }
 
   /**
@@ -237,6 +245,7 @@ export class TargetStore {
     for (const [key, target] of this.targets) {
       if (target.kind !== kind) continue;
       if (seen.has(key)) continue;
+      if (key === this.protectedKey) continue;
 
       const outsideCoverage = coverages.length ? !insideAny(target, coverages) : false;
       const unreportedFor = fetchedAt - target.updatedAt;
@@ -259,6 +268,7 @@ export class TargetStore {
     let removed = 0;
     for (const [key, target] of this.targets) {
       if (target.kind !== kind) continue;
+      if (key === this.protectedKey) continue;
       if (!insideAny(target, coverages)) {
         this.targets.delete(key);
         removed += 1;

@@ -8,7 +8,8 @@
     "deploy": "wrangler pages deploy public --project-name=flysdown --branch=main --commit-dirty=true",
     "relay": "node tools/relay.mjs",
     "relay:once": "node tools/relay.mjs --once",
-    "paper": "node tools/build-paper.mjs"
+    "paper": "node tools/build-paper.mjs",
+    "linkedin": "node tools/build-linkedin.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.13",

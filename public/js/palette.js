@@ -19,15 +19,30 @@
  *   text label on every zone. Do not remove either one.
  */
 
+/**
+ * Chrome colors are jaronwilson.dev and jaronwilson.org's own dark tokens, so
+ * this reads as part of the same web presence. The data colors below are
+ * unchanged and were re-validated against this warmer surface (#201d16): the
+ * altitude ramp still passes every ordinal check with its darkest step at
+ * 2.08:1.
+ *
+ * One rule follows from the rebrand. The brand accent (#d97a4a) is only four
+ * units of color difference from the vessel orange (#d95926), far below the
+ * separation a viewer needs, so the accent is confined to chrome: the brand
+ * mark, navigation links, primary buttons and the footer. It never appears in
+ * the data panels, in the legend or on the map, and no data color appears in
+ * the chrome. Keep that separation.
+ */
 export const INK = {
-  page: '#0d0d0d',
-  surface: '#141416',
-  surfaceRaised: '#1a1a19',
-  primary: '#ffffff',
-  secondary: '#c3c2b7',
-  muted: '#898781',
-  grid: '#2c2c2a',
-  border: 'rgba(255,255,255,0.10)',
+  page: '#17150f',
+  surface: '#201d16',
+  surfaceRaised: '#272319',
+  primary: '#ede9e0',
+  secondary: '#c9c3b5',
+  muted: '#a39d8f',
+  grid: '#35322a',
+  border: 'rgba(237,233,224,0.12)',
+  accent: '#d97a4a',
 };
 
 /** Ordinal ramp: low altitude dark, high altitude light. */

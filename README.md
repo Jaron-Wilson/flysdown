@@ -13,11 +13,20 @@ heading into restricted airspace.
 sources and their quirks, the architecture, the detection mathematics, the
 airspace pipeline, the visual encoding, the verification, and a provenance
 table separating what was measured from what is documented or standardised.
-`docs/flysdown-paper.pdf` is the same thing paginated (9 pages), rebuilt with:
+`docs/flysdown-paper.pdf` is the same thing paginated (9 pages), typeset in the
+same palette and type as jaronwilson.dev and jaronwilson.org.
+`docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
+sized for LinkedIn's document posts, which render a PDF one page per card.
 
 ```bash
-npm run paper
+npm run paper      # docs/flysdown-paper.pdf
+npm run linkedin   # docs/flysdown-linkedin.pdf, needs screenshots in tmp/deck
 ```
+
+The dashboard itself uses those sites' own dark tokens (paper `#17150f`,
+surface `#201d16`, accent `#d97a4a`) with Fraunces and Inter, so the three
+read as one person. The brand accent stays in the chrome and never touches the
+map: it is too close to the vessel orange to be told apart.
 
 ## What it does
 

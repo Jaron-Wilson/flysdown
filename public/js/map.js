@@ -497,7 +497,9 @@ export class MapView {
           id: zone.id,
           kind: zone.kind,
           color: style.color,
-          fillOpacity: breached ? 0.22 : 0.08,
+          // Advisory zones (the SFRA) are context rather than a hazard, so
+          // they sit back further than a real restriction.
+          fillOpacity: breached ? 0.22 : zone.advisory ? 0.035 : 0.08,
           breached,
         },
         geometry: { type: 'Polygon', coordinates: [zone.ring] },

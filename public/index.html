@@ -11,6 +11,9 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://flysdown.jaronwilson.dev/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -173,11 +176,13 @@
 
 <footer class="statusbar">
   <span id="status-text">Starting up</span>
-  <span class="footer-links">
+  <span class="site-links">
     <button class="linkish" type="button" id="toggle-table">Data table</button>
-    <a href="https://jaronwilson.dev">jaronwilson.dev</a>
+    <a class="social" href="https://jaronwilson.dev/">jaronwilson.dev</a>
+    <a class="social" href="https://jaronwilson.org/">jaronwilson.org</a>
+    <a class="social" href="https://www.linkedin.com/in/jaron-wilson/" target="_blank" rel="noopener">LinkedIn</a>
   </span>
-  <span class="disclaimer">Not for navigation. Zone geometry is approximate. Projection is straight-line dead reckoning, not a flight plan.</span>
+  <span class="disclaimer">Built by Jaron Wilson. Not for navigation: zone geometry is approximate and the projection is straight-line dead reckoning, not a flight plan.</span>
 </footer>
 
 <dialog id="table-dialog">

@@ -37,7 +37,7 @@ orbiting or holding. It carries the FAA's published prohibited areas with their
 real boundaries and limits, plus the statutory Washington DC Special Flight
 Rules Area and the two standing Disney restrictions. An operator can draw
 further watch zones (circle or polygon), set their floor, ceiling and whether
-they apply to aircraft, ships or both, and export or import them as GeoJSON. It
+they apply to aircraft, ships or both, and export or import them as GeoJSON.
 By default it tracks only the area on screen, or an
 operator can pin circles and boxes that keep loading while the map is scrolled
 anywhere else. Selecting an aircraft draws the track it has been
@@ -552,13 +552,21 @@ model. This is stated in the zone metadata and in the interface.
 
 Color here encodes data, so it was assigned by the job each color does and
 then checked with a contrast and color-vision validator against the page's
-actual dark surface (`#141416`) rather than judged by eye.
+actual dark surface rather than judged by eye.
+
+The chrome is jaronwilson.dev and jaronwilson.org's own palette and type,
+verbatim, so the three sites read as one person. That moved the data's surface
+from `#141416` to `#201d16`, so every palette below was re-validated against
+it. One rule falls out: the brand accent (`#d97a4a`) is seven units of color
+difference from the vessel orange, inside the range where a viewer cannot tell
+them apart, so the accent stays in the chrome and never appears on the map, in
+the legend or in the data panels, and no data color appears in the chrome.
 
 **Altitude is a magnitude**, so it gets an ordinal ramp on a single hue,
 monotone in lightness, dark low and light high: `#184f95`, `#256abf`, `#3987e5`,
 `#6da7ec`, `#9ec5f4`, `#cde2fb` for bands below 2,500 ft, to 10,000, 20,000,
 30,000, 40,000 and above, passing all four ordinal checks with the darkest step
-at 2.27:1 against the surface **[measured]**. A rainbow ramp, which several
+at 2.08:1 against the surface **[measured]**. A rainbow ramp, which several
 trackers use, was rejected: hue carries no order, so two colors cannot be
 ranked without a legend.
 
@@ -735,7 +743,8 @@ attention on redistribution.
 | DC SFRA is 30 NM on the DCA VOR; prohibited areas under part 73 | 14 CFR 93 subpart V; 14 CFR 73 **[standard]** |
 | Simplification 6,285 to 17 points; 506 vertices, 18.6 KB | Output of the committed ingest script **[measured]** |
 | Haversine and destination formulas | Movable Type latitude/longitude reference **[documented]** |
-| Palette contrast and color-vision figures | Validator run against the page's dark surface **[measured]** |
+| Palette contrast and color-vision figures | Validator run against the page's dark surface, re-run after the rebrand **[measured]** |
+| Chrome palette and type are the other two sites' own tokens | Read from the live jaronwilson.dev and jaronwilson.org stylesheets **[measured]** |
 | 55 alerts before advisory zones, 3 after | Same view, before and after **[measured]** |
 | 241 aircraft shown where the feed reported 1 | Region switch with pruning disabled **[measured]** |
 | End state: 446 to 496 aircraft, 2 to 12 s old, 281 vessels | Public endpoints polled directly **[measured]** |

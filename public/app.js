@@ -273,6 +273,7 @@ function updateSelectedTrack() {
 
 function selectTarget(key) {
   state.selectedKey = key;
+  store.protect(key);
   const target = key ? store.get(key) : null;
   updateSelectedTrack();
   ui.renderDetail(target, {
@@ -419,6 +420,9 @@ function visibleTargets() {
   const inView = viewportFilter();
   const pinned = state.tracking.length > 0;
   return store.all().filter((target) => {
+    // The selected target stays visible wherever the map has been moved to,
+    // so its track and route do not vanish when framing a long flight.
+    if (target.key === state.selectedKey) return true;
     // Pinned areas define the working set, so their contacts stay in the
     // counts and the alerts even when scrolled off screen.
     if (pinned ? !insideTracking(target) : !inView(target)) return false;
