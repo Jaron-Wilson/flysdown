@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>flysdown - live air and sea traffic with geofence projection</title>
+<meta name="description" content="Live ADS-B aircraft and AIS vessel tracking on one map, with dead-reckoning projection and alerting when traffic is heading into restricted airspace.">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="flysdown - live air and sea traffic">
+<meta property="og:description" content="ADS-B and AIS on one map, with geofence projection and incursion alerting.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://flysdown.jaronwilson.dev/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#map">Skip to map</a>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">FD</span>
+    <span class="brand-text">
+      <strong>flysdown</strong>
+      <span>live air and sea traffic, with geofence projection</span>
+    </span>
+  </div>
+
+  <div class="topbar-controls">
+    <label class="field">
+      <span class="field-label">Region</span>
+      <select id="region-select">
+        <option value="dc">Washington DC (restricted airspace)</option>
+        <option value="gof">Gulf of Finland (AIS coverage)</option>
+        <option value="nyc">New York</option>
+        <option value="lon">London</option>
+        <option value="socal">Southern California</option>
+      </select>
+    </label>
+    <button id="pause-btn" class="btn" type="button" aria-pressed="false">Pause</button>
+  </div>
+
+  <div class="feed-chips" id="feed-chips" role="status" aria-live="polite"></div>
+</header>
+
+<main class="layout">
+  <aside class="panel panel-left" id="panel-left" aria-label="Filters and zones">
+    <section class="block">
+      <h2 class="block-title">Now tracking</h2>
+      <div class="tiles" id="stat-tiles"></div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2 class="block-title">Aircraft by altitude</h2>
+        <span class="block-note" id="alt-total"></span>
+      </div>
+      <div class="chart" id="alt-chart"></div>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Layers and filters</h2>
+      <div class="controls" id="filter-controls">
+        <label class="check"><input type="checkbox" id="f-aircraft" checked> <span>Aircraft (ADS-B)</span></label>
+        <label class="check"><input type="checkbox" id="f-vessels" checked> <span>Vessels (AIS)</span></label>
+        <label class="check"><input type="checkbox" id="f-trails" checked> <span>Track history</span></label>
+        <label class="check"><input type="checkbox" id="f-labels" checked> <span>Map labels</span></label>
+        <label class="check"><input type="checkbox" id="f-ground"> <span>Include targets on the ground</span></label>
+        <label class="check"><input type="checkbox" id="f-military"> <span>Military and special-interest only</span></label>
+        <label class="check"><input type="checkbox" id="f-alerts"> <span>Alerting targets only</span></label>
+        <label class="field">
+          <span class="field-label">Projection horizon
+            <output id="horizon-out">10 min</output>
+          </span>
+          <input type="range" id="horizon" min="2" max="20" step="1" value="10">
+        </label>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2 class="block-title">Zones</h2>
+        <span class="block-note" id="zone-count"></span>
+      </div>
+      <div class="draw-tools">
+        <button class="btn btn-sm" type="button" id="draw-circle">Draw circle</button>
+        <button class="btn btn-sm" type="button" id="draw-polygon">Draw polygon</button>
+        <button class="btn btn-sm" type="button" id="draw-finish" hidden>Finish</button>
+        <button class="btn btn-sm" type="button" id="draw-cancel" hidden>Cancel</button>
+      </div>
+      <p class="hint" id="draw-hint" hidden></p>
+      <form class="zone-form" id="zone-form" hidden>
+        <label class="field"><span class="field-label">Name</span><input type="text" id="zf-name" required></label>
+        <label class="field"><span class="field-label">Kind</span>
+          <select id="zf-kind">
+            <option value="custom">Custom watch</option>
+            <option value="prohibited">Prohibited</option>
+            <option value="restricted">Restricted</option>
+            <option value="tfr">TFR</option>
+            <option value="sfra">Special flight rules</option>
+          </select>
+        </label>
+        <div class="field-row">
+          <label class="field"><span class="field-label">Floor (ft)</span><input type="number" id="zf-floor" value="0" step="500"></label>
+          <label class="field"><span class="field-label">Ceiling (ft)</span><input type="number" id="zf-ceiling" value="60000" step="500"></label>
+        </div>
+        <fieldset class="field">
+          <legend class="field-label">Applies to</legend>
+          <label class="check"><input type="checkbox" id="zf-aircraft" checked> <span>Aircraft</span></label>
+          <label class="check"><input type="checkbox" id="zf-vessels"> <span>Vessels</span></label>
+        </fieldset>
+        <div class="form-actions">
+          <button class="btn btn-sm btn-primary" type="submit">Save zone</button>
+          <button class="btn btn-sm" type="button" id="zf-cancel">Discard</button>
+        </div>
+      </form>
+      <ul class="zone-list" id="zone-list"></ul>
+      <div class="zone-io">
+        <button class="btn btn-sm" type="button" id="zone-export">Export GeoJSON</button>
+        <label class="btn btn-sm" for="zone-import">Import GeoJSON<input type="file" id="zone-import" accept=".json,.geojson,application/geo+json,application/json" hidden></label>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block-title">Legend</h2>
+      <div class="legend" id="legend"></div>
+    </section>
+  </aside>
+
+  <div class="map-wrap">
+    <div id="map" tabindex="-1"></div>
+    <div class="map-tooltip" id="map-tooltip" hidden></div>
+    <div class="map-banner" id="map-banner" hidden></div>
+  </div>
+
+  <aside class="panel panel-right" aria-label="Alerts and target detail">
+    <section class="block">
+      <div class="block-head">
+        <h2 class="block-title">Alerts</h2>
+        <span class="block-note" id="alert-summary"></span>
+      </div>
+      <ul class="alert-list" id="alert-list" role="list"></ul>
+    </section>
+
+    <section class="block" id="detail-block">
+      <h2 class="block-title">Target detail</h2>
+      <div id="detail"><p class="hint">Select an aircraft or vessel on the map.</p></div>
+    </section>
+  </aside>
+</main>
+
+<footer class="statusbar">
+  <span id="status-text">Starting up</span>
+  <span class="footer-links">
+    <button class="linkish" type="button" id="toggle-table">Data table</button>
+    <a href="https://jaronwilson.dev">jaronwilson.dev</a>
+  </span>
+  <span class="disclaimer">Not for navigation. Zone geometry is approximate. Projection is straight-line dead reckoning, not a flight plan.</span>
+</footer>
+
+<dialog id="table-dialog">
+  <div class="dialog-head">
+    <h2>Current contacts</h2>
+    <button class="btn btn-sm" type="button" id="table-close">Close</button>
+  </div>
+  <div class="table-wrap" id="table-wrap"></div>
+</dialog>
+
+<script src="vendor/maplibre-gl.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

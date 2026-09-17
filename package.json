@@ -1,0 +1,14 @@
+{
+  "name": "flysdown",
+  "private": true,
+  "description": "Live ADS-B and AIS dashboard with geofence projection - flysdown.jaronwilson.dev",
+  "scripts": {
+    "dev": "wrangler pages dev public --port 8795",
+    "test": "node --test tests/",
+    "deploy": "wrangler pages deploy public --project-name=flysdown --branch=main --commit-dirty=true"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "wrangler": "^4.133.0"
+  }
+}

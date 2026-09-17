@@ -1,0 +1,5 @@
+# flysdown - Cloudflare Pages (static assets in public/, API in functions/).
+# Deploy: npm run deploy
+name = "flysdown"
+compatibility_date = "2026-09-16"
+pages_build_output_dir = "public"
