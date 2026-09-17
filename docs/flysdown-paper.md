@@ -46,7 +46,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. Zone activation by NOTAM is not modelled, so a restricted area
 that is cold today is still drawn.
 
-The system is 4,437 lines across browser modules, edge functions, the shared
+The system is 4,565 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
