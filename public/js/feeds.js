@@ -16,6 +16,8 @@ const DROP_AFTER_MS = 3 * 60 * 1000;
 // does not accumulate ghosts.
 const GRACE_MS = 45 * 1000;
 const MAX_BACKOFF_MS = 60000;
+// Below this, data is current enough to present as live.
+const STALE_AFTER_MS = 45000;
 
 /**
  * Upstreams answer refusals with whole HTML error pages, and the endpoint
@@ -86,16 +88,22 @@ export class Feed {
         throw error;
       }
 
+      // Age decides whether this counts as live, not which code path served
+      // it: a relay snapshot from three seconds ago is live data.
+      const ageMs = json.ageMs || 0;
+      const reallyStale = Boolean(json.stale) && ageMs > STALE_AFTER_MS;
+
       this.failures = 0;
       this.report({
-        state: json.stale ? 'degraded' : 'live',
+        state: reallyStale ? 'degraded' : 'live',
         lastSuccess: Date.now(),
-        lastError: json.stale ? `serving the last good picture, ${Math.round((json.ageMs || 0) / 1000)}s old` : null,
+        lastError: reallyStale ? `last good picture, ${Math.round(ageMs / 1000)}s old` : null,
         latencyMs: Math.round(performance.now() - started),
         count: json.count ?? 0,
         source: json.source || null,
-        stale: Boolean(json.stale),
-        ageMs: json.ageMs || 0,
+        via: json.via || 'edge',
+        stale: reallyStale,
+        ageMs,
         cache: res.headers.get('x-flysdown-cache'),
       });
       this.onData?.(json);
@@ -233,6 +241,27 @@ export class TargetStore {
     }
     return features;
   }
+}
+
+/**
+ * Seconds since this target last reported a position.
+ *
+ * Two things add up: how long ago the receiver network last heard from it
+ * (the feed's own seen_pos, or the AIS report timestamp), plus how long ago we
+ * fetched that answer. Serving a five minute old relay snapshot and then
+ * claiming every contact in it is two seconds old would be a lie.
+ */
+export function targetAgeSec(target, now = Date.now()) {
+  const sinceFetch = Math.max(0, (now - (target.updatedAt || now)) / 1000);
+
+  if (target.kind === 'vessel') {
+    return Number.isFinite(target.reportedAt)
+      ? Math.max(0, (now - target.reportedAt) / 1000)
+      : sinceFetch;
+  }
+
+  const sinceHeard = target.seenPos ?? target.seen;
+  return sinceFetch + (Number.isFinite(sinceHeard) ? sinceHeard : 0);
 }
 
 /** Viewport -> feed query. Aircraft upstreams cap the radius at 250 NM. */

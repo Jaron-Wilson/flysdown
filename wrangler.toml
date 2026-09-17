@@ -3,3 +3,10 @@
 name = "flysdown"
 compatibility_date = "2026-09-16"
 pages_build_output_dir = "public"
+
+# Relay store: snapshots pushed by tools/relay.mjs from an ordinary IP, plus
+# the list of regions people are currently viewing. See README, "Relay".
+[[d1_databases]]
+binding = "RELAY_DB"
+database_name = "flysdown-relay"
+database_id = "9bb48264-c1af-4529-9aff-c4b7eb95d14b"

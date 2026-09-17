@@ -7,6 +7,7 @@
 
 import { INK, altitudeBand, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, SEVERITY, zoneStyle } from './palette.js';
 import { circleRing } from './geo.js';
+import { targetAgeSec } from './feeds.js';
 
 const ICON_SIZE = 44;
 const PLANE = [[22, 3], [25, 16], [40, 26], [40, 30], [25, 24], [24, 35], [30, 39], [30, 41], [22, 38], [14, 41], [14, 39], [20, 35], [19, 24], [4, 30], [4, 26], [19, 16]];
@@ -220,6 +221,11 @@ export class MapView {
         'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 10, 0.75, 14, 0.95],
         'icon-allow-overlap': true,
       },
+      paint: {
+        // A contact that has not reported for a while fades, so a stale
+        // picture is visible as a stale picture.
+        'icon-opacity': ['interpolate', ['linear'], ['get', 'ageSec'], 45, 1, 240, 0.3],
+      },
     });
 
     this.map.addLayer({
@@ -232,6 +238,11 @@ export class MapView {
         'icon-rotation-alignment': 'map',
         'icon-size': ['interpolate', ['linear'], ['zoom'], 5, 0.55, 10, 0.8, 14, 1],
         'icon-allow-overlap': true,
+      },
+      paint: {
+        // A contact that has not reported for a while fades, so a stale
+        // picture is visible as a stale picture.
+        'icon-opacity': ['interpolate', ['linear'], ['get', 'ageSec'], 45, 1, 240, 0.3],
       },
     });
 
@@ -354,6 +365,7 @@ export class MapView {
         alt: t.alt ?? null,
         onGround: t.onGround,
         speed: t.groundSpeed ?? null,
+        ageSec: Math.round(targetAgeSec(t)),
       },
       geometry: { type: 'Point', coordinates: [t.lon, t.lat] },
     })));
@@ -369,6 +381,7 @@ export class MapView {
         speed: t.sog ?? null,
         typeDesc: t.typeDesc || null,
         navStatus: t.navStatusDesc || null,
+        ageSec: Math.round(targetAgeSec(t)),
       },
       geometry: { type: 'Point', coordinates: [t.lon, t.lat] },
     })));

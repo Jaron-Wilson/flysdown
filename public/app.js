@@ -187,15 +187,25 @@ function handleViewChange(viewport) {
   if (vesselsChanged) feeds.vessels.poll();
 }
 
+/** One line describing where the data came from and how old it is. */
+function describeFeed(label, status) {
+  if (!status || status.state === 'idle') return `${label}: starting`;
+  if (status.state === 'paused') return `${label}: paused`;
+  if (status.state === 'down') return `${label}: ${status.lastError || 'unavailable'}`;
+
+  const parts = [status.source || 'unknown'];
+  if (status.ageMs > 1500) parts.push(`data ${fmt.duration(status.ageMs / 1000)} old`);
+  parts.push(`polled ${fmt.ago(status.lastSuccess)}`);
+  if (status.state === 'degraded' && status.lastError) parts.push(status.lastError);
+  return `${label}: ${parts.join(', ')}`;
+}
+
 function updateStatusLine() {
-  const air = state.feeds.aircraft || {};
-  const sea = state.feeds.vessels || {};
-  const parts = [
-    `ADS-B: ${air.state === 'live' ? `${air.source}, ${fmt.ago(air.lastSuccess)}` : air.state}`,
-    `AIS: ${sea.state === 'live' ? `${sea.source}, ${fmt.ago(sea.lastSuccess)}` : sea.state}`,
+  ui.setStatus([
+    describeFeed('ADS-B', state.feeds.aircraft),
+    describeFeed('AIS', state.feeds.vessels),
     `horizon ${Math.round(state.horizonSec / 60)} min`,
-  ];
-  ui.setStatus(parts.join('  |  '));
+  ].join('  |  '));
 }
 
 /* ---------- the tick: evaluate then render ---------- */
@@ -361,7 +371,13 @@ function updateBanner(vesselCount) {
   }
 
   if (state.filters.aircraft && air.stale) {
-    ui.showBanner(`Aircraft positions are ${Math.round(air.ageMs / 1000)} s old: the upstream is rate-limiting the edge, so this is the last good picture.`, null);
+    const seconds = Math.round(air.ageMs / 1000);
+    ui.showBanner(
+      air.via === 'relay'
+        ? `Aircraft positions are ${seconds} s old: the relay has not pushed a fresh snapshot. Check that it is still running.`
+        : `Aircraft positions are ${seconds} s old: the aggregators are rate-limiting the edge, so this is the last good picture.`,
+      null
+    );
     return;
   }
 

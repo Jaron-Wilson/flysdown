@@ -6,6 +6,7 @@
  */
 
 import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
+import { targetAgeSec } from './feeds.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -41,6 +42,15 @@ export const fmt = {
   },
   nm(v) {
     return typeof v === 'number' ? `${v.toFixed(1)} NM` : 'unknown';
+  },
+  /** Compact duration for contact ages: 8s, 2m 05s, 1h 04m. */
+  duration(sec) {
+    if (!Number.isFinite(sec)) return 'unknown';
+    const s = Math.max(0, Math.round(sec));
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${String(s % 60).padStart(2, '0')}s`;
+    return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
   },
 };
 
@@ -200,7 +210,8 @@ export class UI {
           ['Registration', target.registration || 'unknown'],
           ['Operator', target.operator || 'unknown'],
           ['ICAO hex', target.id],
-          ['Last message', `${target.seen ?? '?'} s ago`],
+          ['Last position report', `${fmt.duration(targetAgeSec(target))} ago`],
+          ['Last any message', target.seen === null || target.seen === undefined ? 'unknown' : `${fmt.duration(target.seen)} ago`],
           ['Feed', target.source || 'unknown'],
         ]
       : [
@@ -215,6 +226,7 @@ export class UI {
           ['Length', target.lengthM ? `${target.lengthM} m` : 'not reported'],
           ['MMSI', target.mmsi],
           ['Call sign', target.callsign || 'not reported'],
+          ['Last position report', `${fmt.duration(targetAgeSec(target))} ago`],
           ['Feed', target.source || 'unknown'],
         ];
 
@@ -329,7 +341,11 @@ export class UI {
       <div class="legend-group"><h3>Aircraft altitude</h3>${altRows}</div>
       <div class="legend-group"><h3>Vessels</h3>${vesselRows}</div>
       <div class="legend-group"><h3>Alert severity</h3>${severityRows}</div>
-      <div class="legend-group"><h3>Zone kind (outline style also differs)</h3>${zoneRows}</div>`;
+      <div class="legend-group"><h3>Zone kind (outline style also differs)</h3>${zoneRows}</div>
+      <div class="legend-group"><h3>Contact age</h3>
+        <div class="legend-row"><span class="legend-swatch" style="background:${VESSEL_STATIC};opacity:1"></span>reported in the last 45 s</div>
+        <div class="legend-row"><span class="legend-swatch" style="background:${VESSEL_STATIC};opacity:0.35"></span>faded: position is going stale</div>
+      </div>`;
   }
 
   /* ---------- feed health ---------- */
@@ -341,7 +357,7 @@ export class UI {
         const colour = { live: SEVERITY.good.color, degraded: SEVERITY.warning.color, down: SEVERITY.critical.color, paused: SEVERITY.notice.color }[state] || SEVERITY.notice.color;
         const glyph = { live: '●', degraded: '△', down: '!', paused: '‖' }[state] || '●';
         const detail = state === 'live'
-          ? `<b>${int(status.count)}</b> targets · ${status.latencyMs} ms`
+          ? `<b>${int(status.count)}</b> targets · ${fmt.ago(status.lastSuccess)}`
           : state === 'paused'
             ? 'paused'
             : status.stale
@@ -407,6 +423,8 @@ export class UI {
         Number.isFinite(speed) ? `${int(speed)} kt` : null,
       ].filter(Boolean).join(' \u00b7 ') || 'click for detail';
     }
+    const ageSec = Number(props.ageSec);
+    if (Number.isFinite(ageSec) && ageSec > 20) line += ` \u00b7 ${fmt.duration(ageSec)} ago`;
     node.innerHTML = `<b>${escapeHtml(props.label)}</b><span>${escapeHtml(line)}</span>`;
     const wrap = node.parentElement.getBoundingClientRect();
     const left = Math.min(point.x + 14, wrap.width - node.offsetWidth - 10);
@@ -454,14 +472,15 @@ export class UI {
           <td class="num">${escapeHtml(fmt.speed(t.groundSpeed ?? t.sog))}</td>
           <td class="num">${escapeHtml(fmt.bearing(t.track ?? t.cog))}</td>
           <td>${escapeHtml(t.typeDesc || t.typeCode || '-')}</td>
+          <td class="num">${escapeHtml(fmt.duration(targetAgeSec(t)))}</td>
           <td>${escapeHtml(t.source || '-')}</td>
         </tr>`)
       .join('');
 
     this.refs.tableWrap.innerHTML = `
       <table>
-        <thead><tr><th>Label</th><th>Kind</th><th>Lat</th><th>Lon</th><th>Altitude</th><th>Speed</th><th>Course</th><th>Type</th><th>Feed</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="9">No contacts.</td></tr>'}</tbody>
+        <thead><tr><th>Label</th><th>Kind</th><th>Lat</th><th>Lon</th><th>Altitude</th><th>Speed</th><th>Course</th><th>Type</th><th>Last report</th><th>Feed</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="10">No contacts.</td></tr>'}</tbody>
       </table>`;
   }
 }

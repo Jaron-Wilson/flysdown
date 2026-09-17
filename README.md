@@ -25,8 +25,17 @@ heading into restricted airspace.
 - Lets you draw your own watch zones (circle or polygon) in the browser, set
   their floor, ceiling and whether they apply to aircraft, vessels or both,
   then export or import them as GeoJSON. Drawn zones persist in localStorage.
-- Shows its own health: which upstream answered, how long ago, and whether what
-  you are looking at is live or the last good picture.
+- Tracks only the area on screen. The upstreams are queried with a centre and
+  a radius, which always covers more than the visible rectangle, so everything
+  outside the viewport is filtered out of the map, the counts, the alerts and
+  the table.
+- Timestamps every contact. Each target's age combines how long ago the
+  receiver network last heard from it with how long ago we fetched that answer,
+  so nothing claims to be fresher than it is. Contacts fade as their position
+  goes stale, and the detail panel, tooltip and data table all show the age.
+- Shows its own health: which path served the data (relay or direct), how old
+  that data is, when it was last polled, and whether what you are looking at is
+  live or the last good picture.
 
 ## Architecture
 
@@ -71,35 +80,100 @@ The FAA reissues that dataset every 56 days. The script simplifies the
 geometry: the FAA ships P-56B, a one mile circle, as a 6,285 point polygon,
 which becomes 17 points here with no visible difference.
 
-## Known constraint: ADS-B from Cloudflare's IPs
+## The relay, and why ADS-B needs one
 
-The AIS feed works fine from the edge. The ADS-B aggregators are harder,
-because they rate-limit by IP and a Worker egresses from addresses shared with
-every other Cloudflare customer. Measured from the deployed Worker:
+The AIS feed works fine from the edge. The ADS-B aggregators do not, because
+they rate-limit by IP and a Worker egresses from addresses shared with every
+other Cloudflare customer. Measured from the deployed Worker:
 
-| Upstream | Result from the edge | Result from a normal IP |
+| Upstream | From the edge | From an ordinary IP |
 | --- | --- | --- |
-| adsb.lol | 200 in ~460 ms, but HTTP 429 on roughly 7 attempts in 8 | works |
-| adsb.fi | HTTP 403, a Cloudflare bot challenge page | works |
-| OpenSky | HTTP 522, connection refused after ~20 s | works, 0.5 s |
+| adsb.lol | 200 in ~460 ms, but 429 on five to seven attempts in eight | works every time |
+| adsb.fi | 403, a Cloudflare bot challenge page | works every time, richest fields |
+| OpenSky | 522, no response after ~20 s (4 attempts in 4) | works, 0.5 s |
 
-So the endpoint caches a last-known-good answer for 5 minutes and serves it,
-clearly marked stale with its age, whenever every upstream refuses. In practice
-the map fills within a minute and then refreshes in bursts rather than smoothly.
-The UI says so rather than pretending.
+None of them send CORS headers, so the browser cannot fetch them directly
+either. The constraint is the shared egress address, not the choice of source,
+so switching sources does not fix it. What fixes it is moving the fetch.
 
-Three ways to make it properly live, in order of effort:
+**`tools/relay.mjs`** runs wherever you have a normal connection. It asks the
+site which areas people are currently looking at, fetches those from the
+aggregators, and pushes the snapshots back into Cloudflare D1, which
+`/api/aircraft` reads first. It is demand driven, so it follows the map rather
+than polling a fixed list, and when it is running the edge never touches an
+upstream at all, which is both reliable and considerably politer.
 
-1. **Ask for access.** airplanes.live and adsb.lol both grant higher-volume
-   access to described projects. That is an email, and then one line of config.
-2. **Relay from a normal IP.** Any always-on box polls the aggregators (which
-   works fine from a residential address) and pushes snapshots the Worker
-   reads. Needs a store the edge can read: a Durable Object works on the free
-   plan, Workers KV needs the paid plan for this write rate.
-3. **Leave it.** Stale-but-labelled is honest and costs nothing.
+```
+browser ---> /api/aircraft ---> D1 snapshot (fresh)         <--- relay pushes
+                 |                                               every 8 s
+                 +--> aggregators directly (usually refused)
+                 +--> last known good, labelled stale with its age
+```
 
-Local development has none of this problem, because requests come from your own
-address: `npm run dev` shows 130 or so aircraft over Washington immediately.
+### Running it
+
+```bash
+npm run relay:once          # one cycle, prints what it found
+npm run relay               # loop in the foreground
+
+# kept alive across crashes:
+forever start --uid flysdown-relay -a -l relay.log tools/relay.mjs
+forever list
+forever stop flysdown-relay
+tail -f relay.log
+```
+
+The token lives in `.env.relay` (gitignored) and must match the `RELAY_TOKEN`
+secret on the Pages project. To rotate it:
+
+```bash
+printf '%s' "<new token>" | npx wrangler pages secret put RELAY_TOKEN --project-name flysdown
+printf 'RELAY_TOKEN=%s\n' "<new token>" > .env.relay
+```
+
+To survive a reboot, a systemd user unit is the tidier option:
+
+```ini
+# ~/.config/systemd/user/flysdown-relay.service
+[Unit]
+Description=flysdown ADS-B relay
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/flysdown
+ExecStart=/usr/bin/env node tools/relay.mjs
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now flysdown-relay
+loginctl enable-linger "$USER"     # so it runs without an active login
+```
+
+### If the relay stops
+
+Nothing breaks. `/api/aircraft` falls back to the aggregators, then to the last
+known good picture held for five minutes, and the map says how old what it is
+showing is. The site degrades to intermittent rather than to empty.
+
+### Write budget
+
+D1's free allowance is 100,000 row writes a day. The relay writes one row per
+region per cycle: four regions at eight seconds is about 43,000 a day. The
+endpoint also records which regions are being viewed, throttled to one write
+per region every two minutes, and housekeeping sweeps run on about one relay
+poll in twenty. Raise `--interval` if that ever gets close.
+
+### Relay endpoints
+
+`GET /api/relay` lists the regions being viewed, with the age of each stored
+snapshot. `POST /api/relay` stores a snapshot. Both require
+`Authorization: Bearer $RELAY_TOKEN` and are for the poller only.
 
 ## Custom domain
 
@@ -117,7 +191,11 @@ npm install
 npm run dev        # wrangler pages dev, http://127.0.0.1:8795
 npm test           # detection engine unit tests, no network
 npm run deploy     # wrangler pages deploy
+npm run relay      # ADS-B relay, see above
 ```
+
+Local development needs no relay: requests come from your own address, so the
+aggregators answer directly.
 
 Browser smoke test (loads the page in headless Chromium, fails on any console
 error, exercises selection, region switching and zone drawing, writes
