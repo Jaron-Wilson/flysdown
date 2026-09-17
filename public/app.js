@@ -157,6 +157,24 @@ function handleViewChange(viewport) {
   const query = viewportQuery(viewport.centre, viewport.radiusNm);
   const aircraftChanged = feeds.aircraft.setQuery(query.aircraft);
   const vesselsChanged = feeds.vessels.setQuery(query.vessels);
+
+  // Forget anything the new view does not cover, straight away.
+  if (aircraftChanged) {
+    store.pruneToCoverage('aircraft', {
+      lat: Number(query.aircraft.lat),
+      lon: Number(query.aircraft.lon),
+      radiusNm: Number(query.aircraft.dist),
+    });
+  }
+  if (vesselsChanged) {
+    store.pruneToCoverage('vessel', {
+      lat: Number(query.vessels.lat),
+      lon: Number(query.vessels.lon),
+      radiusNm: Number(query.vessels.radius) / 1.852,
+    });
+  }
+  if (aircraftChanged || vesselsChanged) tick();
+
   if (state.paused) return;
   if (aircraftChanged) feeds.aircraft.poll();
   if (vesselsChanged) feeds.vessels.poll();

@@ -340,7 +340,10 @@ export class UI {
           ? `<b>${int(status.count)}</b> targets · ${status.latencyMs} ms`
           : state === 'paused'
             ? 'paused'
-            : escapeHtml(status.lastError || state);
+            : status.stale
+              // Keep the count visible: the picture is real, just not current.
+              ? `<b>${int(status.count)}</b> targets · stale ${Math.round(status.ageMs / 1000)}s`
+              : escapeHtml(status.lastError || state);
         return `<span class="chip" title="${escapeHtml(name)}: ${escapeHtml(status.lastError || state)}">
             <span class="glyph" style="color:${colour}" aria-hidden="true">${glyph}</span>
             <span>${escapeHtml(name)}</span>

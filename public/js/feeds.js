@@ -163,6 +163,24 @@ export class TargetStore {
     }
   }
 
+  /**
+   * Drop targets of one kind that fall outside an area. Called when the view
+   * moves, so a refused poll for the new area cannot leave the previous
+   * region's targets on the map pretending to be current.
+   */
+  pruneToCoverage(kind, coverage) {
+    if (!coverage) return 0;
+    let removed = 0;
+    for (const [key, target] of this.targets) {
+      if (target.kind !== kind) continue;
+      if (distanceNm(target.lat, target.lon, coverage.lat, coverage.lon) > coverage.radiusNm) {
+        this.targets.delete(key);
+        removed += 1;
+      }
+    }
+    return removed;
+  }
+
   all() {
     return [...this.targets.values()];
   }

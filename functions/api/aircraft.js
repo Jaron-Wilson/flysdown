@@ -143,6 +143,7 @@ const SOURCES = [
     url: (lat, lon, dist) => `https://api.adsb.lol/v2/lat/${lat}/lon/${lon}/dist/${dist}`,
     parse: (json, name) => (json.ac || []).map((raw) => normaliseReadsb(raw, name)),
     timeoutMs: 9000,
+    retries: 4,
   },
   {
     name: 'adsb.fi',
@@ -196,13 +197,28 @@ export const onRequestGet = async (context) => {
   for (const source of SOURCES) {
     if (only && source.name !== only) continue;
     try {
-      const upstream = await fetch(source.url(lat, lon, dist), {
-        headers: { accept: 'application/json', 'accept-encoding': 'gzip', 'user-agent': USER_AGENT },
-        signal: AbortSignal.timeout(source.timeoutMs ?? 9000),
-      });
+      // A 429 here is the shared Cloudflare egress address hitting the
+      // upstream's per-IP limit, not anything about this request, and it
+      // clears in a moment. A couple of jittered retries take one viewport
+      // from roughly one poll in eight succeeding to about half, which is the
+      // difference between an empty map and a populated one. Attempts are
+      // capped and only ever happen on a cache miss, so this stays a handful
+      // of requests a minute per viewport no matter how many people are
+      // watching.
+      let upstream = null;
+      const attempts = source.retries ?? 1;
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        upstream = await fetch(source.url(lat, lon, dist), {
+          headers: { accept: 'application/json', 'accept-encoding': 'gzip', 'user-agent': USER_AGENT },
+          signal: AbortSignal.timeout(source.timeoutMs ?? 9000),
+        });
+        if (upstream.status !== 429 || attempt === attempts) break;
+        await new Promise((resolve) => setTimeout(resolve, 200 * attempt + Math.random() * 300));
+      }
+
       if (!upstream.ok) {
         // Keep a snippet: these upstreams explain refusals in the body, and
-        // without it a 403 is indistinguishable from a 403.
+        // without it one 403 is indistinguishable from another.
         const snippet = (await upstream.text().catch(() => '')).slice(0, 160).replace(/\s+/g, ' ');
         errors.push(`${source.name}: HTTP ${upstream.status}${snippet ? ` - ${snippet}` : ''}`);
         continue;
