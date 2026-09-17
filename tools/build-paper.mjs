@@ -35,7 +35,7 @@ const html = `<!doctype html>
     --accent: #b3542b;
   }
 
-  @page { size: letter; margin: 0.52in 0.7in 0.5in; }
+  @page { size: letter; margin: 0.45in 0.5in 0.4in; }
 
   html { font-size: 8pt; }
   body {
@@ -121,10 +121,21 @@ const html = `<!doctype html>
   }
   pre code { background: none; padding: 0; font-size: inherit; }
 
-  a { color: var(--accent); text-decoration: none; word-break: break-all; }
+  a { color: var(--accent); text-decoration: none; word-break: normal; overflow-wrap: anywhere; }
+
+  /* The only links inside ordered lists are the reference URLs. */
+  ol li a { display: block; margin-top: 1pt; }
 
   blockquote { margin: 0 0 6pt; padding-left: 8pt; border-left: 2pt solid var(--border); color: var(--muted); }
 </style></head><body>${body}</body></html>`;
+
+// --html <path> dumps what is about to be rendered, which is the quickest way
+// to inspect one section without fighting a PDF viewer.
+const htmlIndex = process.argv.indexOf('--html');
+if (htmlIndex !== -1 && process.argv[htmlIndex + 1]) {
+  await writeFile(process.argv[htmlIndex + 1], html);
+  console.log(`wrote ${process.argv[htmlIndex + 1]}`);
+}
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
@@ -140,10 +151,10 @@ await page.pdf({
   displayHeaderFooter: true,
   headerTemplate: '<div></div>',
   footerTemplate:
-    '<div style="width:100%;font:7.5pt Inter,system-ui,sans-serif;color:#6b6862;padding:0 0.72in;display:flex;justify-content:space-between;">' +
+    '<div style="width:100%;font:7.5pt Inter,system-ui,sans-serif;color:#6b6862;padding:0 0.5in;display:flex;justify-content:space-between;">' +
     '<span>flysdown &middot; jaronwilson.dev</span>' +
     '<span class="pageNumber"></span></div>',
-  margin: { top: '0.52in', bottom: '0.5in', left: '0.7in', right: '0.7in' },
+  margin: { top: '0.45in', bottom: '0.4in', left: '0.5in', right: '0.5in' },
 });
 
 await browser.close();

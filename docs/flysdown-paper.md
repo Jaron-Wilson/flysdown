@@ -762,14 +762,20 @@ attention on redistribution.
    <https://www.faa.gov/air_traffic/publications/atpubs/aim_html/chap6_section_2.html>
 4. ITU-R Recommendation M.1371. <https://www.itu.int/rec/R-REC-M.1371>
 5. Fintraffic Digitraffic marine APIs and client instructions, CC BY 4.0.
-   <https://www.digitraffic.fi/en/marine-traffic/>, <https://www.digitraffic.fi/en/support/instructions/>, <https://meri.digitraffic.fi/swagger/>, <https://creativecommons.org/licenses/by/4.0/>
-6. ADSB.lol open data API (ODbL 1.0). <https://www.adsb.lol/docs/open-data/api/>, <https://api.adsb.lol/docs>, <https://opendatacommons.org/licenses/odbl/1.0/>
+   <https://www.digitraffic.fi/en/marine-traffic/>
+   <https://www.digitraffic.fi/en/support/instructions/>
+   <https://meri.digitraffic.fi/swagger/>
+   <https://creativecommons.org/licenses/by/4.0/>
+6. ADSB.lol open data API (ODbL 1.0). <https://www.adsb.lol/docs/open-data/api/>
+   <https://api.adsb.lol/docs>
+   <https://opendatacommons.org/licenses/odbl/1.0/>
 7. adsb.fi open data API, endpoints, rate limits and usage policy.
    <https://github.com/adsbfi/opendata>
 8. The OpenSky Network REST API.
    <https://openskynetwork.github.io/opensky-api/rest.html>
 9. FAA Aeronautical Information Services open data and the Special Use Airspace
-   feature service. <https://ais-faa.opendata.arcgis.com/>, <https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/ArcGIS/rest/services/Special_Use_Airspace/FeatureServer/0>
+   feature service. <https://ais-faa.opendata.arcgis.com/>
+   <https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/ArcGIS/rest/services/Special_Use_Airspace/FeatureServer/0>
 10. 14 CFR part 73, *Special Use Airspace*.
     <https://www.ecfr.gov/current/title-14/chapter-I/subchapter-D/part-73>
 11. 14 CFR part 93 subpart V, *Washington, DC Metropolitan Area SFRA*.
@@ -782,13 +788,16 @@ attention on redistribution.
 14. Cloudflare Pages Functions. <https://developers.cloudflare.com/pages/functions/>
 15. Cloudflare Workers Cache API.
     <https://developers.cloudflare.com/workers/runtime-apis/cache/>
-16. Cloudflare D1 pricing and limits. <https://developers.cloudflare.com/d1/platform/pricing/>, <https://developers.cloudflare.com/d1/platform/limits/>
-17. MapLibre GL JS API and style specification. <https://maplibre.org/maplibre-gl-js/docs/API/>, <https://maplibre.org/maplibre-style-spec/layers/>
+16. Cloudflare D1 pricing and limits. <https://developers.cloudflare.com/d1/platform/pricing/>
+   <https://developers.cloudflare.com/d1/platform/limits/>
+17. MapLibre GL JS API and style specification. <https://maplibre.org/maplibre-gl-js/docs/API/>
+   <https://maplibre.org/maplibre-style-spec/layers/>
 18. OpenFreeMap keyless OpenStreetMap vector tiles. <https://openfreemap.org/>
 19. OpenStreetMap contributors. <https://www.openstreetmap.org/copyright>
 20. adsbdb, aircraft and flight route API (MIT licence; route data credited to
     PlaneBase, David Taylor and Jim Mason).
-    <https://github.com/mrjackwills/adsbdb>, <https://api.adsbdb.com>
+    <https://github.com/mrjackwills/adsbdb>
+   <https://api.adsbdb.com>
 21. IMO Resolution A.823(19), *Performance Standards for Automatic Radar
     Plotting Aids (ARPAs)*, adopted 23 November 1995.
     <https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.823(19).pdf>

@@ -110,7 +110,7 @@ const slides = [
     ],
   },
   {
-    kind: 'cover',
+    kind: 'closing',
     eyebrow: 'Have a look',
     title: 'flysdown.jaronwilson.dev',
     lede:
@@ -149,7 +149,7 @@ function renderSlide(slide, index, total) {
     if (slide.caption) body.push(`<p class="caption">${escape(slide.caption)}</p>`);
   }
 
-  const classes = ['slide', slide.kind === 'cover' ? 'cover' : '', slide.image ? 'has-image' : 'text']
+  const classes = ['slide', slide.kind === 'cover' || slide.kind === 'closing' ? 'cover' : '', slide.kind === 'closing' ? 'closing' : '', slide.image ? 'has-image' : 'text']
     .filter(Boolean)
     .join(' ');
 
@@ -161,8 +161,8 @@ function renderSlide(slide, index, total) {
       ${body.join('\n      ')}
     </div>
     <div class="foot">
-      <span>${slide.kind === 'cover' ? escape(slide.meta) : 'flysdown.jaronwilson.dev'}</span>
-      <span>${slide.kind === 'cover' ? '' : number}</span>
+      <span>${slide.meta ? escape(slide.meta) : 'flysdown.jaronwilson.dev'}</span>
+      <span>${slide.meta ? '' : number}</span>
     </div>
   </section>`;
 }
@@ -224,9 +224,17 @@ const html = `<!doctype html>
     margin: 0 0 26px;
   }
   .cover h2 { font-size: 104px; margin-bottom: 20px; }
+  /* The closing headline is a URL: at cover size it runs off the card, and a
+     wrapped URL reads worse than a smaller one. */
+  .closing h2 { font-size: 66px; }
+  /* Backstop for any future headline with an unbreakable token. */
+  h2 { overflow-wrap: anywhere; }
 
   .lede { font-size: 33px; line-height: 1.45; color: var(--muted); margin: 0; max-width: 21ch; }
   .cover .lede { max-width: 26ch; }
+  /* The closing slide lists the sources, which reads better on a wider
+     measure than the cover's headline-style lede. */
+  .closing .lede { max-width: 38ch; font-size: 29px; }
   .body { font-size: 27px; line-height: 1.5; color: var(--muted); margin: 0 0 22px; }
 
   ul { margin: 0; padding-left: 30px; }
@@ -313,6 +321,59 @@ const page = await browser.newPage({ viewport: { width: 1080, height: 1080 } });
 await page.setContent(html, { waitUntil: 'load' });
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(1500);
+/**
+ * Shrink anything that does not fit, then refuse to build if something still
+ * overflows. A card is a fixed 1080 square with overflow hidden, so without
+ * this a headline or a long paragraph is silently clipped, which is exactly
+ * what happened to the closing slide.
+ */
+const fit = await page.evaluate(() => {
+  const report = [];
+
+  for (const [index, slide] of [...document.querySelectorAll('.slide')].entries()) {
+    const heading = slide.querySelector('h2');
+
+    // Width first: a headline with no break opportunity overflows sideways.
+    if (heading) {
+      let size = parseFloat(getComputedStyle(heading).fontSize);
+      while (size > 34 && heading.scrollWidth > heading.clientWidth + 1) {
+        size -= 2;
+        heading.style.fontSize = `${size}px`;
+      }
+    }
+
+    // Then height: step the body copy down together so proportions hold.
+    const copy = [...slide.querySelectorAll('.lede, .body, li, .caption, .cell-label, blockquote, .diagram')];
+    const originals = copy.map((node) => parseFloat(getComputedStyle(node).fontSize));
+    let scale = 1;
+    while (scale > 0.72 && slide.scrollHeight > slide.clientHeight + 1) {
+      scale -= 0.04;
+      copy.forEach((node, i) => {
+        node.style.fontSize = `${originals[i] * scale}px`;
+      });
+    }
+
+    report.push({
+      slide: index + 1,
+      headingPx: heading ? Math.round(parseFloat(getComputedStyle(heading).fontSize)) : null,
+      copyScale: Number(scale.toFixed(2)),
+      overflowX: Math.max(0, slide.scrollWidth - slide.clientWidth),
+      overflowY: Math.max(0, slide.scrollHeight - slide.clientHeight),
+    });
+  }
+
+  return report;
+});
+
+const clipped = fit.filter((s) => s.overflowX > 1 || s.overflowY > 1);
+for (const s of fit.filter((s) => s.copyScale < 1 || s.headingPx < 66)) {
+  console.log(`  slide ${s.slide}: fitted to heading ${s.headingPx}px, copy at ${Math.round(s.copyScale * 100)}%`);
+}
+if (clipped.length) {
+  console.error('content does not fit on:', JSON.stringify(clipped));
+  process.exit(1);
+}
+
 await page.pdf({ path: output, width: '1080px', height: '1080px', printBackground: true, pageRanges: `1-${slides.length}` });
 
 // --png <dir> also writes each slide as an image, for platforms that want
