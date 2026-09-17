@@ -7,6 +7,18 @@ heading into restricted airspace.
 - Production: https://flysdown.jaronwilson.dev (see "Custom domain" below)
 - Cloudflare Pages: https://flysdown.pages.dev
 
+## Documentation
+
+`docs/flysdown-paper.md` is a full write-up of how the system works: the data
+sources and their quirks, the architecture, the detection mathematics, the
+airspace pipeline, the visual encoding, the verification, and a provenance
+table separating what was measured from what is documented or standardised.
+`docs/flysdown-paper.pdf` is the same thing paginated (8 pages), rebuilt with:
+
+```bash
+npm run paper
+```
+
 ## What it does
 
 - Plots live aircraft and ships on one dark map. Aircraft are coloured by
