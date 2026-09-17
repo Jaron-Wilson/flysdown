@@ -17,7 +17,7 @@
  * deal politer.
  */
 
-import { SOURCES, canonicalRegion, fetchSource } from '../../shared/adsb.js';
+import { sourcesFor, canonicalRegion, fetchSource } from '../../shared/adsb.js';
 
 const CACHE_SECONDS = 6;
 const LAST_GOOD_SECONDS = 300;
@@ -59,21 +59,72 @@ async function recordDemand(env, region) {
     .run();
 }
 
+const EARTH_RADIUS_NM = 3440.065;
+
+function distanceNm(lat1, lon1, lat2, lon2) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * EARTH_RADIUS_NM * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+/**
+ * Find a relay snapshot that answers this request.
+ *
+ * An exact region match is ideal, but the request area changes every time the
+ * map is zoomed or panned, while the relay only covers the handful of regions
+ * people have recently asked for. A snapshot for a larger area centred nearby
+ * still contains every aircraft the caller wants, so it is used and then
+ * filtered down to the requested radius. Without this, panning to a new area
+ * returned nothing at all until the relay caught up.
+ */
 async function readSnapshot(env, region, maxAgeMs) {
   if (!env.RELAY_DB) return null;
-  const row = await env.RELAY_DB.prepare(
-    `SELECT payload, updated_at, source, count FROM snapshots
-     WHERE region = ?1 AND updated_at > ?2`
-  )
-    .bind(region.key, Date.now() - maxAgeMs)
-    .first();
-  if (!row) return null;
 
-  try {
-    return { aircraft: JSON.parse(row.payload), updatedAt: row.updated_at, source: row.source, count: row.count };
-  } catch {
-    return null;
+  const cutoff = Date.now() - maxAgeMs;
+  const lat = Number(region.lat);
+  const lon = Number(region.lon);
+
+  const exact = await env.RELAY_DB.prepare(
+    'SELECT payload, updated_at, source, region FROM snapshots WHERE region = ?1 AND updated_at > ?2'
+  )
+    .bind(region.key, cutoff)
+    .first();
+
+  const parse = (row, { filterTo = null, via } = {}) => {
+    try {
+      let aircraft = JSON.parse(row.payload);
+      if (filterTo) {
+        aircraft = aircraft.filter((a) => distanceNm(lat, lon, a.lat, a.lon) <= filterTo);
+      }
+      return { aircraft, updatedAt: row.updated_at, source: row.source, from: row.region, via };
+    } catch {
+      return null;
+    }
+  };
+
+  if (exact) return parse(exact, { via: 'exact' });
+
+  // No exact match: look for a stored area that fully contains this one.
+  const { results } = await env.RELAY_DB.prepare(
+    `SELECT payload, updated_at, source, region, lat, lon, radius_nm FROM snapshots
+     WHERE kind = 'aircraft' AND updated_at > ?1`
+  )
+    .bind(cutoff)
+    .all();
+
+  let best = null;
+  for (const row of results || []) {
+    const offset = distanceNm(lat, lon, row.lat, row.lon);
+    if (offset + region.dist > row.radius_nm) continue; // does not cover the request
+    // Prefer the tightest covering area: least surplus data to filter away.
+    if (!best || row.radius_nm < best.radius_nm) best = row;
   }
+
+  return best ? parse(best, { filterTo: region.dist, via: 'covering' }) : null;
 }
 
 export const onRequestGet = async (context) => {
@@ -116,6 +167,8 @@ export const onRequestGet = async (context) => {
         ok: true,
         source: `relay/${snapshot.source || 'unknown'}`,
         via: 'relay',
+        snapshotRegion: snapshot.from,
+        snapshotMatch: snapshot.via,
         fetchedAt: snapshot.updatedAt,
         ageMs: Date.now() - snapshot.updatedAt,
         coverage,
@@ -128,7 +181,7 @@ export const onRequestGet = async (context) => {
   }
 
   const errors = [];
-  for (const source of SOURCES) {
+  for (const source of sourcesFor('edge')) {
     if (only && source.name !== only) continue;
     try {
       const aircraft = await fetchSource(source, region.lat, region.lon, region.dist);

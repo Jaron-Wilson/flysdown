@@ -125,11 +125,23 @@ export function boundingBox(lat, lon, distNm) {
 }
 
 /**
- * Order was measured from a deployed Worker, not guessed. From the edge:
- * adsb.lol answers in ~460 ms but 429s most attempts, adsb.fi serves a
- * Cloudflare bot challenge, and OpenSky does not respond at all. From a
- * normal IP all three behave, and adsb.fi carries the richest fields
- * (aircraft description, operator, year), which is why the relay prefers it.
+ * Sources, with where each one is actually usable.
+ *
+ * Measured from a deployed Worker (2026-09-16/17), not assumed: adsb.lol
+ * answers in ~460 ms but 429s most attempts from the edge, adsb.fi returns a
+ * Cloudflare bot challenge (403) every single time, and OpenSky does not
+ * respond at all (522 after ~20 s, 4 attempts out of 4). From an ordinary IP
+ * all three work.
+ *
+ * `usableFrom` matters for more than speed. adsb.fi's policy counts 400, 401,
+ * 403, 404 and 429 responses as invalid requests that "may trigger temporary
+ * IP blocks", so repeatedly walking into its bot challenge from the edge would
+ * be accumulating strikes against a shared Cloudflare address for a call that
+ * has never once succeeded there. It is relay-only by design, not by accident.
+ *
+ * Endpoint choice: adsb.fi's own documentation marks v2/lat/lon/dist as
+ * deprecated in favour of v3, which returns the same `ac` shape as the other
+ * v2 endpoints rather than the `aircraft` shape.
  */
 export const SOURCES = [
   {
@@ -138,12 +150,16 @@ export const SOURCES = [
     parse: (json, name) => (json.ac || []).map((raw) => normaliseReadsb(raw, name)),
     timeoutMs: 9000,
     retries: 4,
+    usableFrom: ['edge', 'relay'],
+    attribution: 'adsb.lol (ODbL 1.0)',
   },
   {
     name: 'adsb.fi',
-    url: (lat, lon, dist) => `https://opendata.adsb.fi/api/v2/lat/${lat}/lon/${lon}/dist/${dist}`,
-    parse: (json, name) => (json.aircraft || []).map((raw) => normaliseReadsb(raw, name)),
+    url: (lat, lon, dist) => `https://opendata.adsb.fi/api/v3/lat/${lat}/lon/${lon}/dist/${dist}`,
+    parse: (json, name) => (json.ac || []).map((raw) => normaliseReadsb(raw, name)),
     timeoutMs: 9000,
+    usableFrom: ['relay'],
+    attribution: 'adsb.fi (personal, non-commercial use; citation required)',
   },
   {
     name: 'opensky',
@@ -153,8 +169,27 @@ export const SOURCES = [
     },
     parse: (json, name) => (json.states || []).map((row) => normaliseOpenSky(row, name)),
     timeoutMs: 6000,
+    usableFrom: ['relay'],
+    attribution: 'The OpenSky Network',
   },
 ];
+
+/** Sources worth trying from a given vantage point. */
+export const sourcesFor = (vantage) => SOURCES.filter((source) => source.usableFrom.includes(vantage));
+
+/**
+ * Every provider here publishes a limit of about one request a second, so one
+ * global spacing rule keeps us inside all of them at once. The relay polls
+ * several regions per cycle and would otherwise send them as a burst.
+ */
+const MIN_REQUEST_SPACING_MS = 1100;
+let lastRequestAt = 0;
+
+export async function throttle(spacingMs = MIN_REQUEST_SPACING_MS) {
+  const wait = lastRequestAt + spacingMs - Date.now();
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  lastRequestAt = Date.now();
+}
 
 /** Relay-side ordering: richest data first, since nothing is blocking us. */
 export const RELAY_SOURCE_ORDER = ['adsb.fi', 'adsb.lol', 'opensky'];
@@ -179,11 +214,12 @@ export function canonicalRegion(params) {
 }
 
 /** Fetch one source with a jittered retry on 429. Returns normalised aircraft. */
-export async function fetchSource(source, lat, lon, dist, { fetchImpl = fetch } = {}) {
+export async function fetchSource(source, lat, lon, dist, { fetchImpl = fetch, spaceRequests = false } = {}) {
   let response = null;
   const attempts = source.retries ?? 1;
 
   for (let attempt = 1; attempt <= attempts; attempt++) {
+    if (spaceRequests) await throttle();
     response = await fetchImpl(source.url(lat, lon, dist), {
       headers: { accept: 'application/json', 'accept-encoding': 'gzip', 'user-agent': USER_AGENT },
       signal: AbortSignal.timeout(source.timeoutMs ?? 9000),

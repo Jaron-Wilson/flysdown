@@ -76,7 +76,12 @@ export class MapView {
       new maplibregl.AttributionControl({
         compact: true,
         // The style already credits OpenFreeMap, OpenMapTiles and OSM.
-        customAttribution: 'ADS-B <a href="https://adsb.lol">adsb.lol</a>, AIS <a href="https://www.digitraffic.fi">Digitraffic</a> CC BY 4.0, airspace FAA',
+        // adsb.fi's usage policy requires a citation with a link to its home
+        // page; adsb.lol publishes its data under ODbL 1.0; Digitraffic is
+        // CC BY 4.0. All three are credited here.
+        customAttribution:
+          'ADS-B <a href="https://adsb.fi">adsb.fi</a> and <a href="https://adsb.lol">adsb.lol</a>, ' +
+          'AIS <a href="https://www.digitraffic.fi">Fintraffic Digitraffic</a> CC BY 4.0, airspace FAA',
       }),
       'bottom-right'
     );

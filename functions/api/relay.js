@@ -11,7 +11,7 @@
  */
 
 const WANTED_TTL_MS = 10 * 60 * 1000; // stop polling an area nobody has looked at for ten minutes
-const MAX_REGIONS = 4;                // bounds both upstream load and D1 writes
+const MAX_REGIONS = 5;                // bounds both upstream load and D1 writes
 const MAX_SNAPSHOT_BYTES = 2_000_000;
 
 const json = (body, status = 200) =>

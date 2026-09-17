@@ -19,7 +19,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { SOURCES, RELAY_SOURCE_ORDER, fetchSource } from '../shared/adsb.js';
+import { sourcesFor, RELAY_SOURCE_ORDER, fetchSource } from '../shared/adsb.js';
 
 /**
  * The token lives in .env.relay (gitignored) so a restart under forever,
@@ -53,7 +53,8 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-const ordered = RELAY_SOURCE_ORDER.map((name) => SOURCES.find((s) => s.name === name)).filter(Boolean);
+const available = sourcesFor('relay');
+const ordered = RELAY_SOURCE_ORDER.map((name) => available.find((s) => s.name === name)).filter(Boolean);
 const stamp = () => new Date().toISOString().slice(11, 19);
 const log = (...parts) => console.log(stamp(), ...parts);
 
@@ -85,7 +86,9 @@ async function relayOnce() {
 
     for (const source of ordered) {
       try {
-        aircraft = await fetchSource(source, region.lat.toFixed(1), region.lon.toFixed(1), region.distNm);
+        // spaceRequests keeps us inside the published one request a second
+        // limit even when several regions are polled in the same cycle.
+        aircraft = await fetchSource(source, region.lat.toFixed(1), region.lon.toFixed(1), region.distNm, { spaceRequests: true });
         usedSource = source.name;
         break;
       } catch (err) {
