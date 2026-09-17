@@ -77,7 +77,7 @@ const slides = [
     eyebrow: 'Detection, part one',
     title: 'Projected airspace entry',
     body:
-      'Every target is dead-reckoned forward and checked against each zone in three dimensions, so a jet at 35,000 ft over a surface-to-18,000 ft prohibited area is correctly not an incursion, while one descending into the band is caught. The step size is tied to each zone\\u2019s own radius, because a fixed 15 second step at 500 knots walks straight over a one mile circle, and the crossing time is then refined by bisection.',
+      'Every target is dead-reckoned forward and checked against each zone in three dimensions, so a jet at 35,000 ft over a surface-to-18,000 ft prohibited area is correctly not an incursion, while one descending into the band is caught. The step size is tied to each zone’s own radius, because a fixed 15 second step at 500 knots walks straight over a one mile circle, and the crossing time is then refined by bisection.',
     quote: 'N9287Y reaches P-40 Thurmont in 56s, 5000 ft',
     quoteNote: 'a real alert, over Camp David',
   },
@@ -86,13 +86,13 @@ const slides = [
     title: 'Two ships, one relative track',
     image: shipShot,
     caption:
-      'Closest Point of Approach by relative motion, the same alarm model an ARPA radar uses: a preset CPA limit and a warning time. The tightest pair measured so far was projected to pass 0.32 NM apart, 2 minutes 14 seconds out.',
+      'Closest Point of Approach by relative motion, the same alarm model an ARPA radar uses: a preset CPA limit and a warning time. Moored and anchored ships are excluded, or a harbor would drown the feed with pairs lying a cable apart at zero knots.',
   },
   {
     eyebrow: 'Getting the boring parts right',
     title: 'Real airspace, and honest staleness',
     bullets: [
-      'Zone geometry is the FAA\\u2019s own published Special Use Airspace, not hand-drawn. Their one-mile circles ship as 6,285-point polygons; simplification takes that to 17 with no visible difference.',
+      'Zone geometry is the FAA’s own published Special Use Airspace, not hand-drawn. Their one-mile circles ship as 6,285-point polygons; simplification takes that to 17 with no visible difference.',
       'Transiting the DC Special Flight Rules Area with a clearance is routine, so it is advisory: drawn and reported, never alerted. That change took one view from 55 alerts to 3 real ones.',
       'When every upstream refuses, the map shows the last good picture labeled with its age. A dashboard that quietly shows five minute old positions as current is worse than one showing nothing.',
     ],
@@ -149,8 +149,12 @@ function renderSlide(slide, index, total) {
     if (slide.caption) body.push(`<p class="caption">${escape(slide.caption)}</p>`);
   }
 
+  const classes = ['slide', slide.kind === 'cover' ? 'cover' : '', slide.image ? 'has-image' : 'text']
+    .filter(Boolean)
+    .join(' ');
+
   return `
-  <section class="slide ${slide.kind === 'cover' ? 'cover' : ''}">
+  <section class="${classes}">
     <div class="top">
       <div class="eyebrow">${escape(slide.eyebrow)}</div>
       <h2>${escape(slide.title)}</h2>
@@ -195,6 +199,9 @@ const html = `<!doctype html>
   }
   .slide:last-child { break-after: auto; page-break-after: auto; }
   .slide.cover { justify-content: center; text-align: left; }
+  /* A square card with the type hugging the top reads as unfinished, so
+     text-only slides sit in the middle of their own space. */
+  .slide.text .top { margin-block: auto; }
   .slide.cover .top { display: flex; flex-direction: column; gap: 6px; }
 
   .eyebrow {
@@ -267,7 +274,7 @@ const html = `<!doctype html>
   }
   blockquote span { font-family: "Inter", sans-serif; font-size: 22px; color: var(--muted); }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 40px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px 44px; }
   .cell { display: flex; flex-direction: column; gap: 4px; }
   .cell-value {
     font-family: "Fraunces", Georgia, serif;
@@ -307,6 +314,19 @@ await page.setContent(html, { waitUntil: 'load' });
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(1500);
 await page.pdf({ path: output, width: '1080px', height: '1080px', printBackground: true, pageRanges: `1-${slides.length}` });
+
+// --png <dir> also writes each slide as an image, for platforms that want
+// pictures rather than a document.
+const pngIndex = process.argv.indexOf('--png');
+if (pngIndex !== -1 && process.argv[pngIndex + 1]) {
+  const dir = process.argv[pngIndex + 1];
+  const cards = await page.$$('.slide');
+  for (const [i, card] of cards.entries()) {
+    await card.screenshot({ path: `${dir}/slide-${String(i + 1).padStart(2, '0')}.png` });
+  }
+  console.log(`${cards.length} slide images written to ${dir}`);
+}
+
 await browser.close();
 
 const size = (await readFile(output)).length;

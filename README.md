@@ -19,9 +19,14 @@ same palette and type as jaronwilson.dev and jaronwilson.org.
 sized for LinkedIn's document posts, which render a PDF one page per card.
 
 ```bash
-npm run paper      # docs/flysdown-paper.pdf
-npm run linkedin   # docs/flysdown-linkedin.pdf, needs screenshots in tmp/deck
+npm run paper                        # docs/flysdown-paper.pdf
+npm run shots -- <url> tmp/deck      # screenshots the deck embeds
+npm run linkedin -- tmp/deck         # docs/flysdown-linkedin.pdf
+npm run linkedin -- tmp/deck docs/flysdown-linkedin.pdf --png tmp/slides
 ```
+
+The last form also writes each slide as a PNG, for anywhere that wants images
+rather than a document.
 
 The dashboard itself uses those sites' own dark tokens (paper `#17150f`,
 surface `#201d16`, accent `#d97a4a`) with Fraunces and Inter, so the three

@@ -444,7 +444,11 @@ function tick() {
   });
 
   updateSelectedTrack();
-  if (state.selectedKey) {
+  if (!state.selectedKey) {
+    // Clearing the selection has to clear the panel too: without this it kept
+    // showing the last target's detail forever.
+    ui.renderDetail(null);
+  } else {
     const target = store.get(state.selectedKey);
     ui.renderDetail(target, {
       evaluation: target ? state.evaluation.byTarget.get(target.id) : null,
