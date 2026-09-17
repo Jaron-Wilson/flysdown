@@ -7,6 +7,7 @@
 
 import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
 import { targetAgeSec } from './feeds.js';
+import { distanceNm } from './geo.js';
 import { INK } from './palette.js';
 
 const INK_SECONDARY = INK.secondary;
@@ -198,7 +199,8 @@ export class UI {
 
   /* ---------- target detail ---------- */
 
-  renderDetail(target, evaluation, approaches = []) {
+  renderDetail(target, options = {}) {
+    const { evaluation = null, approaches = [], route = null, track = [] } = options;
     if (!target) {
       this.refs.detail.innerHTML = `<p class="hint">Select an aircraft or vessel on the map.</p>`;
       return;
@@ -273,6 +275,52 @@ export class UI {
       })
       .join('');
 
+    // Where it came from and where it is going, which ADS-B does not carry.
+    let routeBlock = '';
+    if (isAircraft && route?.status === 'pending') {
+      routeBlock = '<h3 class="block-title">Route</h3><p class="hint">Looking up the route.</p>';
+    } else if (isAircraft && route?.status === 'none') {
+      routeBlock = '<h3 class="block-title">Route</h3><p class="hint">No scheduled route for this callsign, which is normal for general aviation and military flights.</p>';
+    } else if (isAircraft && route?.status === 'ok') {
+      const { origin, destination, airline } = route.route;
+      const flownNm = origin ? distanceNm(origin.lat, origin.lon, target.lat, target.lon) : null;
+      const remainingNm = destination ? distanceNm(target.lat, target.lon, destination.lat, destination.lon) : null;
+      const speed = target.groundSpeed;
+      const etaSec = remainingNm !== null && speed > 40 ? (remainingNm / speed) * 3600 : null;
+
+      const leg = (airport, label) =>
+        airport
+          ? `<li>
+              <span>${escapeHtml(label)}</span>
+              <span>${escapeHtml([airport.icao || airport.iata, airport.municipality].filter(Boolean).join(' '))}</span>
+              <span class="z-eta">${escapeHtml(airport.name || '')}</span>
+            </li>`
+          : '';
+
+      routeBlock = `
+        <h3 class="block-title">Route${airline?.name ? ` \u00b7 ${escapeHtml(airline.name)}` : ''}</h3>
+        <ul class="detail-zones">
+          ${leg(origin, 'From')}
+          ${leg(destination, 'To')}
+        </ul>
+        <dl class="kv">
+          ${flownNm !== null ? `<dt>Flown from origin</dt><dd>${escapeHtml(fmt.nm(flownNm))}</dd>` : ''}
+          ${remainingNm !== null ? `<dt>Remaining</dt><dd>${escapeHtml(fmt.nm(remainingNm))}</dd>` : ''}
+          ${etaSec !== null ? `<dt>Arrival at this speed</dt><dd>${escapeHtml(fmt.duration(etaSec))}</dd>` : ''}
+        </dl>
+        <button class="btn btn-sm" type="button" id="detail-route">Frame the whole route</button>`;
+    }
+
+    // How much of its path we have actually watched.
+    let trackBlock = '';
+    if (track.length > 1) {
+      let walked = 0;
+      for (let i = 1; i < track.length; i++) {
+        walked += distanceNm(track[i - 1][1], track[i - 1][0], track[i][1], track[i][0]);
+      }
+      trackBlock = `<p class="hint">Observed track: ${track.length} positions, ${fmt.nm(walked)} drawn. It keeps extending while this target stays selected.</p>`;
+    }
+
     this.refs.detail.innerHTML = `
       <div class="detail-head">
         <h3>${escapeHtml(target.label)}</h3>
@@ -288,13 +336,17 @@ export class UI {
       </dl>
       ${zoneRows ? `<h3 class="block-title">Zone checks</h3><ul class="detail-zones">${zoneRows}</ul>` : '<p class="hint">No zone interaction projected within the horizon.</p>'}
       ${pairRisk ? `<h3 class="block-title">Closest approaches</h3><ul class="detail-zones">${pairRisk}</ul>` : ''}
+      ${routeBlock}
+      ${trackBlock}
       <div class="form-actions">
         <button class="btn btn-sm" type="button" id="detail-center">Center map on target</button>
+        ${routeBlock.includes('id="detail-route"') ? '' : ''}
         <button class="btn btn-sm" type="button" id="detail-clear">Close</button>
       </div>`;
 
     $('detail-center')?.addEventListener('click', () => this.handlers.centerTarget?.(target.key));
     $('detail-clear')?.addEventListener('click', () => this.handlers.clearSelection?.());
+    $('detail-route')?.addEventListener('click', () => this.handlers.frameRoute?.(target.key));
   }
 
   /* ---------- zones ---------- */

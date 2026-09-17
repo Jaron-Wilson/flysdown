@@ -117,6 +117,59 @@ const detailText = await page.textContent('#detail');
 console.log(`  selected ${selected}; detail panel has ${detailText.length} chars`);
 await page.screenshot({ path: `${outDir}/02-detail.png` });
 
+step('flight route lookup and the growing track');
+const routeEndpoint = await page.evaluate(async () => {
+  // Deterministic: a known scheduled callsign must resolve to two airports.
+  const res = await fetch('api/route?callsign=AAL1314');
+  const json = await res.json();
+  return {
+    ok: json.ok,
+    found: json.found,
+    from: json.origin?.icao || null,
+    to: json.destination?.icao || null,
+    unknownHandled: (await (await fetch('api/route?callsign=ZZZZ999')).json()).found === false,
+  };
+});
+console.log(`  endpoint: ${JSON.stringify(routeEndpoint)}`);
+if (!routeEndpoint.found || !routeEndpoint.from || !routeEndpoint.to || !routeEndpoint.unknownHandled) {
+  errors.push(`route endpoint did not behave: ${JSON.stringify(routeEndpoint)}`);
+}
+
+const routeOnMap = await page.evaluate(async () => {
+  const airliner = window.flysdown.store.byKind('aircraft')
+    .filter((a) => a.callsign && /^[A-Z]{3}\d/.test(a.callsign) && !a.onGround)
+    .sort((a, b) => (b.alt || 0) - (a.alt || 0))[0];
+  if (!airliner) return 'no airline callsign airborne in view';
+
+  window.flysdown.state.selectedKey = airliner.key;
+  window.flysdown.tick();
+  // Give the lookup a moment, then re-render.
+  await new Promise((r) => setTimeout(r, 5000));
+  window.flysdown.tick();
+
+  const legs = window.flysdown.buildRouteLegs();
+  return {
+    callsign: airliner.callsign,
+    status: window.flysdown.routes.get(airliner.callsign)?.status,
+    legs: legs.map((l) => `${l.leg}:${l.airport?.icao}:${l.coords.length}pts`),
+    trackPoints: window.flysdown.state.track.points.length,
+    panelShowsRoute: document.getElementById('detail').textContent.includes('Route'),
+  };
+});
+console.log(`  in view: ${JSON.stringify(routeOnMap)}`);
+// Whether an airliner with a published route happens to be overhead is not a
+// property of the code, so only a resolved route is asserted on.
+if (typeof routeOnMap === 'object' && routeOnMap.status === 'ok') {
+  if (!routeOnMap.legs.length || !routeOnMap.panelShowsRoute) {
+    errors.push(`a resolved route was not drawn or shown: ${JSON.stringify(routeOnMap)}`);
+  }
+  if (!routeOnMap.legs.every((l) => l.endsWith('65pts'))) {
+    errors.push(`route legs should be interpolated great circles: ${JSON.stringify(routeOnMap.legs)}`);
+  }
+}
+await page.screenshot({ path: `${outDir}/02b-route.png` });
+await page.evaluate(() => { window.flysdown.state.selectedKey = null; window.flysdown.tick(); });
+
 step('switching to the AIS region');
 await page.selectOption('#region-select', 'gof');
 await page.waitForTimeout(9000);

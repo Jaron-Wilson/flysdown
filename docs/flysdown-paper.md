@@ -40,15 +40,17 @@ further watch zones (circle or polygon), set their floor, ceiling and whether
 they apply to aircraft, ships or both, and export or import them as GeoJSON. It
 By default it tracks only the area on screen, or an
 operator can pin circles and boxes that keep loading while the map is scrolled
-anywhere else. Each feed pauses independently, every contact is timestamped,
-and the interface reports which path served its data and how old that data is.
+anywhere else. Selecting an aircraft draws the track it has been
+observed flying plus its published origin and destination as great circles.
+Each feed pauses independently, every contact is timestamped, and the interface
+reports which path served its data and how old that data is.
 
 It is not a navigation tool and says so on every screen. The projection is
 straight-line dead reckoning: no turns, no wind, no flight plan, no controller
-instruction. Zone activation by NOTAM is not modeled, so a restricted area
-that is cold today is still drawn.
+instruction. NOTAM activation is not modeled, so a restricted area that is cold
+today is still drawn.
 
-The system is 5,254 lines across browser modules, edge functions, the shared
+The system is 5,780 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -157,6 +159,26 @@ Position and identity arrive separately (`/locations` keyed by MMSI,
 merges them by MMSI and caches metadata for 30 minutes against 12 seconds for
 positions, because a ship's name changes less often than its position.
 
+### 2.4 Flight routes
+
+ADS-B broadcasts identity, position, altitude and velocity. It does not
+broadcast where a flight came from or where it is going, because the aircraft
+is not telling you its schedule, only its state. Origin and destination
+therefore come from a fourth source: adsbdb, which resolves an airline callsign
+to origin and destination airports with coordinates, built on volunteer flight
+route data and published under the MIT licence with its data contributors
+credited **[documented]**.
+
+Three things about using it. Most general aviation and military callsigns have
+no scheduled route at all, and the API answers 404 for them, which is a normal
+result rather than an error: the interface says "no scheduled route for this
+callsign" instead of looking broken. A callsign's route does not change during
+a day, so lookups are cached at the edge for six hours, and misses for one
+hour, which means one upstream request per callsign per six hours no matter how
+many people click on it. And unlike the ADS-B aggregators in Section 4, adsbdb
+answers the edge without complaint, verified from the deployed Worker
+**[measured]**, so this one needs no relay.
+
 ## 3. Architecture
 
 ```
@@ -236,12 +258,12 @@ documentation notes that its limits are dynamic according to load
 Two dead ends were eliminated before redesigning. **Browser-direct fetching:**
 none of the aggregators return `Access-Control-Allow-Origin`, so a page cannot
 call them from the user's own address **[measured]**. **A different source:**
-six further candidates were probed and all failed, `api.adsb.one` (403 even
-from an ordinary IP), `api.adsb.im` and `api.theairtraffic.com` (do not
-resolve), `data.adsb.fi` (401), `globe.adsb.fi/data/aircraft.json` (403) and
+six further candidates were probed and all failed: `api.adsb.one` (403 even
+from an ordinary IP), `api.adsb.im` and `api.theairtraffic.com`
+(unresolvable), `data.adsb.fi` (401), `globe.adsb.fi` (403) and
 `api.planespotters.net` (404) **[measured]**. The constraint is the address, not
-the source, so swapping sources cannot fix it. An OpenSky account was also ruled
-out: OpenSky does not answer the edge at all, so authentication would not help.
+the source, so swapping sources cannot fix it, and an OpenSky account would not
+help either because OpenSky does not answer the edge at all.
 
 ### 4.3 Graceful degradation as the floor
 
@@ -344,7 +366,7 @@ zones times hundreds of steps, five times a minute. Three things make it cheap.
 
 **A reachability prefilter.** Maximum travel is speed times horizon; if the
 distance to the zone center less its radius exceeds that, the zone is skipped
-with no stepping at all. For a typical view this eliminates almost every pair.
+with no stepping at all, which eliminates almost every pair.
 
 **A step tied to the zone, not the clock.** The step is
 `max(0.05, min(2, zoneRadius / 2, 0.5))` nautical miles, converted to seconds
@@ -354,10 +376,10 @@ which steps clean over P-56B (one nautical mile radius) without ever sampling
 inside it. There is a test using a 0.25 nautical mile zone and a 550 knot
 target.
 
-**Bisection to refine.** Stepping establishes a bracket; 12 iterations of
-bisection between the last clear and first inside sample narrow the crossing to
-roughly one four-thousandth of a step. That is what lets the interface say
-"reaches P-40 Thurmont in 7m 52s" instead of rounding to the sample interval.
+**Bisection to refine.** Stepping establishes a bracket; 12 iterations between
+the last clear and first inside sample narrow the crossing to roughly one
+four-thousandth of a step, which is what lets the interface say "reaches P-40
+Thurmont in 7m 52s" rather than rounding to the sample interval.
 
 Containment is analytic for circles (distance to center) and ray casting for
 polygons (count edge crossings; odd is inside), verified against two known
@@ -535,8 +557,8 @@ actual dark surface (`#141416`) rather than judged by eye.
 **Altitude is a magnitude**, so it gets an ordinal ramp on a single hue,
 monotone in lightness, dark low and light high: `#184f95`, `#256abf`, `#3987e5`,
 `#6da7ec`, `#9ec5f4`, `#cde2fb` for bands below 2,500 ft, to 10,000, 20,000,
-30,000, 40,000 and above. The validator passes all four ordinal checks, darkest
-step at 2.27:1 against the surface **[measured]**. A rainbow ramp, which several
+30,000, 40,000 and above, passing all four ordinal checks with the darkest step
+at 2.27:1 against the surface **[measured]**. A rainbow ramp, which several
 trackers use, was rejected: hue carries no order, so two colors cannot be
 ranked without a legend.
 
@@ -547,10 +569,9 @@ never an identity color, and always labeled.
 
 **Alerts are status**, using a reserved four-step palette (`#d03b3b` critical,
 `#ec835a` serious, `#fab219` warning, gray notice) never reused for a data
-series. The validator reports red against green as inherently weak under
-deuteranopia at a difference of 4.1 **[measured]**, which is exactly why every
-alert pairs its color with a glyph and the severity word. Status color never
-carries meaning alone anywhere here.
+series. Red against green is inherently weak under deuteranopia, measured at a
+difference of 4.1 **[measured]**, which is why every alert pairs its color with
+a glyph and the severity word: status color never carries meaning alone here.
 
 **Zone kind is identity with a safety-critical failure mode**, so it is encoded
 twice. The four hues clear the normal-vision floor comfortably (worst pair 24.6)
@@ -596,7 +617,27 @@ The age appears in the detail panel, in the tooltip past 20 seconds, as a table
 column, and on the map as opacity: contacts fade from full to 30 percent
 between 45 and 240 seconds, so a stale picture looks stale.
 
-### 7.3 One layout bug worth recording
+### 7.3 Flight history and where it is going
+
+Selecting an aircraft answers three questions at once. Its **observed track**
+is the positions this system has actually seen, seeded from the history already
+held for that target and then extended for as long as it stays selected, drawn
+as a solid bright line: it is what we watched, not what we were told. Its
+**route legs** are the published origin and destination, drawn as great circles
+from the origin airport to the aircraft's current position and on to the
+destination, with the airports marked and labelled. The panel adds the distance
+flown from the origin, the distance remaining and an arrival time at the
+current ground speed, and a button frames the whole flight.
+
+The legs are interpolated rather than drawn as straight lines, because a
+straight line between two airports is wrong on a Mercator projection: the
+shortest path curves. Sixty-five points along the great circle, using the
+standard intermediate-point formula **[documented]**, make the drawn path the
+flown path. Longitudes are unwrapped as the path is built, so a transpacific
+route does not draw itself the long way around the world; there is a test for
+exactly that, on Tokyo to Los Angeles.
+
+### 7.4 One layout bug worth recording
 
 The endpoint includes a snippet of the upstream response body in its error
 detail, which is how the adsb.fi 403 was identified as a bot challenge rather
@@ -613,7 +654,7 @@ chrome is a layout hazard, and summarizing it is not sufficient alone.
 
 ## 8. Verification
 
-**Unit tests (24, no network).** The geometry and the rules: haversine and
+**Unit tests (26, no network).** The geometry and the rules: haversine and
 destination round-tripping, ray casting against known points, inside and
 projected alerts, severity escalation with closing time, altitude band
 exclusion, a descending target entering the band mid-projection, the small-zone
@@ -625,7 +666,10 @@ the close-approach math: a head-on pair whose TCPA must equal range over
 closing speed, a parallel pair that never closes, a crossing pair whose CPA is
 its offset, a pair already past, one alert per pair regardless of input order,
 a harbor of 30 moored ships raising nothing, the severity bands, and the
-pairwise pass appearing in the combined result.
+pairwise pass appearing in the combined result. Two more check the
+great-circle path drawn for a route: that its summed length matches the direct
+distance and that it bows poleward of the chord, and that a path across the
+antimeridian stays continuous.
 
 Two failed on first run and both were genuine: the unclamped altitude
 extrapolation of 5.2, and the great-circle convergence error in the test's own
@@ -696,6 +740,8 @@ attention on redistribution.
 | 241 aircraft shown where the feed reported 1 | Region switch with pruning disabled **[measured]** |
 | End state: 446 to 496 aircraft, 2 to 12 s old, 281 vessels | Public endpoints polled directly **[measured]** |
 | CPA and TCPA are the standard measures, with alarms on a preset CPA limit and TCPA warning time | IMO Resolution A.823(19), ARPA performance standards **[standard]** |
+| Origin and destination are not in ADS-B and come from adsbdb; 404 means no scheduled route | adsbdb documentation **[documented]**; live callsigns resolved and 404s observed **[measured]** |
+| adsbdb answers the Cloudflare edge, unlike the ADS-B aggregators | `/api/route` exercised from the deployed Worker **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
 ## 11. References
@@ -731,7 +777,10 @@ attention on redistribution.
 17. MapLibre GL JS API and style specification. <https://maplibre.org/maplibre-gl-js/docs/API/>, <https://maplibre.org/maplibre-style-spec/layers/>
 18. OpenFreeMap keyless OpenStreetMap vector tiles. <https://openfreemap.org/>
 19. OpenStreetMap contributors. <https://www.openstreetmap.org/copyright>
-20. IMO Resolution A.823(19), *Performance Standards for Automatic Radar
+20. adsbdb, aircraft and flight route API (MIT licence; route data credited to
+    PlaneBase, David Taylor and Jim Mason).
+    <https://github.com/mrjackwills/adsbdb>, <https://api.adsbdb.com>
+21. IMO Resolution A.823(19), *Performance Standards for Automatic Radar
     Plotting Aids (ARPAs)*, adopted 23 November 1995.
     <https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.823(19).pdf>
 

@@ -9,7 +9,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { distanceNm, destination, bearingTo, pointInRing, secondsToGround } from '../public/js/geo.js';
+import { distanceNm, destination, bearingTo, pointInRing, secondsToGround, greatCirclePath } from '../public/js/geo.js';
 import { prepareZone } from '../public/js/zones.js';
 import { evaluateAll, evaluateTarget, firstEntry, zoneContains, inAltitudeBand, detectOrbit, closestApproach, detectCloseApproaches } from '../public/js/detect.js';
 
@@ -312,4 +312,40 @@ test('evaluateAll includes pairwise vessel risk alongside per-target rules', () 
   assert.equal(approaches.length, 1);
   assert.ok(alerts.some((x) => x.rule === 'close-approach'));
   assert.equal(evaluateAll([a, b], [], { closeApproaches: false }).approaches.length, 0);
+});
+
+/* ---------- great-circle paths for drawn routes ---------- */
+
+test('great-circle path starts and ends on its endpoints and follows the sphere', () => {
+  // Philadelphia to Austin, the live route used in the worked example.
+  const path = greatCirclePath(39.8719, -75.2411, 30.1975, -97.662, 64);
+  assert.equal(path.length, 65);
+  assert.ok(Math.abs(path[0][0] - -75.2411) < 0.001 && Math.abs(path[0][1] - 39.8719) < 0.001);
+  assert.ok(Math.abs(path.at(-1)[0] - -97.662) < 0.001 && Math.abs(path.at(-1)[1] - 30.1975) < 0.001);
+
+  // The summed path length should match the direct great-circle distance.
+  let walked = 0;
+  for (let i = 1; i < path.length; i++) {
+    walked += distanceNm(path[i - 1][1], path[i - 1][0], path[i][1], path[i][0]);
+  }
+  const direct = distanceNm(39.8719, -75.2411, 30.1975, -97.662);
+  assert.ok(Math.abs(walked - direct) / direct < 0.001, `walked ${walked} vs direct ${direct}`);
+
+  // And it must bow away from the straight line in latitude/longitude space.
+  const mid = path[32];
+  const chordLat = (39.8719 + 30.1975) / 2;
+  assert.ok(mid[1] > chordLat, 'the great circle should bow poleward of the chord');
+});
+
+test('a path across the antimeridian stays continuous', () => {
+  // Tokyo to Los Angeles crosses 180 degrees of longitude.
+  const path = greatCirclePath(35.55, 139.78, 33.94, -118.41, 64);
+  for (let i = 1; i < path.length; i++) {
+    assert.ok(
+      Math.abs(path[i][0] - path[i - 1][0]) < 180,
+      `longitude jumped from ${path[i - 1][0]} to ${path[i][0]}`
+    );
+  }
+  // Unwrapping means the far end is expressed beyond 180, not wrapped back.
+  assert.ok(path.at(-1)[0] > 180, `expected an unwrapped longitude, got ${path.at(-1)[0]}`);
 });

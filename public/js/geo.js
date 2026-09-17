@@ -63,6 +63,50 @@ export function destination(lat, lon, bearing, distNm) {
   return { lat: toDeg(p2), lon: lonOut };
 }
 
+/**
+ * Points along the great circle between two positions.
+ *
+ * A straight line between two distant airports is wrong on a Mercator map:
+ * the shortest path curves. This interpolates the real path so a route from
+ * Philadelphia to Austin, or anything transoceanic, is drawn as flown.
+ * Longitudes are kept continuous so a path crossing the antimeridian does not
+ * draw itself the long way round the world.
+ */
+export function greatCirclePath(lat1, lon1, lat2, lon2, steps = 64) {
+  const p1 = toRad(lat1);
+  const l1 = toRad(lon1);
+  const p2 = toRad(lat2);
+  const l2 = toRad(lon2);
+
+  const d =
+    2 *
+    Math.asin(
+      Math.min(1, Math.sqrt(Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2))
+    );
+  if (!Number.isFinite(d) || d < 1e-9) return [[lon1, lat1], [lon2, lat2]];
+
+  const points = [];
+  let previousLon = null;
+  for (let i = 0; i <= steps; i++) {
+    const f = i / steps;
+    const a = Math.sin((1 - f) * d) / Math.sin(d);
+    const b = Math.sin(f * d) / Math.sin(d);
+    const x = a * Math.cos(p1) * Math.cos(l1) + b * Math.cos(p2) * Math.cos(l2);
+    const y = a * Math.cos(p1) * Math.sin(l1) + b * Math.cos(p2) * Math.sin(l2);
+    const z = a * Math.sin(p1) + b * Math.sin(p2);
+
+    const lat = toDeg(Math.atan2(z, Math.hypot(x, y)));
+    let lon = toDeg(Math.atan2(y, x));
+    if (previousLon !== null) {
+      while (lon - previousLon > 180) lon -= 360;
+      while (previousLon - lon > 180) lon += 360;
+    }
+    previousLon = lon;
+    points.push([lon, lat]);
+  }
+  return points;
+}
+
 /** Ray-casting containment test. Ring is [[lon, lat], ...], closed or not. */
 export function pointInRing(lon, lat, ring) {
   let inside = false;

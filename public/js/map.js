@@ -116,7 +116,7 @@ export class MapView {
   }
 
   installLayers() {
-    for (const id of ['zones', 'zone-labels', 'coverage', 'tracking', 'tracking-labels', 'approaches', 'trails', 'projections', 'entry-points', 'alert-rings', 'vessels', 'aircraft', 'selection']) {
+    for (const id of ['zones', 'zone-labels', 'coverage', 'tracking', 'tracking-labels', 'approaches', 'route-legs', 'route-airports', 'selected-track', 'trails', 'projections', 'entry-points', 'alert-rings', 'vessels', 'aircraft', 'selection']) {
       this.addSource(id);
     }
 
@@ -198,6 +198,54 @@ export class MapView {
         'line-dasharray': [1, 1.5],
         'line-opacity': 0.95,
       },
+    });
+
+    // The selected flight's route: where it came from, where it is going.
+    this.map.addLayer({
+      id: 'route-leg-lines',
+      type: 'line',
+      source: 'route-legs',
+      paint: {
+        'line-color': ['case', ['==', ['get', 'leg'], 'flown'], '#6da7ec', '#9ec5f4'],
+        'line-width': 1.6,
+        'line-dasharray': ['case', ['==', ['get', 'leg'], 'flown'], ['literal', [1, 0]], ['literal', [4, 3]]],
+        'line-opacity': 0.75,
+      },
+    });
+
+    this.map.addLayer({
+      id: 'route-airport-dots',
+      type: 'circle',
+      source: 'route-airports',
+      paint: {
+        'circle-radius': 4.5,
+        'circle-color': INK.page,
+        'circle-stroke-color': '#9ec5f4',
+        'circle-stroke-width': 2,
+      },
+    });
+
+    this.map.addLayer({
+      id: 'route-airport-labels',
+      type: 'symbol',
+      source: 'route-airports',
+      layout: {
+        'text-field': ['get', 'label'],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 11,
+        'text-anchor': 'top',
+        'text-offset': [0, 0.7],
+        'text-allow-overlap': true,
+      },
+      paint: { 'text-color': '#cde2fb', 'text-halo-color': INK.page, 'text-halo-width': 1.5 },
+    });
+
+    // The observed track of the selected target, which keeps growing.
+    this.map.addLayer({
+      id: 'selected-track-line',
+      type: 'line',
+      source: 'selected-track',
+      paint: { 'line-color': INK.primary, 'line-width': 2, 'line-opacity': 0.85 },
     });
 
     this.map.addLayer({
@@ -401,7 +449,7 @@ export class MapView {
   /** One render pass. Everything here is derived state handed in by app.js. */
   render(state) {
     if (!this.ready) return;
-    const { aircraft, vessels, zones, zoneAlertCounts, projections, alerts, approaches, trackingAreas, selectedKey, coverage, showLabels } = state;
+    const { aircraft, vessels, zones, zoneAlertCounts, projections, alerts, approaches, trackingAreas, selectedTrack, routeLegs, selectedKey, coverage, showLabels } = state;
 
     this.setData('aircraft', aircraft.map((t) => ({
       type: 'Feature',
@@ -544,6 +592,24 @@ export class MapView {
       },
     })));
 
+    this.setData('route-legs', (routeLegs || []).map((leg) => ({
+      type: 'Feature',
+      properties: { leg: leg.leg },
+      geometry: { type: 'LineString', coordinates: leg.coords },
+    })));
+
+    this.setData('route-airports', (routeLegs || []).filter((leg) => leg.airport).map((leg) => ({
+      type: 'Feature',
+      properties: {
+        label: `${leg.airport.icao || leg.airport.iata || ''}${leg.airport.municipality ? ` ${leg.airport.municipality}` : ''}`.trim(),
+      },
+      geometry: { type: 'Point', coordinates: [leg.airport.lon, leg.airport.lat] },
+    })));
+
+    this.setData('selected-track', selectedTrack && selectedTrack.length > 1
+      ? [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: selectedTrack } }]
+      : []);
+
     this.setData('coverage', coverage
       ? [{
           type: 'Feature',
@@ -559,5 +625,15 @@ export class MapView {
 
   panTo(lon, lat) {
     this.map.easeTo({ center: [lon, lat], duration: 600 });
+  }
+
+  /** Fit a set of [lon, lat] points, used to frame a whole flight route. */
+  fitPoints(points, padding = 80) {
+    if (!points?.length) return;
+    const bounds = points.reduce(
+      (acc, [lon, lat]) => acc.extend([lon, lat]),
+      new maplibregl.LngLatBounds(points[0], points[0])
+    );
+    this.map.fitBounds(bounds, { padding, duration: 900, maxZoom: 9 });
   }
 }

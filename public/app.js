@@ -14,7 +14,7 @@
 import { Feed, TargetStore, areaQuery, FEED_INTERVALS } from './js/feeds.js';
 import { ZoneStore, prepareZone } from './js/zones.js';
 import { evaluateAll, SEVERITY_RANK } from './js/detect.js';
-import { projectPath, circleRing, distanceNm } from './js/geo.js';
+import { projectPath, circleRing, distanceNm, greatCirclePath } from './js/geo.js';
 import { MapView } from './js/map.js';
 import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
@@ -46,6 +46,7 @@ const state = {
   // Pinned areas keep loading regardless of where the map is scrolled. Empty
   // means follow the viewport, which is the default.
   tracking: [],
+  track: { key: null, points: [] },
   coverages: [],
   viewRadiusNm: 0,
   feeds: { aircraft: { state: 'idle' }, vessels: { state: 'idle' } },
@@ -201,12 +202,85 @@ const feeds = {
   }),
 };
 
+/* ---------- flight routes and the selected aircraft's track ---------- */
+
+/**
+ * Callsign -> route lookup state. ADS-B carries no origin or destination, so
+ * this asks the edge (which asks adsbdb) once per callsign per session. General
+ * aviation callsigns usually have no scheduled route, and that answer is
+ * remembered too rather than asked again on every click.
+ */
+const routes = new Map();
+
+async function ensureRoute(callsign) {
+  if (!callsign || routes.has(callsign)) return;
+  routes.set(callsign, { status: 'pending' });
+  try {
+    const res = await fetch(`api/route?${new URLSearchParams({ callsign })}`);
+    const json = await res.json();
+    routes.set(callsign, json.ok && json.found ? { status: 'ok', route: json } : { status: 'none' });
+  } catch {
+    routes.set(callsign, { status: 'none' });
+  }
+  // The panel and the map both want it, and it arrived after they rendered.
+  const target = state.selectedKey ? store.get(state.selectedKey) : null;
+  if (target && target.callsign === callsign) {
+    ui.renderDetail(target, {
+      evaluation: state.evaluation.byTarget.get(target.id),
+      approaches: state.evaluation.approaches,
+      route: routeFor(target),
+      track: state.track.points,
+    });
+    render();
+  }
+}
+
+function routeFor(target) {
+  if (!target || target.kind !== 'aircraft' || !target.callsign) return null;
+  return routes.get(target.callsign) || null;
+}
+
+/**
+ * The full observed track of the selected target, which keeps growing for as
+ * long as it stays selected. Seeded from the history the store already holds,
+ * so selecting an aircraft shows where it has been, not just where it goes
+ * next.
+ */
+function updateSelectedTrack() {
+  const target = state.selectedKey ? store.get(state.selectedKey) : null;
+  if (!target) {
+    state.track = { key: null, points: [] };
+    return;
+  }
+
+  // Any path that changes the selection should get a route lookup, not just
+  // a click on the map.
+  if (target.callsign) ensureRoute(target.callsign);
+
+  if (state.track.key !== target.key) {
+    state.track = { key: target.key, points: target.history.map((h) => [h.lon, h.lat]) };
+    return;
+  }
+
+  const last = state.track.points[state.track.points.length - 1];
+  if (!last || distanceNm(last[1], last[0], target.lat, target.lon) > 0.02) {
+    state.track.points.push([target.lon, target.lat]);
+    if (state.track.points.length > 3000) state.track.points.shift();
+  }
+}
+
 /* ---------- selection ---------- */
 
 function selectTarget(key) {
   state.selectedKey = key;
   const target = key ? store.get(key) : null;
-  ui.renderDetail(target, target ? state.evaluation.byTarget.get(target.id) : null, state.evaluation.approaches);
+  updateSelectedTrack();
+  ui.renderDetail(target, {
+    evaluation: target ? state.evaluation.byTarget.get(target.id) : null,
+    approaches: state.evaluation.approaches,
+    route: routeFor(target),
+    track: state.track.points,
+  });
   ui.focusDetail(Boolean(target));
   render();
 }
@@ -365,9 +439,15 @@ function tick() {
     closeApproaches: state.filters.approaches && state.filters.vessels,
   });
 
+  updateSelectedTrack();
   if (state.selectedKey) {
     const target = store.get(state.selectedKey);
-    ui.renderDetail(target, target ? state.evaluation.byTarget.get(target.id) : null, state.evaluation.approaches);
+    ui.renderDetail(target, {
+      evaluation: target ? state.evaluation.byTarget.get(target.id) : null,
+      approaches: state.evaluation.approaches,
+      route: routeFor(target),
+      track: state.track.points,
+    });
   }
   render(candidates);
   updateStatusLine();
@@ -421,6 +501,8 @@ function render(candidates = visibleTargets()) {
     alerts: state.evaluation.alerts,
     approaches: state.filters.vessels ? state.evaluation.approaches : [],
     trackingAreas: state.tracking,
+    selectedTrack: state.track.points,
+    routeLegs: buildRouteLegs(),
     selectedKey: state.selectedKey,
     // Only worth drawing when the upstream radius cap actually cuts into the
     // view; otherwise it is an off-screen circle explaining nothing.
@@ -452,6 +534,36 @@ function render(candidates = visibleTargets()) {
   ui.renderFeedToggles(state.paused, state.feeds);
 
   updateBanner(vessels.length);
+}
+
+/**
+ * The two legs of a selected flight: where it came from, and where it is
+ * going. Drawn as great circles from the origin airport to the aircraft's
+ * current position and on to the destination, so both are shown as flown
+ * rather than as straight lines on a Mercator projection.
+ */
+function buildRouteLegs() {
+  const target = state.selectedKey ? store.get(state.selectedKey) : null;
+  const entry = routeFor(target);
+  if (!target || entry?.status !== 'ok') return [];
+
+  const { origin, destination } = entry.route;
+  const legs = [];
+  if (origin) {
+    legs.push({
+      leg: 'flown',
+      airport: origin,
+      coords: greatCirclePath(origin.lat, origin.lon, target.lat, target.lon, 64),
+    });
+  }
+  if (destination) {
+    legs.push({
+      leg: 'remaining',
+      airport: destination,
+      coords: greatCirclePath(target.lat, target.lon, destination.lat, destination.lon, 64),
+    });
+  }
+  return legs;
 }
 
 /** Breached zones first, then whatever is nearest the current view. */
@@ -660,6 +772,19 @@ function setFeedPaused(kind, paused) {
 
 ui.on('toggleFeed', (kind) => setFeedPaused(kind, !state.paused[kind]));
 
+ui.on('frameRoute', (key) => {
+  const target = store.get(key);
+  const entry = routeFor(target);
+  if (!target) return;
+  const points = [[target.lon, target.lat], ...state.track.points];
+  if (entry?.status === 'ok') {
+    const { origin, destination } = entry.route;
+    if (origin) points.push([origin.lon, origin.lat]);
+    if (destination) points.push([destination.lon, destination.lat]);
+  }
+  mapView.fitPoints(points);
+});
+
 ui.on('removeTrackingArea', (id) => removeTrackingArea(id));
 ui.on('zoomTrackingArea', (id) => {
   const area = state.tracking.find((a) => a.id === id);
@@ -705,4 +830,4 @@ zones.onChange(() => {
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries };
+window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs };

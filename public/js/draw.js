@@ -94,6 +94,21 @@ export class ZoneDrawer {
         const radiusNm = distanceNm(this.center.lat, this.center.lon, lat, lng);
         this.commitCircle(Math.max(0.1, radiusNm));
       }
+      return;
+    }
+
+    if (this.mode === 'box') {
+      if (!this.corner) {
+        this.corner = { lat, lon: lng };
+        this.renderPreview();
+      } else {
+        this.commitBox({
+          north: Math.max(this.corner.lat, lat),
+          south: Math.min(this.corner.lat, lat),
+          east: Math.max(this.corner.lon, lng),
+          west: Math.min(this.corner.lon, lng),
+        });
+      }
     }
   }
 
@@ -179,8 +194,17 @@ export class ZoneDrawer {
 
   commitCircle(radiusNm) {
     const geometry = { shape: 'circle', center: this.center, radiusNm };
+    // Read the purpose before cancel() clears it.
+    const purpose = this.purpose;
     this.cancel();
-    this.onComplete?.(geometry);
+    this.onComplete?.(geometry, purpose);
+  }
+
+  commitBox(bounds) {
+    const geometry = { shape: 'box', bounds };
+    const purpose = this.purpose;
+    this.cancel();
+    this.onComplete?.(geometry, purpose);
   }
 
   cancel({ silent = false } = {}) {

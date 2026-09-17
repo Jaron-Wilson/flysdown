@@ -13,7 +13,7 @@ heading into restricted airspace.
 sources and their quirks, the architecture, the detection mathematics, the
 airspace pipeline, the visual encoding, the verification, and a provenance
 table separating what was measured from what is documented or standardised.
-`docs/flysdown-paper.pdf` is the same thing paginated (8 pages), rebuilt with:
+`docs/flysdown-paper.pdf` is the same thing paginated (9 pages), rebuilt with:
 
 ```bash
 npm run paper
@@ -50,6 +50,11 @@ npm run paper
   Approach and the time to it, with a settable CPA limit, the same alarm model
   ARPA radar uses. Moored and anchored ships are excluded, so a harbor does not
   drown the feed.
+- Shows a selected flight's history and its route: the track this system has
+  actually observed, drawn and extended for as long as the target stays
+  selected, plus the published origin and destination airports as great circles
+  with distance flown, distance remaining and an arrival estimate. ADS-B does
+  not carry a schedule, so routes come from adsbdb, cached hard at the edge.
 - Timestamps every contact. Each target's age combines how long ago the
   receiver network last heard from it with how long ago we fetched that answer,
   so nothing claims to be fresher than it is. Contacts fade as their position
@@ -86,6 +91,7 @@ alert with nobody watching the page.
 | --- | --- | --- |
 | Aircraft positions | [adsb.lol](https://adsb.lol), [adsb.fi](https://adsb.fi), [OpenSky](https://opensky-network.org) | Community aggregators, no API key. Tried in that order. |
 | Vessel positions | [Fintraffic Digitraffic](https://www.digitraffic.fi/en/marine-traffic/) | CC BY 4.0. The only genuinely keyless live AIS feed found, covering the Baltic and Gulf of Finland. |
+| Flight routes | [adsbdb](https://github.com/mrjackwills/adsbdb) | Origin and destination airports for airline callsigns. ADS-B carries no schedule. |
 | Prohibited airspace | [FAA Special Use Airspace](https://adds-faa.opendata.arcgis.com/) | Real published geometry, floors and ceilings. |
 | DC SFRA | 14 CFR 93 subpart V | Defined in regulation as a 30 NM radius of the DCA VOR, so the circle is exact. |
 | Disney TFRs | FDC 9/3799 | Standing restrictions, surface to 3,000 ft AGL. |
