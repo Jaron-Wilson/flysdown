@@ -4,8 +4,7 @@ Live aircraft (ADS-B) and vessel (AIS) tracking on one map, with a detection
 engine that dead-reckons every target forward and warns when something is
 heading into restricted airspace.
 
-- Production: https://flysdown.jaronwilson.dev
-- Pages deployment URL behind it: https://flysdown.pages.dev
+- **https://flysdown.jaronwilson.dev** - the address to share.
 
 ## Documentation
 
@@ -228,8 +227,9 @@ snapshot. `POST /api/relay` stores a snapshot. Both require
 
 The Pages project is `flysdown`, and `flysdown.jaronwilson.dev` is attached to
 it as a custom domain, with the CNAME and certificate managed by Cloudflare.
-Both hostnames serve the same deployment, so the `pages.dev` URL stays useful
-for checking a build before the domain picks it up.
+Cloudflare also keeps a `flysdown.pages.dev` deployment URL, plus a per-build
+preview URL, which are handy for checking a build before the domain serves it.
+Neither is the address to hand out: everything public points at the domain.
 
 The wrangler OAuth token on this machine is zone read only, so it cannot add or
 change that DNS record: a future domain change is a dashboard step (Workers and
