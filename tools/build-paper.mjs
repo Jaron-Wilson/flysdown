@@ -71,11 +71,26 @@ const html = `<!doctype html>
     --accent: #b3542b;
   }
 
-  /* Chromium leaves the @page margin area unpainted whatever the root
-     background says, so the side margins are zero and recreated as body
-     padding, and the top and bottom strips, which Chromium reserves for its
-     header and footer templates, are painted from inside those templates. */
-  @page { size: letter; margin: 0.45in 0 0.4in 0; }
+  /* Chromium never paints the @page margin area from the root background,
+     and its header/footer templates cannot paint it either (measured: the
+     strips stay white). What does work is CSS margin boxes, which recent
+     Chromium supports: each box carries the paper color, and the bottom ones
+     carry the running title and the page counter. The side margins are zero
+     and recreated as body padding, so the page box itself spans the width. */
+  @page {
+    size: letter;
+    margin: 0.45in 0 0.4in 0;
+    @top-left-corner { content: ''; background: var(--paper); }
+    @top-left { content: ''; background: var(--paper); }
+    @top-center { content: ''; background: var(--paper); }
+    @top-right { content: ''; background: var(--paper); }
+    @top-right-corner { content: ''; background: var(--paper); }
+    @bottom-left-corner { content: ''; background: var(--paper); }
+    @bottom-left { content: 'flysdown \u00b7 jaronwilson.dev'; background: var(--paper); font: 7.5pt Inter, sans-serif; color: var(--muted); padding-left: 0.5in; padding-top: 0.06in; vertical-align: top; }
+    @bottom-center { content: ''; background: var(--paper); }
+    @bottom-right { content: counter(page); background: var(--paper); font: 7.5pt Inter, sans-serif; color: var(--muted); padding-right: 0.5in; padding-top: 0.06in; vertical-align: top; }
+    @bottom-right-corner { content: ''; background: var(--paper); }
+  }
 
   /* The root element's background is the page canvas in paged media, so this
      is what fills the margins too. On body alone it stopped at the text box
@@ -210,14 +225,9 @@ await page.pdf({
   path: output,
   format: 'Letter',
   printBackground: true,
-  displayHeaderFooter: true,
-  headerTemplate:
-    '<div style="position:fixed;left:0;right:0;top:0;bottom:0;background:#faf8f4;-webkit-print-color-adjust:exact;"></div>',
-  footerTemplate:
-    '<div style="position:fixed;left:0;right:0;top:0;bottom:0;background:#faf8f4;-webkit-print-color-adjust:exact;"></div>' +
-    '<div style="position:fixed;left:0;right:0;bottom:0.12in;font:7.5pt Inter,system-ui,sans-serif;color:#6b6862;padding:0 0.5in;display:flex;justify-content:space-between;">' +
-    '<span>flysdown &middot; jaronwilson.dev</span>' +
-    '<span class="pageNumber"></span></div>',
+  // The running title and page number come from the @page margin boxes in
+  // the stylesheet, which is also what paints the top and bottom strips.
+  displayHeaderFooter: false,
   margin: { top: '0.45in', bottom: '0.4in', left: '0', right: '0' },
 });
 
