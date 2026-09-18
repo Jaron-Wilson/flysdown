@@ -6,8 +6,8 @@
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
-Version 1.1, 17 September 2026. Live at `flysdown.pages.dev` (target domain
-`flysdown.jaronwilson.dev`). Source: `Jaron-Wilson/flysdown`.
+Version 1.1, 17 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
+`Jaron-Wilson/flysdown`.
 
 <!-- toc -->
 
@@ -798,7 +798,8 @@ author.
 
 ## 12. Availability
 
-The system is live at `flysdown.pages.dev`. The source, including the tests,
+The system is live at `flysdown.jaronwilson.dev`, served from Cloudflare
+Pages. The source, including the tests,
 the tools that regenerate the zone file, the figures and this document, is in
 the repository `Jaron-Wilson/flysdown` (private at the time of writing;
 contact the first author). Aircraft data is used under adsb.fi's personal,

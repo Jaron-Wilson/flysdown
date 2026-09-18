@@ -4,8 +4,8 @@ Live aircraft (ADS-B) and vessel (AIS) tracking on one map, with a detection
 engine that dead-reckons every target forward and warns when something is
 heading into restricted airspace.
 
-- Production: https://flysdown.jaronwilson.dev (see "Custom domain" below)
-- Cloudflare Pages: https://flysdown.pages.dev
+- Production: https://flysdown.jaronwilson.dev
+- Pages deployment URL behind it: https://flysdown.pages.dev
 
 ## Documentation
 
@@ -16,7 +16,7 @@ table separating what was measured from what is documented or standardized.
 It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
 contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
-`docs/flysdown-paper.pdf` is the same thing paginated (12 pages with figures),
+`docs/flysdown-paper.pdf` is the same thing paginated (11 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 `docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
@@ -226,12 +226,14 @@ snapshot. `POST /api/relay` stores a snapshot. Both require
 
 ## Custom domain
 
-The Pages project is `flysdown`. Attaching `flysdown.jaronwilson.dev` needs one
-step in the dashboard (Workers and Pages, flysdown, Custom domains, add
-`flysdown.jaronwilson.dev`), because the wrangler OAuth token on this machine is
-zone read only and cannot create the DNS record. Cloudflare creates the CNAME
-and certificate automatically, the same way `spike.jaronwilson.dev` is attached
-to `financeapp-spike`.
+The Pages project is `flysdown`, and `flysdown.jaronwilson.dev` is attached to
+it as a custom domain, with the CNAME and certificate managed by Cloudflare.
+Both hostnames serve the same deployment, so the `pages.dev` URL stays useful
+for checking a build before the domain picks it up.
+
+The wrangler OAuth token on this machine is zone read only, so it cannot add or
+change that DNS record: a future domain change is a dashboard step (Workers and
+Pages, flysdown, Custom domains).
 
 ## Running it
 

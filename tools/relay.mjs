@@ -12,7 +12,7 @@
  * the snapshots back.
  *
  *   RELAY_TOKEN=... node tools/relay.mjs
- *   RELAY_TOKEN=... node tools/relay.mjs --url https://flysdown.pages.dev --interval 8
+ *   RELAY_TOKEN=... node tools/relay.mjs --url https://flysdown.jaronwilson.dev --interval 8
  *   RELAY_TOKEN=... node tools/relay.mjs --once        # one cycle, for testing
  *
  * Keep it running with forever, pm2 or a systemd unit (see the README).
@@ -43,7 +43,7 @@ const flag = (name, fallback) => {
   return index === -1 ? fallback : args[index + 1];
 };
 
-const SITE = (flag('url', process.env.FLYSDOWN_URL || 'https://flysdown.pages.dev')).replace(/\/$/, '');
+const SITE = (flag('url', process.env.FLYSDOWN_URL || 'https://flysdown.jaronwilson.dev')).replace(/\/$/, '');
 const INTERVAL_MS = Math.max(4000, Number(flag('interval', process.env.RELAY_INTERVAL || 8)) * 1000);
 const ONCE = args.includes('--once');
 const TOKEN = process.env.RELAY_TOKEN;
