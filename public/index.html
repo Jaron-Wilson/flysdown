@@ -6,6 +6,8 @@
 <title>flysdown - live air and sea traffic with geofence projection</title>
 <meta name="description" content="Live ADS-B aircraft and AIS vessel tracking on one map, with dead-reckoning projection and alerting when traffic is heading into restricted airspace.">
 <meta name="color-scheme" content="dark">
+<!-- Stamped per deploy by tools/stamp.mjs; compared against app.js to catch a stale cached build. -->
+<meta name="build" content="dev">
 <meta property="og:title" content="flysdown - live air and sea traffic">
 <meta property="og:description" content="ADS-B and AIS on one map, with geofence projection and incursion alerting.">
 <meta property="og:type" content="website">
@@ -222,7 +224,7 @@
 
 <!-- ============ feed health, on its own line and foldable ============ -->
 <div class="feedbar" id="feedbar">
-  <button type="button" class="feedbar-toggle" id="feedbar-toggle" aria-expanded="true" aria-controls="status-text">
+  <button type="button" class="btn btn-sm feedbar-toggle" id="feedbar-toggle" aria-expanded="true" aria-controls="status-text">
     <span class="feedbar-caret" aria-hidden="true"></span>
     <span>Feeds</span>
     <span class="feedbar-dot" id="feedbar-dot" hidden title="A feed is not answering"></span>

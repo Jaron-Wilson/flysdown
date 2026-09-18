@@ -209,9 +209,7 @@ export class MapView {
         'line-color': ['case', ['==', ['get', 'leg'], 'flown'], '#6da7ec', '#9ec5f4'],
         'line-width': 1.6,
         'line-dasharray': ['case', ['==', ['get', 'leg'], 'flown'], ['literal', [1, 0]], ['literal', [4, 3]]],
-        // A route the aircraft's own track contradicts is drawn faintly: the
-        // claim is visible, without looking like something this system knows.
-        'line-opacity': ['case', ['==', ['get', 'fit'], 'mismatch'], 0.28, 0.75],
+        'line-opacity': 0.75,
       },
     });
 
@@ -598,7 +596,7 @@ export class MapView {
 
     this.setData('route-legs', (routeLegs || []).map((leg) => ({
       type: 'Feature',
-      properties: { leg: leg.leg, fit: leg.fit || 'ok' },
+      properties: { leg: leg.leg },
       geometry: { type: 'LineString', coordinates: leg.coords },
     })));
 

@@ -12,6 +12,15 @@
  */
 
 import { Feed, TargetStore, areaQuery, FEED_INTERVALS, worstFeedIssue } from './js/feeds.js';
+
+/**
+ * Which deploy this file came from, rewritten in the uploaded copy by
+ * tools/stamp.mjs. index.html carries the same stamp and is never cached,
+ * while this file can be cached for four hours, so a disagreement means the
+ * browser is running old code and the page should say so rather than quietly
+ * behave like a version that has been fixed.
+ */
+const BUILD_STAMP = 'dev';
 import { ZoneStore, prepareZone } from './js/zones.js';
 import { evaluateAll, SEVERITY_RANK } from './js/detect.js';
 import { projectPath, circleRing, distanceNm, greatCirclePath } from './js/geo.js';
@@ -53,6 +62,8 @@ const state = {
   feeds: { aircraft: { state: 'idle' }, vessels: { state: 'idle' } },
   evaluation: { alerts: [], byTarget: new Map(), zoneAlertCounts: new Map(), approaches: [] },
   pendingGeometry: null,
+  // Set when this file is older than the HTML that loaded it: see BUILD_STAMP.
+  staleBuild: null,
 };
 
 /* ---------- tracking areas ---------- */
@@ -567,16 +578,17 @@ function buildRouteLegs() {
 
   const { origin, destination } = entry.route;
 
-  // A route that disagrees with the aircraft's own position and track is still
-  // drawn, because seeing the claim is how you judge it, but it is drawn as a
-  // claim: see the route-leg paint in js/map.js.
-  const fit = routeFit(entry.route, target).verdict === 'mismatch' ? 'mismatch' : 'ok';
+  // A route the aircraft's own position contradicts is not drawn at all. Drawn
+  // faintly it was still a line from Houston through an aircraft over
+  // Washington and on to New Orleans, which reads as a path whatever its
+  // opacity, and it sent the framing button to a view of half a continent.
+  // The panel keeps the claim, with the distances that disprove it.
+  if (routeFit(entry.route, target).verdict === 'mismatch') return [];
 
   const legs = [];
   if (origin) {
     legs.push({
       leg: 'flown',
-      fit,
       airport: origin,
       coords: greatCirclePath(origin.lat, origin.lon, target.lat, target.lon, 64),
     });
@@ -584,7 +596,6 @@ function buildRouteLegs() {
   if (destination) {
     legs.push({
       leg: 'remaining',
-      fit,
       airport: destination,
       coords: greatCirclePath(target.lat, target.lon, destination.lat, destination.lon, 64),
     });
@@ -613,6 +624,16 @@ function sortedZones() {
 function updateBanner(vesselCount) {
   const air = state.feeds.aircraft || {};
   const center = mapView.map.getCenter();
+
+  // Outranks every other banner: if this is old code, nothing else it says
+  // about itself can be trusted.
+  if (state.staleBuild) {
+    ui.showBanner(
+      `This page is running an older build (${BUILD_STAMP}) than the one deployed (${state.staleBuild}), because the browser cached it. Reload with Ctrl+Shift+R, or Cmd+Shift+R on a Mac.`,
+      null
+    );
+    return;
+  }
 
   if (state.filters.aircraft && air.state === 'down') {
     ui.showBanner(
@@ -883,10 +904,18 @@ zones.onChange(() => {
   if (mapView.ready) render();
 });
 
+/** Is this file older than the HTML that loaded it? See BUILD_STAMP. */
+function checkBuildStamp() {
+  const deployed = document.querySelector('meta[name="build"]')?.getAttribute('content') || '';
+  state.staleBuild = deployed && deployed !== BUILD_STAMP ? deployed : null;
+  return state.staleBuild;
+}
+
 (async function boot() {
   // First thing, before any network round trip: a first-time visitor should
   // not stare at an unexplained map while the zone file downloads.
   if (!UI.hasBeenWelcomed()) ui.showWelcome();
+  checkBuildStamp();
   loadTracking();
   ui.renderFeedToggles(state.paused, state.feeds);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
@@ -902,4 +931,4 @@ zones.onChange(() => {
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs };
+window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP };

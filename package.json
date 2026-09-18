@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "wrangler pages dev public --port 8795",
     "test": "node --test tests/*.test.mjs",
-    "deploy": "wrangler pages deploy public --project-name=flysdown --branch=main --commit-dirty=true",
+    "deploy": "node tools/stamp.mjs && wrangler pages deploy .deploy --project-name=flysdown --branch=main --commit-dirty=true",
     "relay": "node tools/relay.mjs",
     "relay:once": "node tools/relay.mjs --once",
     "paper": "node tools/build-paper.mjs",
     "linkedin": "node tools/build-linkedin.mjs",
     "shots": "node tools/capture-shots.mjs",
-    "figures": "node tools/capture-figures.mjs"
+    "figures": "node tools/capture-figures.mjs",
+    "stamp": "node tools/stamp.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.13",

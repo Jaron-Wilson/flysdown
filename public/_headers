@@ -1,0 +1,19 @@
+# Cloudflare Pages serves this project's own modules with
+# `cache-control: public, max-age=14400, must-revalidate`, and must-revalidate
+# only bites once a response is stale, so for four hours after a deploy a
+# browser that already had the page keeps running the previous JavaScript
+# without asking. That made a fix that was deployed and verified in production
+# invisible to the person who reported the bug.
+#
+# Measured: Pages will not go below that floor. `Cache-Control: no-cache` here
+# came back as `max-age=14400`, and `public, max-age=0, must-revalidate` was
+# ignored outright. Values above the floor are honored, which is why vendor/
+# works. The mitigation therefore lives in the page: index.html is served with
+# max-age=0, so it always carries the current build stamp, and app.js compares
+# that stamp with the one baked into itself and says so when they differ.
+#
+# Third-party code changes only when it is deliberately upgraded, so it keeps a
+# week rather than four hours.
+
+/vendor/*
+  Cache-Control: public, max-age=604800

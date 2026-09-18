@@ -451,7 +451,7 @@ export class UI {
           ${leg(destination, 'To')}
         </ul>
         <dl class="kv">${rows}</dl>
-        <button class="btn btn-sm" type="button" id="detail-route">Frame the whole route</button>`;
+        ${wrong ? '' : '<button class="btn btn-sm" type="button" id="detail-route">Frame the whole route</button>'}`;
     }
 
     // How much of its path we have actually watched.

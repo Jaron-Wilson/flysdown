@@ -330,9 +330,18 @@ const feedbar = await page.evaluate(() => {
     footerLinks: [...footer.querySelectorAll('a')].map((a) => a.textContent.trim()),
     dotShown: !document.getElementById('feedbar-dot').hidden,
   };
+  // The fold button must read as one of this app's buttons, not a control of
+  // its own: same type, weight, corner and case as any other .btn.
+  const themeOf = (el) => {
+    const s = getComputedStyle(el);
+    return [s.fontFamily, s.fontSize, s.fontWeight, s.borderRadius, s.textTransform, s.borderColor, s.color].join('|');
+  };
+  const themeMatchesButtons = themeOf(document.getElementById('feedbar-toggle')) === themeOf(document.getElementById('help-btn'));
+
   document.getElementById('feedbar-toggle').click();
   return {
     ...before,
+    themeMatchesButtons,
     foldedHidesText: !document.getElementById('status-text').offsetParent,
     remembered: localStorage.getItem('flysdown.feedbar.folded.v1'),
   };
@@ -344,6 +353,7 @@ if (!feedbar.titleHoldsFullText) errors.push('the full status text is not on the
 if (!feedbar.foldedHidesText) errors.push('folding the feed line did not hide the status text');
 if (feedbar.remembered !== '1') errors.push('the folded state was not remembered');
 if (!feedbar.dotShown) errors.push('a down feed did not light the dot on the fold button');
+if (!feedbar.themeMatchesButtons) errors.push('the feed fold button is styled unlike the rest of the buttons');
 if (/ADS-B:|AIS:|horizon/.test(feedbar.footerText)) errors.push(`feed diagnostics are still in the footer: ${feedbar.footerText}`);
 if (feedbar.footerLinks.join(',') !== 'jaronwilson.dev,jaronwilson.org,LinkedIn') {
   errors.push(`unexpected footer links: ${feedbar.footerLinks.join(',')}`);
@@ -355,41 +365,102 @@ if (!/^jaronwilson\.dev jaronwilson\.org LinkedIn Built by Jaron Wilson\. Not fo
 // Put it back, so the remaining steps and the screenshots see the normal page.
 await page.evaluate(() => document.getElementById('feedbar-toggle').click());
 
+step('a cached older build announces itself');
+const staleCheck = await page.evaluate(() => {
+  const meta = document.querySelector('meta[name="build"]');
+  const original = meta.getAttribute('content');
+
+  // No false positive on the build actually being served.
+  const atLoad = window.flysdown.checkBuildStamp();
+
+  // Then pretend the HTML came from a later deploy than this app.js, which is
+  // exactly what a four-hour asset cache produces.
+  meta.setAttribute('content', 'deployed-later');
+  const detected = window.flysdown.checkBuildStamp();
+  window.flysdown.tick();
+  const banner = document.getElementById('map-banner');
+  const text = banner.hidden ? null : banner.textContent.replace(/\s+/g, ' ');
+
+  meta.setAttribute('content', original);
+  window.flysdown.checkBuildStamp();
+  window.flysdown.tick();
+  return { atLoad, detected, text, cleared: window.flysdown.state.staleBuild === null, stamp: window.flysdown.BUILD_STAMP };
+});
+console.log(`  ${JSON.stringify(staleCheck)}`);
+if (staleCheck.atLoad !== null) errors.push(`the served build reported itself stale: ${JSON.stringify(staleCheck)}`);
+if (staleCheck.detected !== 'deployed-later') errors.push('a stale cached build was not detected');
+if (!/older build/.test(staleCheck.text || '')) errors.push(`no banner for a stale build: ${staleCheck.text}`);
+if (!staleCheck.cleared) errors.push('the stale-build state did not clear');
+
 step('a route that disagrees with the aircraft is labeled, not asserted');
 const routeCheck = await page.evaluate(async () => {
-  const { store, routes, ui, state, buildRouteLegs } = window.flysdown;
-  const aircraft = [...store.all()].find((tgt) => tgt.kind === 'aircraft' && tgt.callsign);
-  if (!aircraft) return { skipped: 'no aircraft with a callsign on screen' };
+  const { ui, routeFit, buildRouteLegs, store, state, routes } = window.flysdown;
 
-  // Leipzig to Cologne, the route reported for BCS30A while it was over
-  // France: a real adsbdb answer for a leg the aircraft was not flying.
-  routes.set(aircraft.callsign, {
+  // Synthetic on purpose: SWA1246 as it actually appeared, over Washington and
+  // descending, against the route adsbdb reports for that callsign. Live
+  // traffic is not required, so this asserts the same thing on every run.
+  const target = {
+    id: 'aa9b42',
+    key: 'aircraft:aa9b42',
+    kind: 'aircraft',
+    label: 'SWA1246',
+    callsign: 'SWA1246',
+    registration: 'N7827A',
+    typeCode: 'B737',
+    lat: 38.85,
+    lon: -77.04,
+    alt: 5375,
+    groundSpeed: 250,
+    track: 316,
+    verticalRate: -1152,
+    squawk: '2174',
+    history: [],
+    seenPosSec: 38,
+    seenSec: 0,
+    source: 'adsb.fi',
+  };
+  const route = {
     status: 'ok',
     route: {
-      origin: { icao: 'EDDP', municipality: 'Leipzig', name: 'Leipzig/Halle Airport', lat: 51.4239, lon: 12.2364 },
-      destination: { icao: 'EDDK', municipality: 'Cologne', name: 'Cologne Bonn Airport', lat: 50.8659, lon: 7.1427 },
-      airline: { name: 'European Air Transport' },
+      origin: { icao: 'KIAH', municipality: 'Houston', name: 'George Bush Intercontinental Houston Airport', lat: 29.9844, lon: -95.3414 },
+      destination: { icao: 'KMSY', municipality: 'New Orleans', name: 'Louis Armstrong New Orleans International Airport', lat: 29.9934, lon: -90.258 },
+      airline: { name: 'Southwest Airlines' },
     },
-  });
-  state.selectedKey = aircraft.key;
-  ui.renderDetail(aircraft, { evaluation: null, approaches: [], route: routes.get(aircraft.callsign), track: [] });
+  };
 
+  const fit = routeFit(route.route, target);
+  ui.renderDetail(target, { evaluation: null, approaches: [], route, track: [] });
   const panel = document.getElementById('detail').textContent.replace(/\s+/g, ' ');
+
+  // And the same route on a real aircraft, to prove nothing is drawn for it.
+  let drawn = null;
+  const real = store.byKind('aircraft').find((t) => t.callsign);
+  if (real) {
+    routes.set(real.callsign, route);
+    state.selectedKey = real.key;
+    drawn = buildRouteLegs().length;
+  }
+
   return {
-    callsign: aircraft.callsign,
+    verdict: fit.verdict,
+    reason: fit.reason,
+    detourNm: Math.round(fit.detourNm),
     flagged: panel.includes('unverified'),
     explains: /does not match where the aircraft is/.test(panel),
     withholdsArrival: !panel.includes('Arrival at this speed'),
-    legsDimmed: buildRouteLegs().every((leg) => leg.fit === 'mismatch'),
+    notFramable: !document.getElementById('detail-route'),
+    legsDrawnForRealAircraft: drawn,
   };
 });
 console.log(`  ${JSON.stringify(routeCheck)}`);
-if (!routeCheck.skipped) {
-  if (!routeCheck.flagged) errors.push('a contradicted route was not marked unverified');
-  if (!routeCheck.explains) errors.push('a contradicted route did not say why it looks wrong');
-  if (!routeCheck.withholdsArrival) errors.push('an arrival time was quoted off a route the aircraft is not flying');
-  if (!routeCheck.legsDimmed) errors.push('the map legs of a contradicted route were not marked as a mismatch');
+if (routeCheck.verdict !== 'mismatch' || routeCheck.reason !== 'detour') {
+  errors.push(`the SWA1246 case was not caught: ${JSON.stringify(routeCheck)}`);
 }
+if (!routeCheck.flagged) errors.push('a contradicted route was not marked unverified');
+if (!routeCheck.explains) errors.push('a contradicted route did not say why it looks wrong');
+if (!routeCheck.withholdsArrival) errors.push('an arrival time was quoted off a route the aircraft is not flying');
+if (!routeCheck.notFramable) errors.push('a contradicted route still offered to frame itself');
+if (routeCheck.legsDrawnForRealAircraft) errors.push('a contradicted route was still drawn on the map');
 await page.evaluate(() => window.flysdown.ui.renderDetail(null, {}));
 
 step('drawing a circular zone');

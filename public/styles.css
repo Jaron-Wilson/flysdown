@@ -609,23 +609,16 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
   text-overflow: ellipsis;
   font-variant-numeric: tabular-nums;
 }
+/* Layout only: the look comes from .btn like every other button here, so it
+   reads as the same control as Help or Pin this view rather than a pill of
+   its own. Slightly tighter padding keeps this line thinner than the header. */
 .feedbar-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   flex: 0 0 auto;
-  padding: 3px 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  cursor: pointer;
+  padding: 4px 10px;
 }
-.feedbar-toggle:hover { color: var(--ink); border-color: var(--border-strong); }
 .feedbar-caret {
   width: 0;
   height: 0;

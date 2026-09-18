@@ -81,7 +81,9 @@ map: it is too close to the vessel orange to be told apart.
   can be a route the aircraft is not flying today. If the two legs do not add up
   to the length of the route, or the aircraft is well out and tracking away from
   the destination, the route is labeled unverified, the arrival estimate is
-  withheld and the map legs are drawn faintly.
+  withheld, and the route is not drawn on the map at all. Two real cases it
+  catches: BCS30A reported as Leipzig to Cologne while over France, and SWA1246
+  reported as Houston to New Orleans while descending into Washington.
 - Timestamps every contact. Each target's age combines how long ago the
   receiver network last heard from it with how long ago we fetched that answer,
   so nothing claims to be fresher than it is. Contacts fade as their position
@@ -228,6 +230,23 @@ poll in twenty. Raise `--interval` if that ever gets close.
 `GET /api/relay` lists the regions being viewed, with the age of each stored
 snapshot. `POST /api/relay` stores a snapshot. Both require
 `Authorization: Bearer $RELAY_TOKEN` and are for the poller only.
+
+## Deploys and the asset cache
+
+Pages serves this project's own modules with `cache-control: max-age=14400,
+must-revalidate`, and will not honor anything shorter in `_headers`: `no-cache`
+came back as `max-age=14400`. So for up to four hours after a deploy, a browser
+that already had the page open keeps running the previous JavaScript, which has
+twice looked like a fix not working.
+
+`npm run deploy` therefore stages a stamped copy of `public/` into `.deploy/`
+(`tools/stamp.mjs`) with the same build stamp in `index.html` and in `app.js`.
+`index.html` is never cached, so a page whose script disagrees with its HTML
+knows it is stale and says so in the banner, with the reload keys. `npm run dev`
+serves `public/` untouched, where both stamps read `dev`.
+
+If you are looking at the live site and something you expect is missing, reload
+with Ctrl+Shift+R (Cmd+Shift+R) and check the banner.
 
 ## Custom domain
 

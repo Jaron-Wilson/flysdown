@@ -216,10 +216,23 @@ a route with both endpoints that contradicts nothing is reported as consistent,
 a route with one usable endpoint stays unknown. What they do is stop the system
 asserting a destination the aircraft is demonstrably not flying to. When either
 fires, the route block is labeled unverified, the caveat names the three
-distances that disagree, the arrival estimate is withheld rather than computed
-from a route that is not being flown, and the legs on the map are drawn at low
-opacity: the claim stays visible, because seeing it is how a reader judges it,
-but it no longer looks like something this system knows.
+distances that disagree, and the arrival estimate is withheld rather than
+computed from a route that is not being flown. The route is not drawn on the
+map at all, and the button that frames a whole flight is withheld with it.
+Drawing it faintly was tried first and abandoned: a line from Houston through
+an aircraft over Washington and on to New Orleans reads as a path whatever its
+opacity, and framing it produced a view of half a continent. The claim stays in
+the panel, where the numbers that disprove it are next to it.
+
+A second instance, the same day, shows why the check earns its place rather
+than being a tidy-up. Callsign SWA1246 was over Washington, inside the DC
+Special Flight Rules Area and descending through 5,375 feet, while adsbdb
+reported it as Houston (KIAH) to New Orleans (KMSY): 1,048 NM from the origin
+and 842 NM from the destination on a 264 NM leg, a detour of 1,626 NM
+**[measured]**. The flight that day was Providence to Washington National. The
+callsign was right and the leg was long out of date, which is exactly the
+failure mode a callsign-keyed lookup produces and exactly what a position can
+refute.
 
 ## 3. Architecture
 
@@ -694,9 +707,9 @@ from the origin airport to the aircraft's current position and on to the
 destination, with the airports marked and labeled. The panel adds the distance
 flown from the origin, the distance remaining and an arrival time at the
 current ground speed, and a button frames the whole flight. When the route
-fails the plausibility checks of Section 2.4 the same legs are drawn at low
-opacity and the distances are relabeled as distances to the two airports, not
-as progress along a flight.
+fails the plausibility checks of Section 2.4 none of that is drawn: the legs
+and the framing button are withheld, and the panel relabels the distances as
+distances to the two airports rather than progress along a flight.
 
 ![**Figure 2.** A selected United flight from Philadelphia to Chicago O'Hare. The solid line behind the aircraft is its observed track; the dashed legs are the published route, interpolated as great circles from the origin airport through the aircraft to the destination. The rail lists distance flown, distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
 
@@ -805,9 +818,37 @@ relay runs as a long-lived process wherever there is an ordinary IP, kept alive
 by `forever`, with a systemd user unit documented for reboot persistence; its
 shared secret lives in a gitignored file the script reads itself, matching a
 Pages secret, and the relay endpoints compare the bearer token byte by byte
-after a length check. For diagnosis the interface comes first: the status bar
-names the path that served the data, its age and the last poll, and the banner
-distinguishes a rate-limited edge from a stopped relay.
+after a length check. For diagnosis the interface comes first: the feed
+line names the path that served the data, its age and the last poll, and the
+banner distinguishes a rate-limited edge from a stopped relay.
+
+One deployment property is worth recording because it made a verified fix
+invisible. Pages served the application's own modules with `cache-control:
+public, max-age=14400, must-revalidate` **[measured]**, and `must-revalidate`
+only takes effect once a response is stale, so for four hours after a deploy a
+browser that already had the page kept running the previous JavaScript without
+asking. A fix can therefore be deployed, smoke-tested in production and still
+absent for the person who reported the bug, who is the one most likely to have
+the page already open. That is not a hypothetical: it happened twice here, with
+the route check of Section 2.4 reported as missing when it was live and working.
+
+The obvious remedy does not work. A `_headers` file asking for
+`max-age=0, must-revalidate` on the application's own files was ignored, and
+`Cache-Control: no-cache` came back from the live site as `max-age=14400`
+**[measured]**: Pages will not serve its static assets below that floor, though
+it honors values above it, which is why `vendor/*` successfully keeps a week.
+With no build step there is no content hashing in the filenames to force the
+issue either.
+
+What is left is the one response that is always fresh. `index.html` is served
+with `max-age=0`, so the deployed build stamp can travel in a meta tag, and the
+same stamp is written into `app.js` in the copy that gets uploaded. A page
+whose script disagrees with its own HTML is therefore able to detect that it is
+old code and say so in the banner, above every other message, naming both
+stamps and how to force the reload. It cannot fix itself, but a stale page that
+declares itself stale stops costing someone else an afternoon. The general
+lesson: when a platform caches your code longer than your deploy cycle, verify
+against a cold cache, and give the page a way to notice.
 
 Known limits: AIS coverage is the Baltic and Gulf of Finland only, because that
 is what a keyless live feed covers; the projection is a straight line, right for
@@ -850,6 +891,8 @@ attention on redistribution.
 | adsbdb answers the Cloudflare edge, unlike the ADS-B aggregators | `/api/route` exercised from the deployed Worker **[measured]** |
 | A callsign-keyed route can contradict the aircraft: BCS30A resolved to EDDP-EDDK, 489 NM from one and 304 NM from the other on a 195 NM leg | Observed in the running system, 17 September 2026 **[measured]** |
 | A proxy error with no colon in it was quoted verbatim in the status line | Cloudflare 520 body observed in the interface **[measured]** |
+| Second route case: SWA1246 over Washington reported as KIAH-KMSY, 1,048 and 842 NM from them on a 264 NM leg | Live lookup and position compared, 17 September 2026 **[measured]** |
+| Pages served application modules with `max-age=14400, must-revalidate`, hiding a deployed fix for four hours, and will not honor a shorter value in `_headers` | Response headers read from the live site before and after a `_headers` change **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
 ## 11. Author contributions
