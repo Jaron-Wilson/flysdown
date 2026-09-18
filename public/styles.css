@@ -372,6 +372,17 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 }
 .tag-warn { border-color: var(--warning); color: var(--warning); }
 
+/* An arrival, which is an event rather than a fault: stated plainly, in the
+   ordinal ramp's own low-altitude color rather than an alert color. */
+.landed-note {
+  margin: 8px 0 10px;
+  padding: 7px 10px;
+  border-left: 2px solid #6da7ec;
+  background: rgba(109, 167, 236, 0.08);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+
 /* ---------- stat tiles ---------- */
 
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }

@@ -43,11 +43,17 @@ console.log('01-dc: aircraft =', await page.evaluate(() => window.flysdown.store
 // empty ocean, so prefer a flight whose airports are 2 to 22 degrees apart.
 const route = await page.evaluate(async () => {
   const candidates = window.flysdown.store.byKind('aircraft')
-    .filter((a) => a.callsign && /^[A-Z]{3}\d/.test(a.callsign) && !a.onGround && (a.alt || 0) > 25000);
+    .filter((a) => a.callsign && /^[A-Z]{3}\d/.test(a.callsign) && !a.onGround && (a.alt || 0) > 15000);
   for (const aircraft of candidates) {
     window.flysdown.mapView.onSelect(aircraft.key);
     await new Promise((r) => setTimeout(r, 2200));
     window.flysdown.tick();
+
+    // A route that fails the plausibility check draws nothing, by design, so
+    // it is no use for a screenshot of a route.
+    const entry = window.flysdown.routes.get(aircraft.callsign);
+    if (entry?.status !== 'ok' || window.flysdown.routeFit(entry.route, aircraft).verdict === 'mismatch') continue;
+
     const legs = window.flysdown.buildRouteLegs();
     if (legs.length === 2) {
       const span = Math.abs(legs[0].airport.lon - legs[1].airport.lon);

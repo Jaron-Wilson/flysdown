@@ -56,7 +56,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 7,308 lines across browser modules, edge functions, the shared
+The system is 7,726 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -210,6 +210,17 @@ and 35 percent of the leg. The second is a bearing test: an aircraft more than
 25 NM from its destination and tracking more than 75 degrees away from it is
 not going there. Below 25 NM the heading is about the approach, not the
 destination, so the check is skipped rather than made to lie.
+
+A second route source was measured rather than assumed to help. hexdb.io
+answers callsign lookups from the edge and disagreed with adsbdb on every one
+of the seven sampled callsigns that it knew: ENY4047 as KDFW-KSJT-KDFW against
+KPHX-KSLC, AAL1314 as KLAX-KMIA against KPHL-KAUS, JZA786 as CYUL-CYSJ against
+CYYZ-KDCA **[measured]**. The last of those is decisive: JZA786 was checked
+independently and adsbdb had it right, so cross-referencing the two would have
+flagged a correct route as disputed. Agreement between two databases of the
+same kind of crowd-sourced data is not evidence, so the second source was not
+adopted. What is offered instead is a link, per selected flight, to a source
+that does know the day's leg, which is the check being made by hand anyway.
 
 Neither check can prove a route right, and they are not presented as doing so:
 a route with both endpoints that contradicts nothing is reported as consistent,
@@ -452,6 +463,18 @@ truths: the White House is inside P-56A, Dulles is not.
 | Rapid descent | Below -4,000 ft/min, or -3,000 ft/min under 10,000 ft | Warning; serious when low |
 | Orbit or hold | Over 270 degrees cumulative turn inside a 12 NM footprint over 150 s | Notice |
 | Close approach (vessels) | Projected CPA within the limit (default 1 NM) and TCPA inside 30 min | By CPA band, reduced one step beyond 15 min |
+| Landed | On the ground now, or under 250 ft below 60 kt, having been above 1,000 ft within 15 min | Good, an event rather than a fault |
+
+The landing rule is the only one that reports something going right, and it
+exists because watching an aircraft you have been following actually arrive is
+part of why anyone runs a dashboard like this. ADS-B has no "landed" message,
+so the rule reads a transition out of the observed history: on the ground now,
+and demonstrably airborne a few minutes ago. Both halves are needed. An
+aircraft parked at a gate has been on the ground all along and has not just
+landed; an aircraft at 400 ft doing 140 kt is on approach and has not landed
+yet; a taxiing aircraft reporting 200 ft on a barometric setting has. Its
+severity is `good`, which keeps it in the alert rail and out of the count of
+things wrong.
 
 Severity is computed, not stored: zone kind gives a base rank and the projected
 time reduces it, so an aircraft escalates from warning to serious to critical as
@@ -696,6 +719,18 @@ panels and the map become four full-screen views behind a bottom tab bar, with
 an alert count on the Alerts tab, rather than a tall page with the map at the
 top and everything else stacked underneath.
 
+Every target also has its own address. Selecting one writes a fragment,
+`#JZA786` for a flight, the ICAO hex for an aircraft with no callsign, the MMSI
+for a ship, so a particular target can be linked, shared or returned to, the
+way a flight-tracking site gives each flight a page. It is a fragment rather
+than a path because this is a single static page with no server-side routing,
+and it is written with `replaceState` so selecting a dozen aircraft does not
+leave a dozen entries in the back button. Opening such a link selects that
+target as soon as it appears in the feed. Because the feed only carries the
+area being watched, a target named in a link may genuinely not be present, and
+after twenty seconds of looking the page says so and suggests moving the map or
+pinning the area, rather than sitting silently on a link that appears broken.
+
 ### 7.4 Flight history and where it is going
 
 Selecting an aircraft answers three questions at once. Its **observed track**
@@ -710,6 +745,32 @@ current ground speed, and a button frames the whole flight. When the route
 fails the plausibility checks of Section 2.4 none of that is drawn: the legs
 and the framing button are withheld, and the panel relabels the distances as
 distances to the two airports rather than progress along a flight.
+
+Airport codes are shown as IATA rather than ICAO, because a flight from
+Charleston to Washington National is CRW to DCA on every board and boarding
+pass, not KCRW to KDCA. Where the route data carries no IATA code the code is
+still usually derivable rather than unknown: an ICAO identifier in the
+contiguous United States is K followed by the three-letter code, and in Canada
+C followed by a code beginning Y or Z, both by the structure of the ICAO
+location indicator system rather than by coincidence **[standard]**. Those two
+prefixes are dropped; everywhere else, including Alaska and Hawaii where the
+mapping is not one to one, the ICAO code is shown as it stands.
+
+The origin is marked but never drawn to, which is a correction. A great circle
+from the departure airport to the aircraft's present position looks like the
+path flown and is not: real flights follow airways, take vectors, and hold.
+Jaron put it exactly right, that "it did not come from that spot". What can be
+drawn of the past is the track this system has watched, and that is the solid
+line, so the origin keeps its marker and loses its line.
+
+There is no honest way to draw the rest. Historical tracks are not available
+from any keyless source: the trace endpoints of globe.adsb.fi,
+globe.airplanes.live and globe.adsbexchange.com all answer 403, and
+api.adsb.lol has no trace route at all, measured from an ordinary residential
+address rather than from the edge **[measured]**. The observed window is
+therefore widened instead, to 45 minutes and 400 positions per target, and the
+panel says what the line is: positions actually watched, still extending, with
+nothing before this system first saw the target.
 
 ![**Figure 2.** A selected United flight from Philadelphia to Chicago O'Hare. The solid line behind the aircraft is its observed track; the dashed legs are the published route, interpolated as great circles from the origin airport through the aircraft to the destination. The rail lists distance flown, distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
 
@@ -760,7 +821,7 @@ the not-for-navigation notice.
 
 ## 8. Verification
 
-**Unit tests (38, no network).** The geometry and the rules: haversine and
+**Unit tests (45, no network).** The geometry and the rules: haversine and
 destination round-tripping, ray casting against known points, inside and
 projected alerts, severity escalation with closing time, altitude band
 exclusion, a descending target entering the band mid-projection, the small-zone
@@ -892,6 +953,8 @@ attention on redistribution.
 | A callsign-keyed route can contradict the aircraft: BCS30A resolved to EDDP-EDDK, 489 NM from one and 304 NM from the other on a 195 NM leg | Observed in the running system, 17 September 2026 **[measured]** |
 | A proxy error with no colon in it was quoted verbatim in the status line | Cloudflare 520 body observed in the interface **[measured]** |
 | Second route case: SWA1246 over Washington reported as KIAH-KMSY, 1,048 and 842 NM from them on a 264 NM leg | Live lookup and position compared, 17 September 2026 **[measured]** |
+| hexdb.io disagrees with adsbdb on every sampled callsign it knows, including one where adsbdb was right | Both sources queried for ten callsigns **[measured]** |
+| No keyless source serves a flight's historical track: every trace endpoint probed answers 403 | globe.adsb.fi, globe.airplanes.live, globe.adsbexchange.com and api.adsb.lol probed from a residential address **[measured]** |
 | Pages served application modules with `max-age=14400, must-revalidate`, hiding a deployed fix for four hours, and will not honor a shorter value in `_headers` | Response headers read from the live site before and after a `_headers` change **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 

@@ -52,7 +52,23 @@ const BEARING_LIMIT_DEG = 75;
  * DCA on every board and ticket, not KCRW to KDCA. IATA first, then ICAO for
  * the military and general aviation fields that have no IATA code at all.
  */
-export const airportCode = (airport) => airport?.iata || airport?.icao || '';
+export function airportCode(airport) {
+  if (airport?.iata) return airport.iata;
+
+  const icao = airport?.icao || '';
+
+  // Where a route database has no IATA code, the code is often still derivable
+  // rather than unknown. In the contiguous United States an ICAO identifier is
+  // the letter K followed by the three-letter code (KDCA is DCA, KJFK is JFK),
+  // and in Canada it is C followed by a code that begins with Y or Z (CYYZ is
+  // YYZ). Both are conventions of the ICAO location indicator system rather
+  // than coincidences, so the leading letter can be dropped. Everywhere else,
+  // including Alaska and Hawaii where the mapping is not one to one, the ICAO
+  // code is shown as it stands rather than guessed at.
+  if (/^K[A-Z]{3}$/.test(icao)) return icao.slice(1);
+  if (/^C[YZ][A-Z]{2}$/.test(icao)) return icao.slice(1);
+  return icao;
+}
 
 export function routeFit(route, target) {
   const origin = airportPoint(route?.origin);

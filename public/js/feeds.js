@@ -8,8 +8,11 @@ import { distanceNm } from './geo.js';
 
 const AIRCRAFT_INTERVAL_MS = 5000;
 const VESSEL_INTERVAL_MS = 15000;
-const MAX_HISTORY_POINTS = 150;
-const HISTORY_WINDOW_MS = 10 * 60 * 1000;
+const MAX_HISTORY_POINTS = 400;
+// How much observed track to keep per target. This is the only record of
+// where an aircraft has actually been: no keyless ADS-B source serves history
+// (every trace endpoint probed answers 403), so what is not kept here is gone.
+const HISTORY_WINDOW_MS = 45 * 60 * 1000;
 const DROP_AFTER_MS = 3 * 60 * 1000;
 // How long a target inside the covered area may go unreported before it is
 // dropped. Long enough to ride out one missed poll, short enough that the map

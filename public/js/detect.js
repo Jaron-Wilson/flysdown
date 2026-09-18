@@ -31,6 +31,10 @@ export const DEFAULTS = {
   orbitTurnDeg: 270,        // cumulative turn that counts as a hold/orbit
   orbitRadiusNm: 12,
   orbitMinSec: 150,
+  landedAltFt: 250,         // at or below this, with taxi speed, counts as down
+  landedSpeedKt: 60,
+  airborneAltFt: 1000,      // a previous sample this high means it was flying
+  landedWindowSec: 900,     // how long a landing stays worth reporting
   staleSec: 60,
 };
 
@@ -175,6 +179,43 @@ export function detectOrbit(target, opts = DEFAULTS) {
 }
 
 /** Run every rule against one target. Returns alerts plus per-zone detail. */
+/**
+ * Has this aircraft just landed?
+ *
+ * ADS-B has no "landed" message. What it has is the transition: a target that
+ * reports itself on the ground, or is at taxi speed a few hundred feet up on a
+ * barometric reading, and that was demonstrably airborne a few minutes ago in
+ * the history this system has watched. Both halves are needed. An aircraft
+ * sitting at a gate has been on the ground all along and has not just landed,
+ * and an aircraft at 400 ft on approach has not landed yet.
+ *
+ * Returns the landing with how long ago it happened, so the interface can say
+ * "landed 2 minutes ago" and let it fall off after a while.
+ */
+export function detectLanding(target, options = {}) {
+  const opts = { ...DEFAULTS, ...options };
+  if (target.kind !== 'aircraft') return null;
+
+  const speed = typeof target.groundSpeed === 'number' ? target.groundSpeed : 0;
+  const low = typeof target.alt === 'number' && target.alt <= opts.landedAltFt;
+  const down = Boolean(target.onGround) || (low && speed < opts.landedSpeedKt);
+  if (!down) return null;
+
+  const history = target.history || [];
+  const now = opts.now || target.updatedAt || Date.now();
+
+  for (let i = history.length - 1; i >= 0; i -= 1) {
+    const sample = history[i];
+    if (typeof sample.alt !== 'number' || sample.alt < opts.airborneAltFt) continue;
+
+    const agoSec = Math.round((now - sample.t) / 1000);
+    if (agoSec < 0 || agoSec > opts.landedWindowSec) return null;
+    return { agoSec, fromAltFt: sample.alt, at: sample.t };
+  }
+
+  return null;
+}
+
 export function evaluateTarget(target, zones, options = {}) {
   const opts = { ...DEFAULTS, ...options };
   const alerts = [];
@@ -272,6 +313,22 @@ export function evaluateTarget(target, zones, options = {}) {
           detail: `${target.label} descending ${Math.abs(Math.round(vs))} ft/min through ${ft(target.alt)}.`,
         });
       }
+    }
+
+    const landing = detectLanding(target, opts);
+    if (landing) {
+      alerts.push({
+        id: `${target.id}:landed`,
+        rule: 'landed',
+        // Not a warning about anything: an event worth seeing.
+        severity: 'good',
+        targetId: target.id,
+        targetKind: target.kind,
+        targetLabel: target.label,
+        title: 'Landed',
+        detail: `${target.label} was airborne at ${ft(landing.fromAltFt)} ${mins(landing.agoSec)} ago and is now on the ground.`,
+        agoSec: landing.agoSec,
+      });
     }
 
     const orbit = detectOrbit(target, opts);

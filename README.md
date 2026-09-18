@@ -15,7 +15,7 @@ table separating what was measured from what is documented or standardized.
 It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
 contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
-`docs/flysdown-paper.pdf` is the same thing paginated (12 pages with figures),
+`docs/flysdown-paper.pdf` is the same thing paginated (13 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 `docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
@@ -76,6 +76,19 @@ map: it is too close to the vessel orange to be told apart.
   selected, plus the published origin and destination airports as great circles
   with distance flown, distance remaining and an arrival estimate. ADS-B does
   not carry a schedule, so routes come from adsbdb, cached hard at the edge.
+- Gives every target its own URL: `#JZA786` for a flight, the ICAO hex for an
+  aircraft with no callsign, the MMSI for a ship. Open one and it selects that
+  target as soon as the feed has it, or tells you it is not in the area being
+  watched. Each selected flight also carries a link to check it against
+  FlightAware, which knows the day's actual leg.
+- Marks an aircraft as landed when it lands: on the ground now, having been
+  above 1,000 ft in the last quarter hour. It reads as an event, not an alert,
+  and does not count toward the "something is wrong" badge.
+- Draws only the path it has actually watched. The departure airport is marked
+  but never drawn to: a straight line from there to the aircraft claims a path
+  no flight flies. No keyless source serves a flight's earlier track (every
+  trace endpoint probed answers 403), so the observed window is 45 minutes and
+  400 positions per target and the panel says what the line is.
 - Checks a reported route before believing it. adsbdb keys routes on the
   callsign, and a callsign is a flight number rather than a leg, so the answer
   can be a route the aircraft is not flying today. If the two legs do not add up

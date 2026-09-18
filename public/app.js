@@ -64,6 +64,10 @@ const state = {
   pendingGeometry: null,
   // Set when this file is older than the HTML that loaded it: see BUILD_STAMP.
   staleBuild: null,
+  // A callsign from the URL that has not been found in the feed yet.
+  pendingHash: null,
+  pendingHashSince: 0,
+  missingHash: null,
 };
 
 /* ---------- tracking areas ---------- */
@@ -283,6 +287,84 @@ function updateSelectedTrack() {
 
 /* ---------- selection ---------- */
 
+/* ---------- one URL per target ---------- */
+
+/**
+ * The address for a target: `#JZA786` for a flight, the ICAO hex for an
+ * aircraft with no callsign, the MMSI for a ship.
+ *
+ * FlightAware gives every flight its own page, which is how someone checks or
+ * shares one, and Jaron asked for the same here with a fragment rather than a
+ * path because this is one static page. The fragment is written with
+ * replaceState, so selecting six aircraft in a row does not leave six entries
+ * in the back button.
+ */
+function hashFor(target) {
+  if (!target) return null;
+  if (target.kind === 'vessel') return String(target.mmsi || target.id || '').toUpperCase();
+  return String(target.callsign || target.id || '').toUpperCase();
+}
+
+function syncHash(target) {
+  const wanted = hashFor(target);
+  const next = wanted ? `#${wanted}` : '';
+  if (location.hash === next) return;
+  history.replaceState(null, '', next || `${location.pathname}${location.search}`);
+}
+
+/** A target named in the URL, if it is one this page could resolve. */
+function readHash() {
+  const raw = decodeURIComponent(location.hash.replace(/^#/, '')).trim().toUpperCase();
+  return /^[A-Z0-9][A-Z0-9-]{1,11}$/.test(raw) ? raw : null;
+}
+
+function findByHash(wanted) {
+  if (!wanted) return null;
+  return store.all().find((target) => hashFor(target) === wanted) || null;
+}
+
+/**
+ * Try to honor the URL. The feed only carries the area being watched, so a
+ * flight named in the URL may simply not be here: keep looking while updates
+ * arrive, then say so rather than leaving the panel silent.
+ */
+const PENDING_HASH_TIMEOUT_MS = 20000;
+
+function resolvePendingHash() {
+  if (!state.pendingHash) return;
+
+  const target = findByHash(state.pendingHash);
+  if (target) {
+    state.missingHash = null;
+    state.pendingHash = null;
+    selectTarget(target.key);
+    mapView.panTo(target.lon, target.lat);
+    return;
+  }
+
+  if (Date.now() - state.pendingHashSince > PENDING_HASH_TIMEOUT_MS) {
+    state.missingHash = state.pendingHash;
+    state.pendingHash = null;
+  }
+}
+
+function requestHash(wanted) {
+  state.pendingHash = wanted;
+  state.pendingHashSince = Date.now();
+  state.missingHash = null;
+  if (wanted) resolvePendingHash();
+}
+
+window.addEventListener('hashchange', () => {
+  const wanted = readHash();
+  if (!wanted) {
+    if (state.selectedKey) selectTarget(null);
+    return;
+  }
+  if (hashFor(state.selectedKey ? store.get(state.selectedKey) : null) === wanted) return;
+  requestHash(wanted);
+});
+
 function selectTarget(key) {
   state.selectedKey = key;
   store.protect(key);
@@ -295,6 +377,8 @@ function selectTarget(key) {
     track: state.track.points,
   });
   ui.focusDetail(Boolean(target));
+  syncHash(target);
+  if (target) state.missingHash = null;
   render();
 }
 
@@ -462,6 +546,7 @@ function tick() {
     closeApproaches: state.filters.approaches && state.filters.vessels,
   });
 
+  resolvePendingHash();
   updateSelectedTrack();
   if (!state.selectedKey) {
     // Clearing the selection has to clear the panel too: without this it kept
@@ -559,7 +644,9 @@ function render(candidates = visibleTargets()) {
   ui.renderZones(sortedZones(), state.evaluation.zoneAlertCounts);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
   ui.renderFeedToggles(state.paused, state.feeds);
-  ui.renderAlertBadge(state.evaluation.alerts.length);
+  // 'good' covers events like a landing, which belong in the rail but should
+  // not inflate a count that reads as "things wrong right now".
+  ui.renderAlertBadge(state.evaluation.alerts.filter((alert) => alert.severity !== 'good').length);
   ui.renderMapPin(state.tracking.length);
 
   updateBanner(vessels.length);
@@ -586,13 +673,18 @@ function buildRouteLegs() {
   if (routeFit(entry.route, target).verdict === 'mismatch') return [];
 
   const legs = [];
+
+  // The origin is marked, not drawn to. A great circle from the departure
+  // airport to the aircraft's current position claims a path it did not fly:
+  // airways, vectors and holds are not straight, and Jaron noticed. What this
+  // system can honestly draw of the past is the track it has actually watched,
+  // which is the solid line, so the origin gets its marker and nothing more.
   if (origin) {
-    legs.push({
-      leg: 'flown',
-      airport: origin,
-      coords: greatCirclePath(origin.lat, origin.lon, target.lat, target.lon, 64),
-    });
+    legs.push({ leg: 'origin', airport: origin, coords: [] });
   }
+
+  // Ahead of the aircraft is a projection rather than a record, and it is
+  // dashed for that reason.
   if (destination) {
     legs.push({
       leg: 'remaining',
@@ -624,6 +716,16 @@ function sortedZones() {
 function updateBanner(vesselCount) {
   const air = state.feeds.aircraft || {};
   const center = mapView.map.getCenter();
+
+  // A URL naming a target that is not here is a direct answer to something the
+  // reader did, so it outranks the feed's own state, but not stale code.
+  if (state.missingHash) {
+    ui.showBanner(
+      `${state.missingHash} is not in the area being tracked right now. Move the map to where it is flying, or pin that area, and it will be selected.`,
+      { label: 'Dismiss', onClick: () => { state.missingHash = null; updateBanner(vesselCount); } }
+    );
+    return;
+  }
 
   // Outranks every other banner: if this is old code, nothing else it says
   // about itself can be trusted.
@@ -916,6 +1018,7 @@ function checkBuildStamp() {
   // not stare at an unexplained map while the zone file downloads.
   if (!UI.hasBeenWelcomed()) ui.showWelcome();
   checkBuildStamp();
+  requestHash(readHash());
   loadTracking();
   ui.renderFeedToggles(state.paused, state.feeds);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
@@ -931,4 +1034,4 @@ function checkBuildStamp() {
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP };
+window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };

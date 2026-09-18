@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 
 import { routeFit, airportCode } from '../public/js/route.js';
 import { distanceNm, bearingTo } from '../public/js/geo.js';
+import { detectLanding, DEFAULTS } from '../public/js/detect.js';
 import { summarizeUpstreamFailure, worstFeedIssue } from '../public/js/feeds.js';
 
 const EDDP = { icao: 'EDDP', lat: 51.4239, lon: 12.2364 };
@@ -151,8 +152,92 @@ test('airports show the code people read, not the ICAO one', () => {
   assert.equal(airportCode({ icao: 'KCRW', iata: 'CRW' }), 'CRW');
   assert.equal(airportCode({ icao: 'KDCA', iata: 'DCA' }), 'DCA');
   assert.equal(airportCode({ icao: 'EDDP', iata: 'LEJ' }), 'LEJ');
-  // Military and general aviation fields often have no IATA code at all.
-  assert.equal(airportCode({ icao: 'KADW', iata: null }), 'KADW');
-  assert.equal(airportCode({ icao: 'KADW' }), 'KADW');
+  // With no IATA code from the data, the US and Canadian conventions still
+  // give the code people read: K or C, then the code itself.
+  assert.equal(airportCode({ icao: 'KADW', iata: null }), 'ADW');
+  assert.equal(airportCode({ icao: 'CYYZ' }), 'YYZ');
+  assert.equal(airportCode({ icao: 'CZBB' }), 'ZBB');
+
+  // Elsewhere the mapping is not one to one, so the ICAO code stands.
+  assert.equal(airportCode({ icao: 'EDDP' }), 'EDDP');
+  assert.equal(airportCode({ icao: 'PANC' }), 'PANC');
+  assert.equal(airportCode({ icao: 'MYNN' }), 'MYNN');
   assert.equal(airportCode(null), '');
+});
+
+/*
+ * Landing detection: "when im watcing a plane and i see its about to land and
+ * it lands, let me see that its marked as landed, cause thats kinda cool to
+ * watch." Both halves matter: on the ground now, and airborne a moment ago.
+ */
+
+const AT = 1789700000000;
+const airborneThen = (minutesAgo, alt) => ({ t: AT - minutesAgo * 60000, lat: 38.9, lon: -77.0, alt, track: 316 });
+
+test('an aircraft on the ground that was just flying has landed', () => {
+  const landing = detectLanding({
+    kind: 'aircraft',
+    onGround: true,
+    groundSpeed: 12,
+    alt: null,
+    updatedAt: AT,
+    history: [airborneThen(6, 4200), airborneThen(3, 1800), { t: AT, lat: 38.85, lon: -77.04, alt: null, track: 316 }],
+  });
+
+  assert.ok(landing, 'expected a landing');
+  assert.equal(landing.agoSec, 180);
+  assert.equal(landing.fromAltFt, 1800);
+});
+
+test('an aircraft parked all along has not just landed', () => {
+  const landing = detectLanding({
+    kind: 'aircraft',
+    onGround: true,
+    groundSpeed: 0,
+    alt: null,
+    updatedAt: AT,
+    history: [{ t: AT - 600000, lat: 38.85, lon: -77.04, alt: null }, { t: AT, lat: 38.85, lon: -77.04, alt: null }],
+  });
+  assert.equal(landing, null);
+});
+
+test('an aircraft on approach has not landed yet', () => {
+  const landing = detectLanding({
+    kind: 'aircraft',
+    onGround: false,
+    groundSpeed: 140,
+    alt: 400,
+    updatedAt: AT,
+    history: [airborneThen(2, 2500), { t: AT, lat: 38.85, lon: -77.04, alt: 400 }],
+  });
+  assert.equal(landing, null, 'still flying at 400 ft and 140 kt');
+});
+
+test('a taxiing aircraft with a barometric offset still counts as down', () => {
+  const landing = detectLanding({
+    kind: 'aircraft',
+    onGround: false,
+    groundSpeed: 18,
+    alt: 200,
+    updatedAt: AT,
+    history: [airborneThen(4, 3000), { t: AT, lat: 38.85, lon: -77.04, alt: 200 }],
+  });
+  assert.ok(landing);
+  assert.equal(landing.agoSec, 240);
+});
+
+test('a landing stops being news after the window', () => {
+  const stale = detectLanding({
+    kind: 'aircraft',
+    onGround: true,
+    groundSpeed: 0,
+    alt: null,
+    updatedAt: AT,
+    history: [airborneThen(30, 5000), { t: AT, lat: 38.85, lon: -77.04, alt: null }],
+  });
+  assert.equal(stale, null, `outside the ${DEFAULTS.landedWindowSec}s window`);
+});
+
+test('ships do not land', () => {
+  assert.equal(detectLanding({ kind: 'vessel', onGround: false, groundSpeed: 0, history: [] }), null);
 });

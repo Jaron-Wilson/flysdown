@@ -163,23 +163,36 @@ const routeOnMap = await page.evaluate(async () => {
   window.flysdown.tick();
 
   const legs = window.flysdown.buildRouteLegs();
+  const entry = window.flysdown.routes.get(airliner.callsign);
   return {
     callsign: airliner.callsign,
-    status: window.flysdown.routes.get(airliner.callsign)?.status,
+    status: entry?.status,
+    // Whether this particular aircraft's reported route survives the
+    // plausibility check is a property of today's data, not of the code, so
+    // the verdict is reported and the assertion branches on it.
+    verdict: entry?.status === 'ok' ? window.flysdown.routeFit(entry.route, airliner).verdict : null,
     legs: legs.map((l) => `${l.leg}:${l.airport?.icao}:${l.coords.length}pts`),
     trackPoints: window.flysdown.state.track.points.length,
-    panelShowsRoute: document.getElementById('detail').textContent.includes('Route'),
+    panelShowsRoute: document.getElementById('detail').textContent.includes('Reported route'),
   };
 });
 console.log(`  in view: ${JSON.stringify(routeOnMap)}`);
 // Whether an airliner with a published route happens to be overhead is not a
 // property of the code, so only a resolved route is asserted on.
 if (typeof routeOnMap === 'object' && routeOnMap.status === 'ok') {
-  if (!routeOnMap.legs.length || !routeOnMap.panelShowsRoute) {
-    errors.push(`a resolved route was not drawn or shown: ${JSON.stringify(routeOnMap)}`);
+  const shouldDraw = routeOnMap.verdict !== 'mismatch';
+  if ((shouldDraw && !routeOnMap.legs.length) || (!shouldDraw && routeOnMap.legs.length) || !routeOnMap.panelShowsRoute) {
+    errors.push(`a resolved route was drawn wrongly for its verdict: ${JSON.stringify(routeOnMap)}`);
   }
-  if (!routeOnMap.legs.every((l) => l.endsWith('65pts'))) {
-    errors.push(`route legs should be interpolated great circles: ${JSON.stringify(routeOnMap.legs)}`);
+  // The origin is a marker with no line, because the path flown to here was
+  // not observed. Anything drawn forward is an interpolated great circle.
+  const drawnLegs = routeOnMap.legs.filter((l) => !l.startsWith('origin:'));
+  const originLegs = routeOnMap.legs.filter((l) => l.startsWith('origin:'));
+  if (!originLegs.every((l) => l.endsWith(':0pts'))) {
+    errors.push(`the origin should be marked, not drawn to: ${JSON.stringify(originLegs)}`);
+  }
+  if (!drawnLegs.every((l) => l.endsWith('65pts'))) {
+    errors.push(`forward route legs should be interpolated great circles: ${JSON.stringify(drawnLegs)}`);
   }
 }
 await page.screenshot({ path: `${outDir}/02b-route.png` });
@@ -328,8 +341,13 @@ const feedbar = await page.evaluate(() => {
     barAboveFooter: bar.getBoundingClientRect().bottom <= footer.getBoundingClientRect().top + 1,
     footerText: footer.textContent.replace(/\s+/g, ' ').trim(),
     footerLinks: [...footer.querySelectorAll('a')].map((a) => a.textContent.trim()),
-    dotShown: !document.getElementById('feedbar-dot').hidden,
   };
+
+  // Assert the down state here rather than relying on the previous step's: a
+  // healthy feed's own tick lands in between and clears it, which is correct
+  // behavior and made this read a race.
+  window.flysdown.ui.setStatus('ADS-B: upstream not responding', { issue: 'down' });
+  before.dotShown = !document.getElementById('feedbar-dot').hidden;
   // The fold button must read as one of this app's buttons, not a control of
   // its own: same type, weight, corner and case as any other .btn.
   const themeOf = (el) => {
@@ -364,6 +382,49 @@ if (!/^jaronwilson\.dev jaronwilson\.org LinkedIn Built by Jaron Wilson\. Not fo
 
 // Put it back, so the remaining steps and the screenshots see the normal page.
 await page.evaluate(() => document.getElementById('feedbar-toggle').click());
+
+step('every target has its own URL, and a URL selects its target');
+const hashCheck = await page.evaluate(async () => {
+  const { store, state, tick, hashFor, requestHash } = window.flysdown;
+  const target = store.byKind('aircraft').find((t) => t.callsign) || store.all()[0];
+  if (!target) return { skipped: 'nothing in the store' };
+
+  // Selecting writes the fragment.
+  state.selectedKey = null;
+  requestHash(hashFor(target));
+  tick();
+  const afterUrl = { hash: location.hash, selected: state.selectedKey === target.key };
+
+  // Clearing takes it away again.
+  window.flysdown.ui.handlers.clearSelection?.();
+  tick();
+
+  // And a fragment nobody can resolve says so instead of going quiet.
+  requestHash('ZZZZ999');
+  state.pendingHashSince = Date.now() - 30000;
+  tick();
+  const banner = document.getElementById('map-banner');
+  const missingText = banner.hidden ? null : banner.textContent.replace(/\s+/g, ' ');
+  state.missingHash = null;
+  tick();
+
+  return {
+    expected: `#${hashFor(target)}`,
+    ...afterUrl,
+    clearedHash: location.hash,
+    missingText,
+    historyLength: history.length,
+  };
+});
+console.log(`  ${JSON.stringify(hashCheck)}`);
+if (!hashCheck.skipped) {
+  if (!hashCheck.selected) errors.push(`a URL fragment did not select its target: ${JSON.stringify(hashCheck)}`);
+  if (hashCheck.hash !== hashCheck.expected) errors.push(`wrong fragment written: ${hashCheck.hash} wanted ${hashCheck.expected}`);
+  if (hashCheck.clearedHash !== '') errors.push(`clearing the selection left a fragment: ${hashCheck.clearedHash}`);
+  if (!/not in the area being tracked/.test(hashCheck.missingText || '')) {
+    errors.push(`an unresolvable fragment said nothing: ${hashCheck.missingText}`);
+  }
+}
 
 step('a cached older build announces itself');
 const staleCheck = await page.evaluate(() => {
@@ -491,6 +552,15 @@ await page.screenshot({ path: `${outDir}/04-drawn-zone.png` });
 step('mobile layout: bottom tab bar, one view at a time');
 await page.setViewportSize({ width: 430, height: 900 });
 await page.waitForTimeout(1500);
+
+// A phone-sized viewport is a much smaller query area, and earlier steps have
+// moved the map, so the store is pruned and refilled on the next poll. Wait for
+// something to be there rather than racing the feed.
+const haveTargets = await page
+  .waitForFunction(() => (window.flysdown?.store?.all().length || 0) > 0, null, { timeout: 30000 })
+  .then(() => true)
+  .catch(() => false);
+if (!haveTargets) console.warn('  no targets in the phone viewport: the sheet check will be skipped');
 const mobile = await page.evaluate(async () => {
   const shown = (sel) => getComputedStyle(document.querySelector(sel)).display !== 'none';
   const out = { headerPx: Math.round(document.querySelector('.topbar').getBoundingClientRect().height), navShown: shown('.mobile-nav') };
@@ -502,10 +572,18 @@ const mobile = await page.evaluate(async () => {
   out.areasView = document.body.dataset.view === 'areas' && shown('.panel-left') && !document.getElementById('tab-areas').hidden;
   document.querySelector('.mobile-nav [data-view="map"]').click();
   await new Promise((r) => setTimeout(r, 300));
-  // Select through the real click path, so the sheet logic runs.
-  const target = window.flysdown.store.all()[0];
-  if (target) window.flysdown.mapView.onSelect(target.key);
-  await new Promise((r) => setTimeout(r, 500));
+  // Select through the real click path, so the sheet logic runs. Earlier steps
+  // move the map, and a target from the previous view can be pruned between
+  // being chosen here and being clicked, so take one whose key still resolves
+  // and try again if it went anyway.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const target = window.flysdown.store.all().find((t) => window.flysdown.store.get(t.key));
+    if (!target) break;
+    window.flysdown.mapView.onSelect(target.key);
+    await new Promise((r) => setTimeout(r, 500));
+    out.selected = window.flysdown.state.selectedKey;
+    if (document.querySelector('.panel-right').classList.contains('has-selection')) break;
+  }
   const rect = document.getElementById('detail-block').getBoundingClientRect();
   out.sheet = { height: Math.round(rect.height), bottomOnScreen: rect.bottom <= window.innerHeight + 1, aboveNav: rect.bottom <= window.innerHeight - 50 };
   return out;
@@ -513,8 +591,63 @@ const mobile = await page.evaluate(async () => {
 console.log(`  ${JSON.stringify(mobile)}`);
 if (!mobile.navShown || !mobile.alertsView || !mobile.areasView) errors.push(`phone view switching broke: ${JSON.stringify(mobile)}`);
 if (mobile.headerPx > 190) errors.push(`phone header is ${mobile.headerPx}px tall, it should stay compact`);
-if (mobile.sheet.height < 100 || !mobile.sheet.bottomOnScreen) errors.push(`detail sheet did not appear over the map on a phone: ${JSON.stringify(mobile.sheet)}`);
+if (haveTargets && (mobile.sheet.height < 100 || !mobile.sheet.bottomOnScreen)) {
+  errors.push(`detail sheet did not appear over the map on a phone: ${JSON.stringify(mobile)}`);
+}
 await page.screenshot({ path: `${outDir}/05-mobile.png`, fullPage: false });
+
+// Last, because it feeds the store a target of its own and a poll for one kind
+// prunes what it did not mention.
+step('watching one land');
+await page.setViewportSize({ width: 1600, height: 950 });
+await page.waitForTimeout(800);
+const landedCheck = await page.evaluate(() => {
+  const { store, state, tick, mapView } = window.flysdown;
+  const center = mapView.map.getCenter();
+  const now = Date.now();
+  const base = {
+    id: 'ffee01',
+    label: 'SMOKE1',
+    callsign: 'SMOKE1',
+    typeCode: 'B738',
+    typeDesc: 'BOEING 737-800',
+    lat: center.lat,
+    lon: center.lng,
+    track: 90,
+    source: 'smoke test',
+    seenPos: 0,
+    seen: 0,
+  };
+
+  // Airborne three minutes ago, on the ground now: the transition is the whole
+  // point, so it takes two updates.
+  store.ingest('aircraft', [{ ...base, alt: 3000, groundSpeed: 180, onGround: false }], now - 180000, state.coverages);
+  store.ingest('aircraft', [{ ...base, alt: null, groundSpeed: 8, onGround: true }], now, state.coverages);
+
+  state.selectedKey = 'aircraft:ffee01';
+  tick();
+
+  const panel = document.getElementById('detail').textContent.replace(/\s+/g, ' ');
+  const landedAlerts = state.evaluation.alerts.filter((alert) => alert.rule === 'landed');
+  const badge = document.getElementById('alert-badge');
+  return {
+    detected: landedAlerts.length,
+    severity: landedAlerts[0]?.severity || null,
+    detail: landedAlerts[0]?.detail || null,
+    panelSaysLanded: /Landed \u00b7 \d/.test(panel),
+    inRail: [...document.querySelectorAll('.alert-list .alert')].some((row) => /Landed/.test(row.textContent)),
+    badgeCountsIt: (badge.textContent || '').trim() !== '' && !badge.hidden
+      ? state.evaluation.alerts.filter((a) => a.severity !== 'good').length !== Number(badge.textContent)
+      : false,
+  };
+});
+console.log(`  ${JSON.stringify(landedCheck)}`);
+if (landedCheck.detected !== 1) errors.push(`a landing was not detected: ${JSON.stringify(landedCheck)}`);
+if (landedCheck.severity !== 'good') errors.push(`a landing was reported as a fault: ${landedCheck.severity}`);
+if (!landedCheck.panelSaysLanded) errors.push('the panel did not say the target had landed');
+if (!landedCheck.inRail) errors.push('the landing did not appear in the alerts rail');
+if (landedCheck.badgeCountsIt) errors.push('the alert badge counted a landing as something wrong');
+await page.screenshot({ path: `${outDir}/06-landed.png` });
 
 await browser.close();
 

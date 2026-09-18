@@ -207,9 +207,9 @@ export class MapView {
       type: 'line',
       source: 'route-legs',
       paint: {
-        'line-color': ['case', ['==', ['get', 'leg'], 'flown'], '#6da7ec', '#9ec5f4'],
+        'line-color': '#9ec5f4',
         'line-width': 1.6,
-        'line-dasharray': ['case', ['==', ['get', 'leg'], 'flown'], ['literal', [1, 0]], ['literal', [4, 3]]],
+        'line-dasharray': [4, 3],
         'line-opacity': 0.75,
       },
     });
@@ -595,7 +595,7 @@ export class MapView {
       },
     })));
 
-    this.setData('route-legs', (routeLegs || []).map((leg) => ({
+    this.setData('route-legs', (routeLegs || []).filter((leg) => (leg.coords || []).length > 1).map((leg) => ({
       type: 'Feature',
       properties: { leg: leg.leg },
       geometry: { type: 'LineString', coordinates: leg.coords },

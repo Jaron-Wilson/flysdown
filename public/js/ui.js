@@ -365,6 +365,18 @@ export class UI {
           ['Feed', target.source || 'unknown'],
         ];
 
+    // Watching one land is half the fun, so say so rather than leaving it to be
+    // inferred from a gray dot and a zero ground speed.
+    const landed = (evaluation?.alerts || []).find((alert) => alert.rule === 'landed');
+    let landedBlock = '';
+    if (landed) {
+      const arrival = route?.status === 'ok' ? route.route.destination : null;
+      const fit = arrival ? routeFit(route.route, target) : null;
+      // Only name the airport if the aircraft is actually at it.
+      const where = fit && fit.remainingNm !== null && fit.remainingNm < 6 ? ` at ${escapeHtml(airportCode(arrival))}` : '';
+      landedBlock = `<p class="landed-note">Landed${where} \u00b7 ${escapeHtml(fmt.duration(landed.agoSec))} ago</p>`;
+    }
+
     const flags = [
       target.military && 'military',
       target.interesting && 'special interest',
@@ -444,7 +456,7 @@ export class UI {
            ${etaSec !== null ? `<dt>Arrival at this speed</dt><dd>${escapeHtml(fmt.duration(etaSec))}</dd>` : ''}`;
 
       routeBlock = `
-        <h3 class="block-title">Route${airline?.name ? ` \u00b7 ${escapeHtml(airline.name)}` : ''}${wrong ? ' <span class="tag tag-warn">unverified</span>' : ''}</h3>
+        <h3 class="block-title">Reported route${airline?.name ? ` \u00b7 ${escapeHtml(airline.name)}` : ''}${wrong ? ' <span class="tag tag-warn">unverified</span>' : ''}</h3>
         ${note}
         <ul class="detail-zones">
           ${leg(origin, 'From')}
@@ -454,6 +466,13 @@ export class UI {
         ${wrong ? '' : '<button class="btn btn-sm" type="button" id="detail-route">Frame the whole route</button>'}`;
     }
 
+    // Whatever the route lookup said, or did not say, a flight can be looked up
+    // by callsign at a source that knows today's leg rather than the callsign's
+    // usual one. This is the check Jaron was doing by hand.
+    const checkBlock = isAircraft && target.callsign
+      ? `<p class="hint detail-check"><a class="linkish" href="https://www.flightaware.com/live/flight/${encodeURIComponent(target.callsign)}" target="_blank" rel="noopener">Check ${escapeHtml(target.callsign)} on FlightAware</a></p>`
+      : '';
+
     // How much of its path we have actually watched.
     let trackBlock = '';
     if (track.length > 1) {
@@ -461,7 +480,12 @@ export class UI {
       for (let i = 1; i < track.length; i++) {
         walked += distanceNm(track[i - 1][1], track[i - 1][0], track[i][1], track[i][0]);
       }
-      trackBlock = `<p class="hint">Observed track: ${track.length} positions, ${fmt.nm(walked)} drawn. It keeps extending while this target stays selected.</p>`;
+      // What the solid line is, and what it is not. The earlier part of a
+      // flight cannot be drawn: no keyless ADS-B source serves history, so the
+      // record starts where this system started watching.
+      trackBlock = `
+        <h3 class="block-title">Observed track</h3>
+        <p class="hint">${track.length} positions, ${escapeHtml(fmt.nm(walked))} of path actually watched, still extending. Anything before this system first saw the target is not drawn: no keyless source serves a flight's earlier track.</p>`;
     }
 
     this.refs.detail.innerHTML = `
@@ -479,7 +503,9 @@ export class UI {
       </dl>
       ${zoneRows ? `<h3 class="block-title">Zone checks</h3><ul class="detail-zones">${zoneRows}</ul>` : '<p class="hint">No zone interaction projected within the horizon.</p>'}
       ${pairRisk ? `<h3 class="block-title">Closest approaches</h3><ul class="detail-zones">${pairRisk}</ul>` : ''}
+      ${landedBlock}
       ${routeBlock}
+      ${checkBlock}
       ${trackBlock}
       <div class="form-actions">
         <button class="btn btn-sm" type="button" id="detail-center">Center map on target</button>

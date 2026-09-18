@@ -38,10 +38,10 @@ const slides = [
   },
   {
     eyebrow: 'What you are looking at',
-    title: 'Baltimore to Dallas, drawn as flown',
+    title: 'One flight, and only what was watched',
     image: routeShot,
     caption:
-      'An American 737 selected mid-flight. The dashed leg is its published route from BWI on to DFW as a great circle, the rail shows 965 NM to go and just over two hours at its current speed, and every other aircraft within 250 NM is on the map with it.',
+      'An airliner mid-flight. Solid is the track actually watched; dashed ahead is the reported route to its destination, with distance remaining and an arrival estimate. The departure airport is marked, never drawn to: a straight line from there claims a path no flight flies.',
   },
   {
     eyebrow: 'What it does',
@@ -102,12 +102,12 @@ const slides = [
     eyebrow: 'By the numbers',
     title: 'What it took',
     stats: [
-      ['7,300', 'lines, no framework, no build step'],
-      ['39', 'unit tests, plus a real-browser smoke test'],
+      ['7,700', 'lines, no framework, no build step'],
+      ['45', 'unit tests, plus a real-browser smoke test'],
       ['16', 'restricted zones from FAA data'],
       ['4', 'live data sources, none needing a key'],
       ['$0', 'hosting: Cloudflare free tier'],
-      ['12', 'page write-up of how it all works'],
+      ['13', 'page write-up of how it all works'],
     ],
   },
   {
