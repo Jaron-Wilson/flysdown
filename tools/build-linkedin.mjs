@@ -32,7 +32,7 @@ const slides = [
   {
     kind: 'cover',
     eyebrow: 'Side project &middot; September 2026',
-    title: 'flysdown',
+    title: 'Project Flys Down',
     lede: 'Live aircraft and ships on one map, with a detection engine that warns before something enters restricted airspace.',
     meta: 'flysdown.jaronwilson.dev',
   },
@@ -95,18 +95,19 @@ const slides = [
       'Zone geometry is the FAA’s own published Special Use Airspace, not hand-drawn. Their one-mile circles ship as 6,285-point polygons; simplification takes that to 17 with no visible difference.',
       'Transiting the DC Special Flight Rules Area with a clearance is routine, so it is advisory: drawn and reported, never alerted. That change took one view from 55 alerts to 3 real ones.',
       'When every upstream refuses, the map shows the last good picture labeled with its age. A dashboard that quietly shows five minute old positions as current is worse than one showing nothing.',
+      'Route data is keyed on the callsign, so it can describe a leg the aircraft is not flying. Every route is checked against the aircraft\u2019s own position and track, and one that disagrees is labeled unverified with no arrival estimate rather than drawn as fact.',
     ],
   },
   {
     eyebrow: 'By the numbers',
     title: 'What it took',
     stats: [
-      ['5,780', 'lines, no framework, no build step'],
-      ['26', 'unit tests, plus a real-browser smoke test'],
+      ['7,300', 'lines, no framework, no build step'],
+      ['39', 'unit tests, plus a real-browser smoke test'],
       ['16', 'restricted zones from FAA data'],
       ['4', 'live data sources, none needing a key'],
       ['$0', 'hosting: Cloudflare free tier'],
-      ['9', 'page write-up of how it all works'],
+      ['12', 'page write-up of how it all works'],
     ],
   },
   {
@@ -170,7 +171,7 @@ function renderSlide(slide, index, total) {
 }
 
 const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>flysdown</title>
+<html lang="en"><head><meta charset="utf-8"><title>Project Flys Down</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">

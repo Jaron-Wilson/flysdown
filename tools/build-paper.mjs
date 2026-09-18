@@ -86,7 +86,7 @@ const html = `<!doctype html>
     @top-right { content: ''; background: var(--paper); }
     @top-right-corner { content: ''; background: var(--paper); }
     @bottom-left-corner { content: ''; background: var(--paper); }
-    @bottom-left { content: 'flysdown \u00b7 jaronwilson.dev'; background: var(--paper); font: 7.5pt Inter, sans-serif; color: var(--muted); padding-left: 0.5in; padding-top: 0.06in; vertical-align: top; }
+    @bottom-left { content: 'Project Flys Down \u00b7 jaronwilson.dev'; background: var(--paper); font: 7.5pt Inter, sans-serif; color: var(--muted); padding-left: 0.5in; padding-top: 0.06in; vertical-align: top; }
     @bottom-center { content: ''; background: var(--paper); }
     @bottom-right { content: counter(page); background: var(--paper); font: 7.5pt Inter, sans-serif; color: var(--muted); padding-right: 0.5in; padding-top: 0.06in; vertical-align: top; }
     @bottom-right-corner { content: ''; background: var(--paper); }

@@ -1,4 +1,4 @@
-# flysdown: a live ADS-B and AIS dashboard with geofence projection
+# Project Flys Down: a live ADS-B and AIS dashboard with geofence projection
 
 **How the system works, why it is built this way, and where every fact in it came from**
 
@@ -13,7 +13,7 @@ Version 1.2, 17 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 
 ## Abstract
 
-flysdown plots live aircraft and live ships on one map and runs a detection
+Project Flys Down plots live aircraft and live ships on one map and runs a detection
 engine over them that answers one question: if this target holds its current
 track and speed, does it end up somewhere it should not be, and how long have
 we got. Aircraft positions come from community ADS-B aggregators, ship positions
@@ -56,7 +56,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 7,127 lines across browser modules, edge functions, the shared
+The system is 7,308 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.

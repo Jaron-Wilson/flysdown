@@ -6,6 +6,7 @@
  */
 
 import { INK, altitudeBand, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, SEVERITY, zoneStyle } from './palette.js';
+import { airportCode } from './route.js';
 import { circleRing } from './geo.js';
 import { targetAgeSec } from './feeds.js';
 
@@ -603,7 +604,7 @@ export class MapView {
     this.setData('route-airports', (routeLegs || []).filter((leg) => leg.airport).map((leg) => ({
       type: 'Feature',
       properties: {
-        label: `${leg.airport.icao || leg.airport.iata || ''}${leg.airport.municipality ? ` ${leg.airport.municipality}` : ''}`.trim(),
+        label: `${airportCode(leg.airport)}${leg.airport.municipality ? ` ${leg.airport.municipality}` : ''}`.trim(),
       },
       geometry: { type: 'Point', coordinates: [leg.airport.lon, leg.airport.lat] },
     })));

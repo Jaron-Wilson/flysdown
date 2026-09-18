@@ -44,6 +44,16 @@ const BEARING_LIMIT_DEG = 75;
  *   detourNm: number|null, bearingErrorDeg: number|null,
  * }}
  */
+/**
+ * The code to show for an airport.
+ *
+ * adsbdb carries both, and ICAO is the technical identifier, but it is not the
+ * one anybody reads: a flight from Charleston to Washington National is CRW to
+ * DCA on every board and ticket, not KCRW to KDCA. IATA first, then ICAO for
+ * the military and general aviation fields that have no IATA code at all.
+ */
+export const airportCode = (airport) => airport?.iata || airport?.icao || '';
+
 export function routeFit(route, target) {
   const origin = airportPoint(route?.origin);
   const destination = airportPoint(route?.destination);

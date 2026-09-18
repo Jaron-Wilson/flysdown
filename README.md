@@ -1,4 +1,4 @@
-# flysdown
+# Project Flys Down
 
 Live aircraft (ADS-B) and vessel (AIS) tracking on one map, with a detection
 engine that dead-reckons every target forward and warns when something is

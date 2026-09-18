@@ -422,8 +422,8 @@ const routeCheck = await page.evaluate(async () => {
   const route = {
     status: 'ok',
     route: {
-      origin: { icao: 'KIAH', municipality: 'Houston', name: 'George Bush Intercontinental Houston Airport', lat: 29.9844, lon: -95.3414 },
-      destination: { icao: 'KMSY', municipality: 'New Orleans', name: 'Louis Armstrong New Orleans International Airport', lat: 29.9934, lon: -90.258 },
+      origin: { icao: 'KIAH', iata: 'IAH', municipality: 'Houston', name: 'George Bush Intercontinental Houston Airport', lat: 29.9844, lon: -95.3414 },
+      destination: { icao: 'KMSY', iata: 'MSY', municipality: 'New Orleans', name: 'Louis Armstrong New Orleans International Airport', lat: 29.9934, lon: -90.258 },
       airline: { name: 'Southwest Airlines' },
     },
   };
@@ -450,6 +450,9 @@ const routeCheck = await page.evaluate(async () => {
     withholdsArrival: !panel.includes('Arrival at this speed'),
     notFramable: !document.getElementById('detail-route'),
     legsDrawnForRealAircraft: drawn,
+    // The codes people read: IAH and MSY, not KIAH and KMSY.
+    showsIataCodes: panel.includes('IAH Houston') && panel.includes('MSY New Orleans'),
+    showsIcaoCodes: /\bKIAH\b|\bKMSY\b/.test(panel),
   };
 });
 console.log(`  ${JSON.stringify(routeCheck)}`);
@@ -461,6 +464,9 @@ if (!routeCheck.explains) errors.push('a contradicted route did not say why it l
 if (!routeCheck.withholdsArrival) errors.push('an arrival time was quoted off a route the aircraft is not flying');
 if (!routeCheck.notFramable) errors.push('a contradicted route still offered to frame itself');
 if (routeCheck.legsDrawnForRealAircraft) errors.push('a contradicted route was still drawn on the map');
+if (!routeCheck.showsIataCodes || routeCheck.showsIcaoCodes) {
+  errors.push(`airport codes are not the ones people read: ${JSON.stringify(routeCheck)}`);
+}
 await page.evaluate(() => window.flysdown.ui.renderDetail(null, {}));
 
 step('drawing a circular zone');

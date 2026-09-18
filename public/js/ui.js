@@ -6,7 +6,7 @@
  */
 
 import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
-import { routeFit } from './route.js';
+import { routeFit, airportCode } from './route.js';
 import { targetAgeSec } from './feeds.js';
 import { distanceNm } from './geo.js';
 import { INK } from './palette.js';
@@ -422,12 +422,12 @@ export class UI {
         airport
           ? `<li>
               <span>${escapeHtml(label)}</span>
-              <span>${escapeHtml([airport.icao || airport.iata, airport.municipality].filter(Boolean).join(' '))}</span>
+              <span>${escapeHtml([airportCode(airport), airport.municipality].filter(Boolean).join(' '))}</span>
               <span class="z-eta">${escapeHtml(airport.name || '')}</span>
             </li>`
           : '';
 
-      const place = (airport) => escapeHtml(airport?.icao || airport?.iata || 'the airport');
+      const place = (airport) => escapeHtml(airportCode(airport) || 'the airport');
       let note = '<p class="hint">Reported for this callsign by adsbdb. ADS-B does not broadcast a destination, so this is the route the callsign usually flies, not a filed flight plan.</p>';
       if (wrong && fit.reason === 'detour') {
         note = `<p class="hint hint-warn">This does not match where the aircraft is. ${place(origin)} to ${place(destination)} is ${escapeHtml(fmt.nm(fit.totalNm))}, but the aircraft is ${escapeHtml(fmt.nm(fit.flownNm))} from ${place(origin)} and ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)}. Treat the route below as the callsign's usual one, not this flight's.</p>`;

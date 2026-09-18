@@ -12,7 +12,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { routeFit } from '../public/js/route.js';
+import { routeFit, airportCode } from '../public/js/route.js';
 import { distanceNm, bearingTo } from '../public/js/geo.js';
 import { summarizeUpstreamFailure, worstFeedIssue } from '../public/js/feeds.js';
 
@@ -144,4 +144,15 @@ test('a dead feed outranks a stale one, and a paused feed is not a fault', () =>
   assert.equal(worstFeedIssue([{ state: 'paused', lastError: 'boom' }, live]), null);
   assert.equal(worstFeedIssue([null, undefined]), null);
   assert.equal(worstFeedIssue([]), null);
+});
+
+test('airports show the code people read, not the ICAO one', () => {
+  // The complaint: KCRW and KDCA where every board says CRW and DCA.
+  assert.equal(airportCode({ icao: 'KCRW', iata: 'CRW' }), 'CRW');
+  assert.equal(airportCode({ icao: 'KDCA', iata: 'DCA' }), 'DCA');
+  assert.equal(airportCode({ icao: 'EDDP', iata: 'LEJ' }), 'LEJ');
+  // Military and general aviation fields often have no IATA code at all.
+  assert.equal(airportCode({ icao: 'KADW', iata: null }), 'KADW');
+  assert.equal(airportCode({ icao: 'KADW' }), 'KADW');
+  assert.equal(airportCode(null), '');
 });
