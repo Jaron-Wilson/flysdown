@@ -12,15 +12,19 @@ heading into restricted airspace.
 `docs/flysdown-paper.md` is a full write-up of how the system works: the data
 sources and their quirks, the architecture, the detection mathematics, the
 airspace pipeline, the visual encoding, the verification, and a provenance
-table separating what was measured from what is documented or standardised.
-`docs/flysdown-paper.pdf` is the same thing paginated (9 pages), typeset in the
-same palette and type as jaronwilson.dev and jaronwilson.org.
+table separating what was measured from what is documented or standardized.
+It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
+contributions section stating who did what, three figures captured from the
+live system by `npm run figures`, and a contents list.
+`docs/flysdown-paper.pdf` is the same thing paginated (12 pages with figures),
+typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 `docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
 
 ```bash
-npm run paper                        # docs/flysdown-paper.pdf
-npm run shots -- <url> tmp/deck      # screenshots the deck embeds
+npm run figures -- <url> docs/figures  # the paper's three figures
+npm run paper                          # docs/flysdown-paper.pdf
+npm run shots -- <url> tmp/deck        # screenshots the deck embeds
 npm run linkedin -- tmp/deck         # docs/flysdown-linkedin.pdf
 npm run linkedin -- tmp/deck docs/flysdown-linkedin.pdf --png tmp/slides
 ```
@@ -51,6 +55,10 @@ map: it is too close to the vessel orange to be told apart.
 - Lets you draw your own watch zones (circle or polygon) in the browser, set
   their floor, ceiling and whether they apply to aircraft, vessels or both,
   then export or import them as GeoJSON. Drawn zones persist in localStorage.
+- Is laid out to be found your way around: a tabbed left rail (Overview,
+  Filters, Areas) instead of one long scroll, a first-visit welcome card with
+  three quick starts, a floating "Pin this view" on the map, and on phones a
+  bottom tab bar that shows one view at a time with an alert count.
 - Tracks only the area on screen by default. The upstreams are queried with a
   center and a radius, which always covers more than the visible rectangle, so
   everything outside the viewport is filtered out of the map, the counts, the

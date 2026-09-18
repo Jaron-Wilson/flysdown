@@ -540,6 +540,8 @@ function render(candidates = visibleTargets()) {
   ui.renderZones(sortedZones(), state.evaluation.zoneAlertCounts);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
   ui.renderFeedToggles(state.paused, state.feeds);
+  ui.renderAlertBadge(state.evaluation.alerts.length);
+  ui.renderMapPin(state.tracking.length);
 
   updateBanner(vessels.length);
 }
@@ -641,6 +643,8 @@ function updateBanner(vesselCount) {
 
 function openZoneForm(geometry) {
   state.pendingGeometry = geometry;
+  ui.setTab('areas');
+  if (window.matchMedia('(max-width: 1040px)').matches) ui.setView('areas');
   const form = $('zone-form');
   form.hidden = false;
   const count = zones.all().filter((z) => z.userDrawn).length + 1;
@@ -702,6 +706,10 @@ $('zf-cancel').addEventListener('click', () => {
 $('track-circle').addEventListener('click', () => drawer.setMode(drawer.mode === 'circle' && drawer.purpose === 'tracking' ? null : 'circle', 'tracking'));
 $('track-box').addEventListener('click', () => drawer.setMode(drawer.mode === 'box' ? null : 'box', 'tracking'));
 $('track-view').addEventListener('click', () => pinCurrentView());
+$('map-pin').addEventListener('click', () => {
+  if (state.tracking.length) clearTrackingAreas();
+  else pinCurrentView();
+});
 $('track-clear').addEventListener('click', () => clearTrackingAreas());
 
 $('draw-circle').addEventListener('click', () => drawer.setMode(drawer.mode === 'circle' && drawer.purpose === 'zone' ? null : 'circle', 'zone'));
@@ -808,11 +816,49 @@ $('table-close').addEventListener('click', () => $('table-dialog').close());
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
+  if (!$('welcome').hidden) {
+    ui.hideWelcome();
+    return;
+  }
   if (drawer.mode) {
     drawer.cancel();
     return;
   }
   if (state.selectedKey) selectTarget(null);
+});
+
+/* ---------- welcome, help and navigation ---------- */
+
+ui.initNavigation();
+
+// Drawing needs the map visible; on a phone the Areas view covers it.
+for (const id of ['track-circle', 'track-box', 'draw-circle', 'draw-polygon']) {
+  $(id).addEventListener('click', () => {
+    if (window.matchMedia('(max-width: 1040px)').matches && drawer.mode) ui.setView('map');
+  });
+}
+
+// A selection made on a phone should be seen: it arrives as a sheet over the
+// map, so make sure the map view is the one showing.
+ui.on('leftMap', () => drawer.cancel());
+
+$('help-btn').addEventListener('click', () => ui.showWelcome());
+
+for (const button of document.querySelectorAll('#welcome [data-start]')) {
+  button.addEventListener('click', () => {
+    const remember = $('welcome-remember').checked;
+    ui.hideWelcome({ remember });
+    const start = button.dataset.start;
+    if (start === 'dc' || start === 'gof') {
+      $('region-select').value = start;
+      mapView.flyTo(REGIONS[start].center, REGIONS[start].zoom);
+    }
+  });
+}
+
+$('welcome').addEventListener('click', (event) => {
+  // Clicking the dim backdrop, not the card, closes it without remembering.
+  if (event.target === $('welcome')) ui.hideWelcome();
 });
 
 /* ---------- boot ---------- */
@@ -822,6 +868,9 @@ zones.onChange(() => {
 });
 
 (async function boot() {
+  // First thing, before any network round trip: a first-time visitor should
+  // not stare at an unexplained map while the zone file downloads.
+  if (!UI.hasBeenWelcomed()) ui.showWelcome();
   loadTracking();
   ui.renderFeedChips(state.feeds);
   ui.renderFeedToggles(state.paused, state.feeds);

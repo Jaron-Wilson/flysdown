@@ -39,6 +39,21 @@ const step = (name) => console.log(`- ${name}`);
 step(`loading ${url}`);
 await page.goto(url, { waitUntil: 'load', timeout: 60000 });
 
+step('first-visit welcome card');
+// It is shown synchronously at boot, but give a slow network a moment.
+const welcomeShown = await page.waitForFunction(() => !document.getElementById('welcome').hidden, null, { timeout: 15000 })
+  .then(() => true)
+  .catch(() => false);
+if (!welcomeShown) errors.push('the welcome card did not show on a first visit');
+await page.click('#welcome [data-start="explore"]');
+await page.waitForTimeout(400);
+const welcomeState = await page.evaluate(() => ({
+  hidden: document.getElementById('welcome').hidden,
+  remembered: localStorage.getItem('flysdown.welcomed.v1') === '1',
+}));
+console.log(`  ${JSON.stringify({ welcomeShown, ...welcomeState })}`);
+if (!welcomeState.hidden || !welcomeState.remembered) errors.push(`welcome card did not dismiss cleanly: ${JSON.stringify(welcomeState)}`);
+
 step('waiting for the feeds to report');
 await page.waitForFunction(() => {
   const state = window.flysdown?.state;
@@ -237,7 +252,19 @@ if (!pauseCheck.planes || pauseCheck.ships || !pauseCheck.resumed) {
   errors.push(`per-feed pause did not behave: ${JSON.stringify(pauseCheck)}`);
 }
 
+step('left rail tabs');
+const tabCheck = {};
+for (const name of ['filters', 'areas', 'overview']) {
+  await page.click(`.tab[data-tab="${name}"]`);
+  await page.waitForTimeout(150);
+  tabCheck[name] = await page.evaluate((n) => !document.getElementById(`tab-${n}`).hidden
+    && [...document.querySelectorAll('.tab-pane')].filter((p) => p.id !== `tab-${n}`).every((p) => p.hidden), name);
+}
+console.log(`  ${JSON.stringify(tabCheck)}`);
+if (!Object.values(tabCheck).every(Boolean)) errors.push(`tab switching broke: ${JSON.stringify(tabCheck)}`);
+
 step('pinning a tracking area and scrolling away from it');
+await page.click('.tab[data-tab="areas"]');
 await page.click('#track-view');
 await page.waitForTimeout(2500);
 const pinnedQueries = await page.evaluate(() => JSON.stringify(window.flysdown.feeds.aircraft.queries));
@@ -285,6 +312,7 @@ if (!layoutCheck.panelVisible || layoutCheck.documentOverflowPx > 2) {
 await page.screenshot({ path: `${outDir}/03b-feed-error.png` });
 
 step('drawing a circular zone');
+await page.click('.tab[data-tab="areas"]');
 await page.click('#draw-circle');
 const box = await page.locator('#map').boundingBox();
 await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -302,9 +330,32 @@ const drawn = await page.evaluate(() => {
 console.log(`  drawn zone: ${JSON.stringify(drawn)}`);
 await page.screenshot({ path: `${outDir}/04-drawn-zone.png` });
 
-step('mobile layout');
+step('mobile layout: bottom tab bar, one view at a time');
 await page.setViewportSize({ width: 430, height: 900 });
 await page.waitForTimeout(1500);
+const mobile = await page.evaluate(async () => {
+  const shown = (sel) => getComputedStyle(document.querySelector(sel)).display !== 'none';
+  const out = { headerPx: Math.round(document.querySelector('.topbar').getBoundingClientRect().height), navShown: shown('.mobile-nav') };
+  document.querySelector('.mobile-nav [data-view="alerts"]').click();
+  await new Promise((r) => setTimeout(r, 300));
+  out.alertsView = document.body.dataset.view === 'alerts' && shown('.panel-right');
+  document.querySelector('.mobile-nav [data-view="areas"]').click();
+  await new Promise((r) => setTimeout(r, 300));
+  out.areasView = document.body.dataset.view === 'areas' && shown('.panel-left') && !document.getElementById('tab-areas').hidden;
+  document.querySelector('.mobile-nav [data-view="map"]').click();
+  await new Promise((r) => setTimeout(r, 300));
+  // Select through the real click path, so the sheet logic runs.
+  const target = window.flysdown.store.all()[0];
+  if (target) window.flysdown.mapView.onSelect(target.key);
+  await new Promise((r) => setTimeout(r, 500));
+  const rect = document.getElementById('detail-block').getBoundingClientRect();
+  out.sheet = { height: Math.round(rect.height), bottomOnScreen: rect.bottom <= window.innerHeight + 1, aboveNav: rect.bottom <= window.innerHeight - 50 };
+  return out;
+});
+console.log(`  ${JSON.stringify(mobile)}`);
+if (!mobile.navShown || !mobile.alertsView || !mobile.areasView) errors.push(`phone view switching broke: ${JSON.stringify(mobile)}`);
+if (mobile.headerPx > 190) errors.push(`phone header is ${mobile.headerPx}px tall, it should stay compact`);
+if (mobile.sheet.height < 100 || !mobile.sheet.bottomOnScreen) errors.push(`detail sheet did not appear over the map on a phone: ${JSON.stringify(mobile.sheet)}`);
 await page.screenshot({ path: `${outDir}/05-mobile.png`, fullPage: false });
 
 await browser.close();

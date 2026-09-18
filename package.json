@@ -10,7 +10,8 @@
     "relay:once": "node tools/relay.mjs --once",
     "paper": "node tools/build-paper.mjs",
     "linkedin": "node tools/build-linkedin.mjs",
-    "shots": "node tools/capture-shots.mjs"
+    "shots": "node tools/capture-shots.mjs",
+    "figures": "node tools/capture-figures.mjs"
   },
   "devDependencies": {
     "marked": "^18.0.13",

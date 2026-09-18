@@ -17,24 +17,25 @@
 <link rel="stylesheet" href="vendor/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-view="map">
 <a class="skip-link" href="#map">Skip to map</a>
 
+<!-- ============ header: brand, where, live state, help ============ -->
 <header class="topbar">
-  <div class="brand">
+  <a class="brand" href="./" aria-label="flysdown home">
     <span class="brand-mark" aria-hidden="true">FD</span>
     <span class="brand-text">
       <strong>flysdown</strong>
       <span>live air and sea traffic, with geofence projection</span>
     </span>
-  </div>
+  </a>
 
   <div class="topbar-controls">
-    <label class="field">
-      <span class="field-label">Region</span>
-      <select id="region-select">
-        <option value="dc">Washington DC (restricted airspace)</option>
-        <option value="gof">Gulf of Finland (AIS coverage)</option>
+    <label class="field field-inline">
+      <span class="field-label">Where</span>
+      <select id="region-select" aria-label="Region">
+        <option value="dc">Washington DC airspace</option>
+        <option value="gof">Gulf of Finland shipping</option>
         <option value="nyc">New York</option>
         <option value="lon">London</option>
         <option value="socal">Southern California</option>
@@ -43,147 +44,212 @@
     <div class="feed-toggles" id="feed-toggles" role="group" aria-label="Pause feeds"></div>
   </div>
 
-  <div class="feed-chips" id="feed-chips" role="status" aria-live="polite"></div>
+  <div class="topbar-right">
+    <div class="feed-chips" id="feed-chips" role="status" aria-live="polite"></div>
+    <button class="btn btn-sm" type="button" id="help-btn" aria-haspopup="dialog">Help</button>
+  </div>
 </header>
 
 <main class="layout">
-  <aside class="panel panel-left" id="panel-left" aria-label="Filters and zones">
-    <section class="block">
-      <h2 class="block-title">Now tracking</h2>
-      <div class="tiles" id="stat-tiles"></div>
-    </section>
 
-    <section class="block">
-      <div class="block-head">
-        <h2 class="block-title">Aircraft by altitude</h2>
-        <span class="block-note" id="alt-total"></span>
-      </div>
-      <div class="chart" id="alt-chart"></div>
-    </section>
+  <!-- ============ left: tabbed controls ============ -->
+  <aside class="panel panel-left" id="panel-left" aria-label="Controls">
+    <div class="tabs" role="tablist" aria-label="Control panels">
+      <button class="tab is-active" role="tab" type="button" data-tab="overview" aria-selected="true" aria-controls="tab-overview">Overview</button>
+      <button class="tab" role="tab" type="button" data-tab="filters" aria-selected="false" aria-controls="tab-filters">Filters</button>
+      <button class="tab" role="tab" type="button" data-tab="areas" aria-selected="false" aria-controls="tab-areas">Areas</button>
+    </div>
 
-    <section class="block">
-      <div class="block-head">
-        <h2 class="block-title">Tracking area</h2>
-        <span class="block-note" id="track-note"></span>
-      </div>
-      <p class="hint">Pin a circle or a box to keep loading it while you scroll anywhere else on the map.</p>
-      <div class="draw-tools">
-        <button class="btn btn-sm" type="button" id="track-circle">Pin circle</button>
-        <button class="btn btn-sm" type="button" id="track-box">Pin box</button>
-        <button class="btn btn-sm" type="button" id="track-view">Pin current view</button>
-        <button class="btn btn-sm" type="button" id="track-clear">Follow map again</button>
-      </div>
-      <ul class="zone-list" id="track-list"></ul>
-    </section>
+    <!-- Overview: what is happening right now -->
+    <div class="tab-pane" id="tab-overview" role="tabpanel">
+      <section class="block">
+        <h2 class="block-title">Now tracking</h2>
+        <div class="tiles" id="stat-tiles"></div>
+      </section>
 
-    <section class="block">
-      <h2 class="block-title">Layers and filters</h2>
-      <div class="controls" id="filter-controls">
-        <label class="check"><input type="checkbox" id="f-aircraft" checked> <span>Aircraft (ADS-B)</span></label>
-        <label class="check"><input type="checkbox" id="f-vessels" checked> <span>Vessels (AIS)</span></label>
-        <label class="check"><input type="checkbox" id="f-trails" checked> <span>Track history</span></label>
-        <label class="check"><input type="checkbox" id="f-labels" checked> <span>Map labels</span></label>
-        <label class="check"><input type="checkbox" id="f-ground"> <span>Include targets on the ground</span></label>
-        <label class="check"><input type="checkbox" id="f-military"> <span>Military and special-interest only</span></label>
-        <label class="check"><input type="checkbox" id="f-alerts"> <span>Alerting targets only</span></label>
-        <label class="field">
-          <span class="field-label">Projection horizon
-            <output id="horizon-out">10 min</output>
-          </span>
-          <input type="range" id="horizon" min="2" max="20" step="1" value="10">
-        </label>
-        <label class="check"><input type="checkbox" id="f-approach" checked> <span>Vessel close-approach warnings</span></label>
-        <label class="field">
-          <span class="field-label">Close-approach limit
-            <output id="cpa-out">1.0 NM</output>
-          </span>
-          <input type="range" id="cpa-limit" min="0.25" max="5" step="0.25" value="1">
-        </label>
-      </div>
-    </section>
-
-    <section class="block">
-      <div class="block-head">
-        <h2 class="block-title">Zones</h2>
-        <span class="block-note" id="zone-count"></span>
-      </div>
-      <div class="draw-tools">
-        <button class="btn btn-sm" type="button" id="draw-circle">Draw circle</button>
-        <button class="btn btn-sm" type="button" id="draw-polygon">Draw polygon</button>
-        <button class="btn btn-sm" type="button" id="draw-finish" hidden>Finish</button>
-        <button class="btn btn-sm" type="button" id="draw-cancel" hidden>Cancel</button>
-      </div>
-      <p class="hint" id="draw-hint" hidden></p>
-      <form class="zone-form" id="zone-form" hidden>
-        <label class="field"><span class="field-label">Name</span><input type="text" id="zf-name" required></label>
-        <label class="field"><span class="field-label">Kind</span>
-          <select id="zf-kind">
-            <option value="custom">Custom watch</option>
-            <option value="prohibited">Prohibited</option>
-            <option value="restricted">Restricted</option>
-            <option value="tfr">TFR</option>
-            <option value="sfra">Special flight rules</option>
-          </select>
-        </label>
-        <div class="field-row">
-          <label class="field"><span class="field-label">Floor (ft)</span><input type="number" id="zf-floor" value="0" step="500"></label>
-          <label class="field"><span class="field-label">Ceiling (ft)</span><input type="number" id="zf-ceiling" value="60000" step="500"></label>
+      <section class="block">
+        <div class="block-head">
+          <h2 class="block-title">Aircraft by altitude</h2>
+          <span class="block-note" id="alt-total"></span>
         </div>
-        <fieldset class="field">
-          <legend class="field-label">Applies to</legend>
-          <label class="check"><input type="checkbox" id="zf-aircraft" checked> <span>Aircraft</span></label>
-          <label class="check"><input type="checkbox" id="zf-vessels"> <span>Vessels</span></label>
-        </fieldset>
-        <div class="form-actions">
-          <button class="btn btn-sm btn-primary" type="submit">Save zone</button>
-          <button class="btn btn-sm" type="button" id="zf-cancel">Discard</button>
-        </div>
-      </form>
-      <ul class="zone-list" id="zone-list"></ul>
-      <div class="zone-io">
-        <button class="btn btn-sm" type="button" id="zone-export">Export GeoJSON</button>
-        <label class="btn btn-sm" for="zone-import">Import GeoJSON<input type="file" id="zone-import" accept=".json,.geojson,application/geo+json,application/json" hidden></label>
-      </div>
-    </section>
+        <div class="chart" id="alt-chart"></div>
+      </section>
 
-    <section class="block">
-      <h2 class="block-title">Legend</h2>
-      <div class="legend" id="legend"></div>
-    </section>
+      <section class="block">
+        <h2 class="block-title">Legend</h2>
+        <div class="legend" id="legend"></div>
+      </section>
+    </div>
+
+    <!-- Filters: what to show and how far to look ahead -->
+    <div class="tab-pane" id="tab-filters" role="tabpanel" hidden>
+      <section class="block">
+        <h2 class="block-title">Show</h2>
+        <div class="controls" id="filter-controls">
+          <label class="check"><input type="checkbox" id="f-aircraft" checked> <span>Aircraft (ADS-B)</span></label>
+          <label class="check"><input type="checkbox" id="f-vessels" checked> <span>Vessels (AIS)</span></label>
+          <label class="check"><input type="checkbox" id="f-trails" checked> <span>Track history</span></label>
+          <label class="check"><input type="checkbox" id="f-labels" checked> <span>Map labels</span></label>
+          <label class="check"><input type="checkbox" id="f-ground"> <span>Include targets on the ground</span></label>
+          <label class="check"><input type="checkbox" id="f-military"> <span>Military and special-interest only</span></label>
+          <label class="check"><input type="checkbox" id="f-alerts"> <span>Alerting targets only</span></label>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Detection</h2>
+        <p class="hint">How far ahead every target is projected, and how close two ships may pass before it counts.</p>
+        <div class="controls">
+          <label class="field">
+            <span class="field-label">Projection horizon
+              <output id="horizon-out">10 min</output>
+            </span>
+            <input type="range" id="horizon" min="2" max="20" step="1" value="10">
+          </label>
+          <label class="check"><input type="checkbox" id="f-approach" checked> <span>Vessel close-approach warnings</span></label>
+          <label class="field">
+            <span class="field-label">Close-approach limit
+              <output id="cpa-out">1.0 NM</output>
+            </span>
+            <input type="range" id="cpa-limit" min="0.25" max="5" step="0.25" value="1">
+          </label>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2 class="block-title">Data</h2>
+        <button class="btn btn-sm" type="button" id="toggle-table">Open the data table</button>
+      </section>
+    </div>
+
+    <!-- Areas: where to load data, and what to alert on -->
+    <div class="tab-pane" id="tab-areas" role="tabpanel" hidden>
+      <section class="block">
+        <div class="block-head">
+          <h2 class="block-title">Where to load data</h2>
+          <span class="block-note" id="track-note"></span>
+        </div>
+        <p class="hint">By default the map loads whatever is on screen. Pin a circle or a box to keep loading that area while you scroll anywhere else.</p>
+        <div class="draw-tools">
+          <button class="btn btn-sm" type="button" id="track-view">Pin current view</button>
+          <button class="btn btn-sm" type="button" id="track-circle">Pin a circle</button>
+          <button class="btn btn-sm" type="button" id="track-box">Pin a box</button>
+          <button class="btn btn-sm" type="button" id="track-clear">Follow the map again</button>
+        </div>
+        <ul class="zone-list" id="track-list"></ul>
+      </section>
+
+      <section class="block">
+        <div class="block-head">
+          <h2 class="block-title">What to alert on</h2>
+          <span class="block-note" id="zone-count"></span>
+        </div>
+        <p class="hint">Restricted airspace comes from the FAA. Add your own watch zones by drawing them.</p>
+        <div class="draw-tools">
+          <button class="btn btn-sm" type="button" id="draw-circle">Draw a circle</button>
+          <button class="btn btn-sm" type="button" id="draw-polygon">Draw a polygon</button>
+          <button class="btn btn-sm" type="button" id="draw-finish" hidden>Finish</button>
+          <button class="btn btn-sm" type="button" id="draw-cancel" hidden>Cancel</button>
+        </div>
+        <p class="hint" id="draw-hint" hidden></p>
+        <form class="zone-form" id="zone-form" hidden>
+          <label class="field"><span class="field-label">Name</span><input type="text" id="zf-name" required></label>
+          <label class="field"><span class="field-label">Kind</span>
+            <select id="zf-kind">
+              <option value="custom">Custom watch</option>
+              <option value="prohibited">Prohibited</option>
+              <option value="restricted">Restricted</option>
+              <option value="tfr">TFR</option>
+              <option value="sfra">Special flight rules</option>
+            </select>
+          </label>
+          <div class="field-row">
+            <label class="field"><span class="field-label">Floor (ft)</span><input type="number" id="zf-floor" value="0" step="500"></label>
+            <label class="field"><span class="field-label">Ceiling (ft)</span><input type="number" id="zf-ceiling" value="60000" step="500"></label>
+          </div>
+          <fieldset class="field">
+            <legend class="field-label">Applies to</legend>
+            <label class="check"><input type="checkbox" id="zf-aircraft" checked> <span>Aircraft</span></label>
+            <label class="check"><input type="checkbox" id="zf-vessels"> <span>Vessels</span></label>
+          </fieldset>
+          <div class="form-actions">
+            <button class="btn btn-sm btn-primary" type="submit">Save zone</button>
+            <button class="btn btn-sm" type="button" id="zf-cancel">Discard</button>
+          </div>
+        </form>
+        <ul class="zone-list" id="zone-list"></ul>
+        <div class="zone-io">
+          <button class="btn btn-sm" type="button" id="zone-export">Export GeoJSON</button>
+          <label class="btn btn-sm" for="zone-import">Import GeoJSON<input type="file" id="zone-import" accept=".json,.geojson,application/geo+json,application/json" hidden></label>
+        </div>
+      </section>
+    </div>
   </aside>
 
+  <!-- ============ center: the map ============ -->
   <div class="map-wrap">
     <div id="map" tabindex="-1"></div>
+    <div class="map-actions" role="group" aria-label="Map actions">
+      <button class="btn btn-sm" type="button" id="map-pin" title="Keep loading this area while you scroll elsewhere">Pin this view</button>
+    </div>
     <div class="map-tooltip" id="map-tooltip" hidden></div>
     <div class="map-banner" id="map-banner" hidden></div>
   </div>
 
-  <aside class="panel panel-right" aria-label="Alerts and target detail">
+  <!-- ============ right: what needs attention ============ -->
+  <aside class="panel panel-right" id="panel-right" aria-label="Alerts and target detail">
     <section class="block">
       <div class="block-head">
-        <h2 class="block-title">Alerts</h2>
+        <h2 class="block-title">Alerts <span class="badge" id="alert-badge" hidden>0</span></h2>
         <span class="block-note" id="alert-summary"></span>
       </div>
       <ul class="alert-list" id="alert-list" role="list"></ul>
     </section>
 
     <section class="block" id="detail-block">
-      <h2 class="block-title">Target detail</h2>
-      <div id="detail"><p class="hint">Select an aircraft or vessel on the map.</p></div>
+      <h2 class="block-title">Selected target</h2>
+      <div id="detail"><p class="hint">Click an aircraft or a ship on the map to see its details, its route and any warnings.</p></div>
     </section>
   </aside>
 </main>
 
+<!-- ============ phones: one panel at a time ============ -->
+<nav class="mobile-nav" aria-label="Views">
+  <button type="button" data-view="map" class="is-active">Map</button>
+  <button type="button" data-view="alerts">Alerts <span class="badge" id="alert-badge-mobile" hidden>0</span></button>
+  <button type="button" data-view="filters">Filters</button>
+  <button type="button" data-view="areas">Areas</button>
+</nav>
+
 <footer class="statusbar">
   <span id="status-text">Starting up</span>
   <span class="site-links">
-    <button class="linkish" type="button" id="toggle-table">Data table</button>
     <a class="social" href="https://jaronwilson.dev/">jaronwilson.dev</a>
     <a class="social" href="https://jaronwilson.org/">jaronwilson.org</a>
     <a class="social" href="https://www.linkedin.com/in/jaron-wilson/" target="_blank" rel="noopener">LinkedIn</a>
   </span>
   <span class="disclaimer">Built by Jaron Wilson. Not for navigation: zone geometry is approximate and the projection is straight-line dead reckoning, not a flight plan.</span>
 </footer>
+
+<!-- ============ first visit ============ -->
+<div class="welcome" id="welcome" hidden role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+  <div class="welcome-card">
+    <div class="eyebrow">Welcome</div>
+    <h2 id="welcome-title">Live planes and ships, and a warning when one is heading somewhere it should not be</h2>
+    <p>Every aircraft and vessel on this map is real and moving. flysdown projects each one forward along its current track and tells you if it is about to enter restricted airspace, or if two ships are about to pass too close.</p>
+    <ol class="welcome-steps">
+      <li><strong>Pick a place</strong> from the Where menu. Washington has the FAA's prohibited areas; the Gulf of Finland has ships.</li>
+      <li><strong>Click anything</strong> to see where it came from, where it is going and how old the report is.</li>
+      <li><strong>Watch the Alerts</strong> panel. Red means inside a zone or about to be.</li>
+    </ol>
+    <div class="welcome-actions">
+      <button class="btn btn-primary" type="button" data-start="dc">Watch Washington airspace</button>
+      <button class="btn" type="button" data-start="gof">Watch Baltic shipping</button>
+      <button class="btn" type="button" data-start="explore">Just explore</button>
+    </div>
+    <label class="check welcome-remember"><input type="checkbox" id="welcome-remember" checked> <span>Do not show this again</span></label>
+  </div>
+</div>
 
 <dialog id="table-dialog">
   <div class="dialog-head">

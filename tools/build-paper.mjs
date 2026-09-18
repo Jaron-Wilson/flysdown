@@ -9,6 +9,7 @@
  */
 
 import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, extname, resolve } from 'node:path';
 import { marked } from 'marked';
 import { chromium } from 'playwright';
 
@@ -16,10 +17,45 @@ const input = process.argv[2] || 'docs/flysdown-paper.md';
 const output = process.argv[3] || 'docs/flysdown-paper.pdf';
 
 const source = await readFile(input, 'utf8');
-const body = marked.parse(source, { gfm: true, mangle: false, headerIds: true });
+let body = marked.parse(source, { gfm: true, mangle: false, headerIds: true });
+
+/**
+ * Figures. setContent has no base URL, so relative image paths in the
+ * markdown would resolve to nothing; inline them as data URIs instead,
+ * resolved against the markdown file's own directory. Markdown images become
+ * <figure> with the alt text as the caption, which is how a paper wants them.
+ */
+const imagePattern = /<p><img src="([^"]+)" alt="([^"]*)"[^>]*><\/p>/g;
+const inlined = [];
+for (const match of body.matchAll(imagePattern)) {
+  const [tag, src, alt] = match;
+  if (/^(https?:|data:)/.test(src)) continue;
+  const path = resolve(dirname(input), src);
+  const mime = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml' }[extname(path).toLowerCase()] || 'application/octet-stream';
+  const data = (await readFile(path)).toString('base64');
+  inlined.push([tag, `<figure><img src="data:${mime};base64,${data}" alt="${alt}"><figcaption>${alt}</figcaption></figure>`]);
+}
+for (const [tag, figure] of inlined) body = body.replace(tag, figure);
+if (inlined.length) console.log(`inlined ${inlined.length} figure(s)`);
+
+/**
+ * A table of contents from the numbered section headings, placed where the
+ * markdown says <!-- toc -->. Only h2 level: the paper's sections.
+ */
+const slug = (text) => text.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+body = body.replace(/<h2(?![^>]*\bid=)([^>]*)>([^<]+)<\/h2>/g, (m, attrs, text) => `<h2${attrs} id="${slug(text)}">${text}</h2>`);
+const headings = [...body.matchAll(/<h2[^>]*id="([^"]+)"[^>]*>([^<]+)<\/h2>/g)].map(([, id, text]) => ({ id, text }));
+if (body.includes('<!-- toc -->') && headings.length) {
+  const items = headings
+    .filter((h) => !/^(abstract|contents)$/i.test(h.text))
+    .map((h) => `<li><a href="#${h.id}">${h.text}</a></li>`)
+    .join('');
+  body = body.replace('<!-- toc -->', `<nav class="toc" aria-label="Contents"><h2 id="contents">Contents</h2><ol>${items}</ol></nav>`);
+}
 
 const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>flysdown</title>
+<html lang="en"><head><meta charset="utf-8"><title>flysdown: a live ADS-B and AIS dashboard with geofence projection</title>
+<meta name="author" content="Jaron M. Wilson; Claude (Anthropic)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -127,6 +163,24 @@ const html = `<!doctype html>
   ol li a { display: block; margin-top: 1pt; }
 
   blockquote { margin: 0 0 6pt; padding-left: 8pt; border-left: 2pt solid var(--border); color: var(--muted); }
+
+  figure { margin: 8pt 0 10pt; break-inside: avoid; page-break-inside: avoid; text-align: center; }
+  figure img { max-width: 100%; max-height: 2.75in; width: auto; display: block; margin: 0 auto; border: 0.5pt solid var(--border); border-radius: 3pt; }
+  figcaption { font-size: 7.6pt; color: var(--muted); margin-top: 4pt; line-height: 1.4; }
+  figcaption strong { color: var(--ink); }
+
+  /* Title block: authors and affiliations under the title. */
+  .authors { font-size: 9.6pt; margin: 6pt 0 2pt; }
+  .authors .name { font-weight: 600; }
+  .affil { font-size: 8pt; color: var(--muted); margin: 0 0 8pt; }
+  .keywords { font-size: 8pt; color: var(--muted); margin: 0 0 6pt; }
+  .keywords strong { color: var(--ink); }
+
+  .toc { background: var(--surface); border: 0.5pt solid var(--border); border-radius: 4pt; padding: 8pt 12pt 6pt; margin: 8pt 0 10pt; break-inside: avoid; }
+  .toc h2 { border: 0; margin: 0 0 4pt; font-size: 10pt; }
+  .toc ol { margin: 0; padding-left: 0; list-style: none; columns: 2; column-gap: 18pt; font-size: 8pt; }
+  .toc li { margin-bottom: 1.5pt; break-inside: avoid; }
+  .toc a { color: var(--ink); }
 </style></head><body>${body}</body></html>`;
 
 // --html <path> dumps what is about to be rendered, which is the quickest way

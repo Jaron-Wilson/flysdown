@@ -38,10 +38,10 @@ const slides = [
   },
   {
     eyebrow: 'What you are looking at',
-    title: '39 seconds from prohibited airspace',
+    title: 'Baltimore to Dallas, drawn as flown',
     image: routeShot,
     caption:
-      'A live warning over the National Mall, and the selected regional jet drawn back to Newark where it took off, with the distance flown, the distance remaining and an arrival time at its current speed.',
+      'An American 737 selected mid-flight. The dashed leg is its published route from BWI on to DFW as a great circle, the rail shows 965 NM to go and just over two hours at its current speed, and every other aircraft within 250 NM is on the map with it.',
   },
   {
     eyebrow: 'What it does',
@@ -115,6 +115,7 @@ const slides = [
     title: 'flysdown.jaronwilson.dev',
     lede:
       'ADS-B from adsb.fi and adsb.lol, AIS from Fintraffic Digitraffic, airspace from the FAA, routes from adsbdb, basemap from OpenFreeMap. Built on Cloudflare Pages with MapLibre GL JS.',
+    credit: 'Designed and directed by Jaron Wilson. Built with Claude, by Anthropic, as a working collaboration: Jaron set the requirements and made the product calls, Claude wrote the code, ran the measurements and drafted the write-up.',
     meta: 'Jaron Wilson &middot; jaronwilson.dev &middot; jaronwilson.org',
   },
 ];
@@ -126,6 +127,7 @@ function renderSlide(slide, index, total) {
   const body = [];
 
   if (slide.lede) body.push(`<p class="lede">${escape(slide.lede)}</p>`);
+  if (slide.credit) body.push(`<p class="credit">${escape(slide.credit)}</p>`);
   if (slide.stat) {
     body.push(`<div class="stat"><span class="stat-value">${escape(slide.stat)}</span><span class="stat-note">${escape(slide.statNote)}</span></div>`);
   }
@@ -235,6 +237,15 @@ const html = `<!doctype html>
   /* The closing slide lists the sources, which reads better on a wider
      measure than the cover's headline-style lede. */
   .closing .lede { max-width: 38ch; font-size: 29px; }
+  .credit {
+    max-width: 44ch;
+    font-size: 21px;
+    line-height: 1.45;
+    color: var(--muted);
+    margin: 22px 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+  }
   .body { font-size: 27px; line-height: 1.5; color: var(--muted); margin: 0 0 22px; }
 
   ul { margin: 0; padding-left: 30px; }

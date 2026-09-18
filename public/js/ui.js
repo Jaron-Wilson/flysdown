@@ -91,6 +91,95 @@ export class UI {
     this.handlers[name] = fn;
   }
 
+  /* ---------- navigation: tabs on desktop, views on phones ---------- */
+
+  initNavigation() {
+    for (const tab of document.querySelectorAll('.tabs .tab')) {
+      tab.addEventListener('click', () => this.setTab(tab.dataset.tab));
+    }
+    for (const button of document.querySelectorAll('.mobile-nav button')) {
+      button.addEventListener('click', () => this.setView(button.dataset.view));
+    }
+  }
+
+  /** Switch the left rail's tab. Also used to jump the user to a control. */
+  setTab(name) {
+    for (const tab of document.querySelectorAll('.tabs .tab')) {
+      const active = tab.dataset.tab === name;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-selected', String(active));
+    }
+    for (const pane of document.querySelectorAll('.tab-pane')) {
+      pane.hidden = pane.id !== `tab-${name}`;
+    }
+    // On a phone the rail is a view of its own; keep the two in step.
+    if (window.matchMedia('(max-width: 1040px)').matches && (name === 'filters' || name === 'areas')) {
+      this.setView(name, { keepTab: true });
+    }
+  }
+
+  /** Phone-only: which one panel is on screen. */
+  setView(name, { keepTab = false } = {}) {
+    document.body.dataset.view = name;
+    for (const button of document.querySelectorAll('.mobile-nav button')) {
+      button.classList.toggle('is-active', button.dataset.view === name);
+    }
+    if (!keepTab && (name === 'filters' || name === 'areas')) this.setTab(name);
+    if (name !== 'map') this.handlers.leftMap?.();
+  }
+
+  /** The alert count, shown on the Alerts heading and the phone tab. */
+  renderAlertBadge(count) {
+    for (const id of ['alert-badge', 'alert-badge-mobile']) {
+      const node = $(id);
+      if (!node) continue;
+      node.textContent = String(count);
+      node.hidden = count === 0;
+    }
+  }
+
+  /* ---------- first visit ---------- */
+
+  showWelcome() {
+    const node = $('welcome');
+    if (!node) return;
+    node.hidden = false;
+    node.querySelector('[data-start]')?.focus();
+  }
+
+  hideWelcome({ remember = false } = {}) {
+    const node = $('welcome');
+    if (!node) return;
+    node.hidden = true;
+    if (remember) {
+      try {
+        localStorage.setItem('flysdown.welcomed.v1', '1');
+      } catch {
+        // private mode: it will simply show again next time
+      }
+    }
+  }
+
+  static hasBeenWelcomed() {
+    try {
+      return localStorage.getItem('flysdown.welcomed.v1') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  /** The floating map button mirrors whether the view is pinned. */
+  renderMapPin(pinnedCount) {
+    const button = $('map-pin');
+    if (!button) return;
+    const pinned = pinnedCount > 0;
+    button.setAttribute('aria-pressed', String(pinned));
+    button.textContent = pinned ? `Following the map again` : 'Pin this view';
+    button.title = pinned
+      ? `Stop tracking the ${pinnedCount} pinned area${pinnedCount === 1 ? '' : 's'} and load whatever is on screen`
+      : 'Keep loading this area while you scroll elsewhere';
+  }
+
   /* ---------- tiles ---------- */
 
   renderStats({ aircraftCount, vesselCount, alerts, projectedCount, groundCount }) {

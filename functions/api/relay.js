@@ -20,7 +20,7 @@ const json = (body, status = 200) =>
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
 
-function authorised(request, env) {
+function authorized(request, env) {
   if (!env.RELAY_TOKEN) return false;
   const header = request.headers.get('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
@@ -32,7 +32,7 @@ function authorised(request, env) {
 }
 
 export const onRequestGet = async ({ request, env }) => {
-  if (!authorised(request, env)) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!authorized(request, env)) return json({ ok: false, error: 'unauthorized' }, 401);
   if (!env.RELAY_DB) return json({ ok: false, error: 'no RELAY_DB binding' }, 503);
 
   const since = Date.now() - WANTED_TTL_MS;
@@ -70,7 +70,7 @@ export const onRequestGet = async ({ request, env }) => {
 };
 
 export const onRequestPost = async ({ request, env }) => {
-  if (!authorised(request, env)) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!authorized(request, env)) return json({ ok: false, error: 'unauthorized' }, 401);
   if (!env.RELAY_DB) return json({ ok: false, error: 'no RELAY_DB binding' }, 503);
 
   let body;

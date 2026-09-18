@@ -2,8 +2,14 @@
 
 **How the system works, why it is built this way, and where every fact in it came from**
 
-Version 1.0, 17 September 2026. Deployment: `flysdown.pages.dev` (target domain
+<p class="authors"><span class="name">Jaron M. Wilson</span><sup>1</sup> and <span class="name">Claude</span><sup>2</sup></p>
+<p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
+<p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
+
+Version 1.1, 17 September 2026. Live at `flysdown.pages.dev` (target domain
 `flysdown.jaronwilson.dev`). Source: `Jaron-Wilson/flysdown`.
+
+<!-- toc -->
 
 ## Abstract
 
@@ -24,7 +30,7 @@ does not work. Section 4 measures that and describes the fix.
 
 Claims are tagged by provenance. **[measured]** means obtained by instrumenting
 this system on 16 to 17 September 2026. **[documented]** means from a
-provider's own documentation, cited in Section 11. **[standard]** means from a
+provider's own documentation, cited in Section 13. **[standard]** means from a
 published standard or regulation. Section 10 collects the load-bearing claims in one table.
 
 ## 1. Scope
@@ -50,7 +56,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 5,780 lines across browser modules, edge functions, the shared
+The system is 6,627 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -65,6 +71,8 @@ status. The 1090 MHz Extended Squitter link and its message formats are
 specified in RTCA DO-260B and ICAO Annex 10 Volume IV **[standard]**. Anyone
 with an antenna and a software defined radio can decode it, which is why a
 volunteer receiver network exists and aggregate live data is free.
+
+![**Figure 1.** The dashboard over Washington. The left rail is tabbed (Overview, Filters, Areas), the map carries the FAA prohibited areas and the statutory DC Special Flight Rules Area, and the right rail holds alerts and the selected target. 104 aircraft were in the covered area when this was captured.](figures/fig1-dashboard.jpg)
 
 What arrives here is the JSON that the `readsb` decoder and its `tar1090`
 interface produce, which aggregators serve directly; field semantics are in the
@@ -417,12 +425,12 @@ The first version produced 55 simultaneous alerts over Washington, about 50 of
 them variations of "an airliner is inside the Washington DC Special Flight
 Rules Area" **[measured]**. True and useless: the SFRA is a 30 nautical mile
 ring inside which transiting requires a flight plan, a discrete code and
-two-way radio, so essentially all traffic in it is authorised. Zones therefore
+two-way radio, so essentially all traffic in it is authorized. Zones therefore
 carry an `advisory` flag, default true for special-flight-rules zones: such a
 zone is still drawn, still tested and still reported in a selected target's zone
 checks, but never raises an alert. The same view then produced 3 alerts, all
 genuine: a projected entry into P-40 at Camp David and two into P-56A over the
-National Mall **[measured]**. A detector that fires on authorised behavior
+National Mall **[measured]**. A detector that fires on authorized behavior
 trains its operator to ignore it.
 
 ### 5.6 Vessel close approach
@@ -468,6 +476,8 @@ Measured against live Baltic traffic, 275 vessels produced 4 alerts at the 1
 nautical mile limit and 27 at 5, the tightest being two ships projected to pass
 0.32 NM apart in 2 minutes 14 seconds **[measured]**. Each pair is drawn on the
 map as a line between the two vessels, colored by severity.
+
+![**Figure 3.** Vessel traffic in the Gulf of Finland with two close-approach warnings in the alert rail. Under way vessels are orange, moored and anchored ones gray; the latter are excluded from the pairwise pass, since a harbor is full of ships lying a cable apart at zero knots. The alert cards carry each pair's projected passing distance and the time to it.](figures/fig3-ships.jpg)
 
 ### 5.7 A worked example
 
@@ -625,7 +635,21 @@ The age appears in the detail panel, in the tooltip past 20 seconds, as a table
 column, and on the map as opacity: contacts fade from full to 30 percent
 between 45 and 240 seconds, so a stale picture looks stale.
 
-### 7.3 Flight history and where it is going
+### 7.3 Finding your way around
+
+The first layout put every control on screen at once, in one long scrolling
+rail. It was complete and it was overwhelming, especially for a visitor arriving
+from a link with no idea what they were looking at. The current layout groups
+the controls into three tabs, **Overview** (what is happening), **Filters**
+(what to show and how far to project) and **Areas** (where to load data and
+what to alert on), and adds a one-time welcome card with three quick starts
+that puts a first-time visitor in front of either the Washington airspace or
+the Baltic shipping before they have to learn anything. On a phone the three
+panels and the map become four full-screen views behind a bottom tab bar, with
+an alert count on the Alerts tab, rather than a tall page with the map at the
+top and everything else stacked underneath.
+
+### 7.4 Flight history and where it is going
 
 Selecting an aircraft answers three questions at once. Its **observed track**
 is the positions this system has actually seen, seeded from the history already
@@ -637,6 +661,8 @@ destination, with the airports marked and labelled. The panel adds the distance
 flown from the origin, the distance remaining and an arrival time at the
 current ground speed, and a button frames the whole flight.
 
+![**Figure 2.** A selected United flight from Philadelphia to Chicago O'Hare. The solid line behind the aircraft is its observed track; the dashed legs are the published route, interpolated as great circles from the origin airport through the aircraft to the destination. The rail lists distance flown, distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
+
 The legs are interpolated rather than drawn as straight lines, because a
 straight line between two airports is wrong on a Mercator projection: the
 shortest path curves. Sixty-five points along the great circle, using the
@@ -645,7 +671,7 @@ flown path. Longitudes are unwrapped as the path is built, so a transpacific
 route does not draw itself the long way around the world; there is a test for
 exactly that, on Tokyo to Los Angeles.
 
-### 7.4 One layout bug worth recording
+### 7.5 One layout bug worth recording
 
 The endpoint includes a snippet of the upstream response body in its error
 detail, which is how the adsb.fi 403 was identified as a bot challenge rather
@@ -753,7 +779,36 @@ attention on redistribution.
 | adsbdb answers the Cloudflare edge, unlike the ADS-B aggregators | `/api/route` exercised from the deployed Worker **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
-## 11. References
+## 11. Author contributions
+
+J.M.W. conceived the project, set its requirements and priorities, chose the
+platform (a static site with edge functions over a framework and an always-on
+server, when offered both), chose the relay over the alternatives when the
+egress problem was measured, decided the feature scope including the pinned
+tracking areas, per-feed pausing, vessel close-approach prediction and flight
+history, tested the deployed system throughout, reported the defects that led
+to several of the fixes described here, and reviewed the text.
+
+Claude (Anthropic) implemented the software, ran the measurements reported as
+**[measured]**, wrote the unit and browser tests, produced the figures, and
+drafted this paper, all under the direction of the first author. The
+provenance tags in the text and the table in Section 10 exist so that a reader
+can check any load-bearing claim against its source rather than trust either
+author.
+
+## 12. Availability
+
+The system is live at `flysdown.pages.dev`. The source, including the tests,
+the tools that regenerate the zone file, the figures and this document, is in
+the repository `Jaron-Wilson/flysdown` (private at the time of writing;
+contact the first author). Aircraft data is used under adsb.fi's personal,
+non-commercial terms with the required citation, and under adsb.lol's ODbL
+1.0. Vessel data is Fintraffic Digitraffic, CC BY 4.0. Airspace geometry is
+the FAA's, in the public domain. Route data is from adsbdb (MIT). The basemap
+is OpenFreeMap, built on OpenStreetMap data, copyright OpenStreetMap
+contributors. Nothing here is for navigation.
+
+## 13. References
 
 1. RTCA DO-260B, *MOPS for 1090 MHz Extended Squitter ADS-B*; ICAO Annex 10 Vol IV.
 2. readsb JSON output reference.
