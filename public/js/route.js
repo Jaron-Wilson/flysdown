@@ -35,11 +35,30 @@ const BEARING_CHECK_MIN_NM = 25;
 const BEARING_LIMIT_DEG = 75;
 
 /**
+ * An aircraft sitting on the ground is at one end of its route or it is not on
+ * that route at all. This is the test that catches the common case, which the
+ * detour test can miss when the airport it is actually parked at happens to
+ * lie near the great circle between the two reported airports.
+ */
+const GROUND_ENDPOINT_NM = 10;
+
+/**
+ * Below this, descending, an aircraft is landing within a few miles. If the
+ * reported destination is much further away than that, it is landing somewhere
+ * else, which is exactly what is seen at a busy airport: a stream of arrivals
+ * whose callsigns resolve to legs those aircraft fly later in the day.
+ */
+const LANDING_ALT_FT = 5000;
+const LANDING_VS_FPM = -300;
+const LANDING_AWAY_NM = 30;
+
+/**
  * @param {{origin: object|null, destination: object|null}|null} route
- * @param {{lat: number, lon: number, track: number|null}|null} target
+ * @param {{lat: number, lon: number, track: number|null, alt: number|null,
+ *   verticalRate: number|null, onGround: boolean|null}|null} target
  * @returns {{
  *   verdict: 'consistent'|'mismatch'|'unknown',
- *   reason: 'detour'|'bearing'|null,
+ *   reason: 'detour'|'bearing'|'on-ground-elsewhere'|'landing-elsewhere'|null,
  *   totalNm: number|null, flownNm: number|null, remainingNm: number|null,
  *   detourNm: number|null, bearingErrorDeg: number|null,
  * }}
@@ -81,6 +100,7 @@ export function routeFit(route, target) {
     remainingNm: null,
     detourNm: null,
     bearingErrorDeg: null,
+    nearestEndpointNm: null,
   };
 
   const hasFix = target && Number.isFinite(target.lat) && Number.isFinite(target.lon);
@@ -102,6 +122,28 @@ export function routeFit(route, target) {
   ) {
     const wanted = bearingTo(target.lat, target.lon, destination.lat, destination.lon);
     result.bearingErrorDeg = Math.abs(bearingDelta(target.track, wanted));
+  }
+
+  const nearestEndpointNm = Math.min(
+    result.flownNm === null ? Infinity : result.flownNm,
+    result.remainingNm === null ? Infinity : result.remainingNm
+  );
+
+  // On the ground somewhere that is neither end of the route.
+  if (target.onGround && Number.isFinite(nearestEndpointNm) && nearestEndpointNm > GROUND_ENDPOINT_NM) {
+    result.verdict = 'mismatch';
+    result.reason = 'on-ground-elsewhere';
+    result.nearestEndpointNm = nearestEndpointNm;
+    return result;
+  }
+
+  // Low, descending, and far from the airport it is supposedly going to.
+  const descending = typeof target.verticalRate === 'number' && target.verticalRate < LANDING_VS_FPM;
+  const low = typeof target.alt === 'number' && target.alt < LANDING_ALT_FT;
+  if (descending && low && result.remainingNm !== null && result.remainingNm > LANDING_AWAY_NM) {
+    result.verdict = 'mismatch';
+    result.reason = 'landing-elsewhere';
+    return result;
   }
 
   // Distance first: it is the stronger signal, and it names both airports.

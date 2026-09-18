@@ -50,9 +50,13 @@ await page.waitForTimeout(400);
 const welcomeState = await page.evaluate(() => ({
   hidden: document.getElementById('welcome').hidden,
   remembered: localStorage.getItem('flysdown.welcomed.v1') === '1',
+  // The card is also the Help content, and it has to carry the one caveat a
+  // new reader needs: positions are measured, routes are reported.
+  saysRoutesAreReported: /Routes are not/.test(document.querySelector('.welcome-caveat')?.textContent || ''),
 }));
 console.log(`  ${JSON.stringify({ welcomeShown, ...welcomeState })}`);
 if (!welcomeState.hidden || !welcomeState.remembered) errors.push(`welcome card did not dismiss cleanly: ${JSON.stringify(welcomeState)}`);
+if (!welcomeState.saysRoutesAreReported) errors.push('the welcome card no longer explains that routes are reported, not measured');
 
 step('waiting for the feeds to report');
 await page.waitForFunction(() => {
@@ -213,8 +217,10 @@ const vesselCheck = await page.evaluate(async () => {
   const store = window.flysdown.store;
   if (!store.byKind('vessel').length) return 'no vessels in this view';
   const vessel = store.byKind('vessel')[0];
-  window.flysdown.state.selectedKey = vessel.key;
-  window.flysdown.tick();
+  // Through the real click path: this is the bug that started the regression
+  // test, a vessel whose detail rendered below the fold.
+  window.flysdown.mapView.onSelect(vessel.key);
+  await new Promise((r) => setTimeout(r, 400));
   const block = document.getElementById('detail-block');
   const rect = block.getBoundingClientRect();
   return {

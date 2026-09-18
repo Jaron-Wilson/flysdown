@@ -440,11 +440,20 @@ export class UI {
           : '';
 
       const place = (airport) => escapeHtml(airportCode(airport) || 'the airport');
-      let note = '<p class="hint">Reported for this callsign by adsbdb. ADS-B does not broadcast a destination, so this is the route the callsign usually flies, not a filed flight plan.</p>';
+      // The caveat is deliberately blunt. Route data keyed on a callsign is
+      // wrong often, not occasionally: of eight aircraft on the ground at
+      // Washington National on 18 September 2026, seven carried a route
+      // between two airports that were neither where they sat nor where they
+      // had come from. Saying "may be inaccurate" would understate it.
+      let note = '<p class="hint">Reported for this callsign by adsbdb, a volunteer route database. ADS-B does not broadcast a destination, so this is a leg the callsign is known to fly, which is frequently not the one in front of you: airlines reuse a number across several legs a day and the data can be months old. Check it below before believing it.</p>';
       if (wrong && fit.reason === 'detour') {
-        note = `<p class="hint hint-warn">This does not match where the aircraft is. ${place(origin)} to ${place(destination)} is ${escapeHtml(fmt.nm(fit.totalNm))}, but the aircraft is ${escapeHtml(fmt.nm(fit.flownNm))} from ${place(origin)} and ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)}. Treat the route below as the callsign's usual one, not this flight's.</p>`;
+        note = `<p class="hint hint-warn">This does not match where the aircraft is. ${place(origin)} to ${place(destination)} is ${escapeHtml(fmt.nm(fit.totalNm))}, but the aircraft is ${escapeHtml(fmt.nm(fit.flownNm))} from ${place(origin)} and ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)}. Treat the route below as the callsign's other leg, not this flight's.</p>`;
       } else if (wrong && fit.reason === 'bearing') {
         note = `<p class="hint hint-warn">This does not match where the aircraft is heading: it is ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)} and tracking ${Math.round(fit.bearingErrorDeg)}\u00b0 away from it. Treat the route below as unverified.</p>`;
+      } else if (wrong && fit.reason === 'on-ground-elsewhere') {
+        note = `<p class="hint hint-warn">This aircraft is on the ground ${escapeHtml(fmt.nm(fit.nearestEndpointNm))} from the nearer of these two airports, so it is parked at neither end of this route. The callsign flies this leg at some point; it is not flying it now.</p>`;
+      } else if (wrong && fit.reason === 'landing-elsewhere') {
+        note = `<p class="hint hint-warn">This aircraft is descending to land, and ${place(destination)} is still ${escapeHtml(fmt.nm(fit.remainingNm))} away, so it is landing somewhere else. This is the common case at a busy airport: the callsign resolves to a leg the aircraft flies later.</p>`;
       }
 
       const rows = wrong
@@ -622,10 +631,16 @@ export class UI {
    * Make the detail panel visible wherever it currently sits: at the top of
    * the right rail on a wide screen, or below the map on a phone.
    */
-  focusDetail(hasSelection) {
+  /**
+   * @param {boolean} hasSelection
+   * @param {{scroll?: boolean}} options `scroll: false` keeps the layout in
+   *   step with the state without moving the rail under the reader, which is
+   *   what every update wants; a deliberate selection wants the scroll.
+   */
+  focusDetail(hasSelection, { scroll = true } = {}) {
     const panel = document.querySelector('.panel-right');
     panel?.classList.toggle('has-selection', Boolean(hasSelection));
-    if (!hasSelection) return;
+    if (!hasSelection || !scroll) return;
     const block = document.getElementById('detail-block');
     if (!block) return;
     // Below this width the detail becomes a fixed sheet over the map, which

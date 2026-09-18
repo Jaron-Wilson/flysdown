@@ -6,7 +6,7 @@
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
-Version 1.2, 17 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
+Version 1.3, 18 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 `Jaron-Wilson/flysdown`.
 
 <!-- toc -->
@@ -28,8 +28,16 @@ ADS-B services rate-limit by IP address, and serverless edge platforms egress
 from addresses shared with every other customer, so the obvious architecture
 does not work. Section 4 measures that and describes the fix.
 
+A second finding is about trusting data rather than fetching it. The origin and
+destination shown for a flight come from a volunteer database keyed on the
+callsign, and among aircraft arriving at one busy airport seven routes in ten
+described a different leg entirely. Section 2.4 measures that and derives four
+checks, from the aircraft's own position, altitude, vertical rate and track,
+that reject a route the aircraft is demonstrably not flying: the system reports
+what it can defend and labels the rest as reported rather than known.
+
 Claims are tagged by provenance. **[measured]** means obtained by instrumenting
-this system on 16 to 17 September 2026. **[documented]** means from a
+this system between 16 and 18 September 2026. **[documented]** means from a
 provider's own documentation, cited in Section 13. **[standard]** means from a
 published standard or regulation. Section 10 collects the load-bearing claims in one table.
 
@@ -56,7 +64,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 7,726 lines across browser modules, edge functions, the shared
+The system is 7,876 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -210,6 +218,42 @@ and 35 percent of the leg. The second is a bearing test: an aircraft more than
 25 NM from its destination and tracking more than 75 degrees away from it is
 not going there. Below 25 NM the heading is about the approach, not the
 destination, so the check is skipped rather than made to lie.
+
+How often is it wrong? Measured at a busy airport, which is where the answer
+matters, on 18 September 2026. Of eleven aircraft on the ground or descending
+within 25 NM of Washington National, ten had route data, and seven of those ten
+were parked at an airport that was neither end of their reported leg: RPA3466
+at Washington reporting Newark to Portland, JIA5344 reporting Portland to
+Philadelphia, AAL2077 reporting Boston to Dallas, SWA1246 reporting Houston to
+New Orleans, and three more **[measured]**. This is not corruption in the data.
+It is what a callsign means: airlines fly a number over several legs in a day,
+the database holds one of them, and an aircraft that has just arrived is
+frequently between two legs, so the leg on file is the one it will fly next or
+flew earlier.
+
+That measurement came from the first author watching about twenty arrivals and
+checking them against an independent source by hand, and it exposed a gap in
+the checks above. Six of the seven were already caught by the detour test. One
+was not: Washington National lies close to the great circle between Boston and
+Dallas, so an aircraft parked there produces two legs that sum almost exactly
+to the length of the route, and the geometry looks perfect. Two further checks
+close that gap, and both are about what an aircraft is doing rather than where
+it is.
+
+The first: an aircraft on the ground is at one end of its route, or it is not
+on that route at all. If it is on the ground more than 10 NM from the nearer of
+the two reported airports, the route is rejected regardless of how well the
+distances add up. The second: an aircraft below 5,000 feet and descending is
+landing within a few miles, so if its reported destination is more than 30 NM
+away it is landing somewhere else. That is the case the first author was
+watching, a stream of arrivals into one airport whose panels named airports
+hundreds of miles off.
+
+Re-measured against the same live traffic with both checks in place, eight of
+the ten routes were flagged and two were accepted, and both of the accepted
+ones were genuinely right: FFT690, which really had arrived from Denver, and
+VIR22Q, sitting at Dulles, which is the origin of the Dulles to Heathrow leg it
+was reported on **[measured]**. No correct route was rejected in that sample.
 
 A second route source was measured rather than assumed to help. hexdb.io
 answers callsign lookups from the edge and disagreed with adsbdb on every one
@@ -821,7 +865,7 @@ the not-for-navigation notice.
 
 ## 8. Verification
 
-**Unit tests (45, no network).** The geometry and the rules: haversine and
+**Unit tests (50, no network).** The geometry and the rules: haversine and
 destination round-tripping, ray casting against known points, inside and
 projected alerts, severity escalation with closing time, altitude band
 exclusion, a descending target entering the band mid-projection, the small-zone
@@ -911,7 +955,15 @@ declares itself stale stops costing someone else an afternoon. The general
 lesson: when a platform caches your code longer than your deploy cycle, verify
 against a cold cache, and give the page a way to notice.
 
-Known limits: AIS coverage is the Baltic and Gulf of Finland only, because that
+Known limits, and the first one is the largest: **the route shown for a flight
+is frequently not the leg being flown.** It comes from a volunteer database
+keyed on the callsign, and Section 2.4 measures seven of ten wrong among
+arrivals at a single busy airport. The checks described there catch the ones
+that contradict the aircraft's own position, altitude and track, and what
+survives them is labeled as reported rather than as known, with a link to a
+source that does hold the day's schedule. A route that is wrong in a way the
+geometry cannot see will still be shown, and it is shown as a claim for that
+reason. AIS coverage is the Baltic and Gulf of Finland only, because that
 is what a keyless live feed covers; the projection is a straight line, right for
 a geofence warning and wrong for predicting behavior; NOTAM activation is not
 modeled, so a cold restricted area is still drawn and P-40's expansion during a
@@ -954,19 +1006,39 @@ attention on redistribution.
 | A proxy error with no colon in it was quoted verbatim in the status line | Cloudflare 520 body observed in the interface **[measured]** |
 | Second route case: SWA1246 over Washington reported as KIAH-KMSY, 1,048 and 842 NM from them on a 264 NM leg | Live lookup and position compared, 17 September 2026 **[measured]** |
 | hexdb.io disagrees with adsbdb on every sampled callsign it knows, including one where adsbdb was right | Both sources queried for ten callsigns **[measured]** |
+| Seven of ten routes wrong among aircraft on the ground or descending at Washington National; eight of ten flagged afterwards, with no correct route rejected | Live feed and route lookups compared against position, altitude and vertical rate, 18 September 2026 **[measured]** |
 | No keyless source serves a flight's historical track: every trace endpoint probed answers 403 | globe.adsb.fi, globe.airplanes.live, globe.adsbexchange.com and api.adsb.lol probed from a residential address **[measured]** |
 | Pages served application modules with `max-age=14400, must-revalidate`, hiding a deployed fix for four hours, and will not honor a shorter value in `_headers` | Response headers read from the live site before and after a `_headers` change **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
 ## 11. Author contributions
 
-J.M.W. conceived the project, set its requirements and priorities, chose the
-platform (a static site with edge functions over a framework and an always-on
-server, when offered both), chose the relay over the alternatives when the
-egress problem was measured, decided the feature scope including the pinned
-tracking areas, per-feed pausing, vessel close-approach prediction and flight
-history, tested the deployed system throughout, reported the defects that led
-to several of the fixes described here, and reviewed the text.
+J.M.W. conceived the project and directed it throughout. He set the
+requirements and the priorities, chose the platform after being offered the
+alternatives (a static site with edge functions, over Angular, Java Spring Boot
+and Python FastAPI), and chose the relay architecture of Section 4 once the
+egress problem had been measured, which is the decision the whole system rests
+on. He specified the feature scope: the pinned tracking areas that keep loading
+while the map is scrolled elsewhere, per-feed pausing, vessel close-approach
+prediction, flight history and routes, the tabbed navigation, per-target URLs,
+and landing detection. He runs the relay on his own infrastructure.
+
+He also did the acceptance testing, and it is the reason much of this system is
+correct rather than merely finished. Working from the deployed build rather
+than from a description of it, he found: the vessel detail panel opening off
+screen on a phone (Section 7.5); upstream error text widening the layout until
+the right-hand panel left the screen (Section 7.5); a drawn box that silently
+did nothing; an altitude chart whose bars had never rendered; text clipped off
+the last slide of the deck; reference URLs breaking mid-link in the typeset
+paper; a white frame around every page of that paper, for which he proposed the
+`@page` approach that led to the fix (Section 9); airport identifiers shown as
+ICAO rather than the codes people read (Section 7.4); a straight line drawn
+from a departure airport that no aircraft had flown, in his words because "it
+did not come from that spot" (Section 7.4); and the route data failure that
+Section 2.4 now quantifies, which he found by checking about twenty arrivals
+into Washington National against an independent source by hand. Each of those
+is a defect that testing from the outside catches and testing from the inside
+does not. He reviewed this text.
 
 Claude (Anthropic) implemented the software, ran the measurements reported as
 **[measured]**, wrote the unit and browser tests, produced the figures, and

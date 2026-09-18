@@ -17,7 +17,7 @@ contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
 `docs/flysdown-paper.pdf` is the same thing paginated (13 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
-`docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
+`docs/flysdown-linkedin.pdf` is an 11 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
 
 ```bash

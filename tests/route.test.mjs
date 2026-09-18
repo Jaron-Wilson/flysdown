@@ -241,3 +241,63 @@ test('a landing stops being news after the window', () => {
 test('ships do not land', () => {
   assert.equal(detectLanding({ kind: 'vessel', onGround: false, groundSpeed: 0, history: [] }), null);
 });
+
+/*
+ * The case Jaron reported: about twenty aircraft landing at Washington
+ * National, all showing destinations elsewhere. Measured on 18 September 2026:
+ * of eight aircraft on the ground at DCA, seven carried a route between two
+ * airports that were neither DCA nor where they had come from. Six of those
+ * seven were already caught by the detour test; BOS-DFW was not, because DCA
+ * lies close to the great circle between them, which is what these two checks
+ * are for.
+ */
+
+const DCA = { icao: 'KDCA', iata: 'DCA', lat: 38.8512, lon: -77.0402 };
+const BOS = { icao: 'KBOS', iata: 'BOS', lat: 42.3656, lon: -71.0096 };
+const DFW = { icao: 'KDFW', iata: 'DFW', lat: 32.8998, lon: -97.0403 };
+const EWR = { icao: 'KEWR', iata: 'EWR', lat: 40.6925, lon: -74.1687 };
+const PWM = { icao: 'KPWM', iata: 'PWM', lat: 43.6462, lon: -70.3087 };
+
+test('parked at an airport on neither end of the route is a mismatch', () => {
+  // AAL2077 sat at DCA reporting BOS to DFW. DCA is nearly on that line, so
+  // the detour test alone cannot see it.
+  const onLine = routeFit({ origin: BOS, destination: DFW }, { ...DCA, onGround: true, alt: null, groundSpeed: 0, track: 0, verticalRate: 0 });
+  assert.ok(Math.abs(onLine.detourNm) < Math.max(60, onLine.totalNm * 0.35), 'the detour test should not fire here');
+  assert.equal(onLine.verdict, 'mismatch');
+  assert.equal(onLine.reason, 'on-ground-elsewhere');
+  assert.ok(onLine.nearestEndpointNm > 300);
+});
+
+test('parked at one end of the route is consistent', () => {
+  const atOrigin = routeFit({ origin: EWR, destination: PWM }, { lat: EWR.lat, lon: EWR.lon, onGround: true, alt: null, track: 0, verticalRate: 0 });
+  assert.equal(atOrigin.verdict, 'consistent');
+  const atDestination = routeFit({ origin: EWR, destination: PWM }, { lat: PWM.lat, lon: PWM.lon, onGround: true, alt: null, track: 0, verticalRate: 0 });
+  assert.equal(atDestination.verdict, 'consistent');
+});
+
+test('descending to land far from the reported destination is a mismatch', () => {
+  // On approach into DCA while the route claims Dallas: what he was watching.
+  const arriving = routeFit(
+    { origin: BOS, destination: DFW },
+    { lat: 38.95, lon: -77.15, alt: 3200, verticalRate: -900, track: 170, onGround: false }
+  );
+  assert.equal(arriving.verdict, 'mismatch');
+  assert.equal(arriving.reason, 'landing-elsewhere');
+});
+
+test('descending into the reported destination is not flagged', () => {
+  const arriving = routeFit(
+    { origin: BOS, destination: DCA },
+    { lat: 38.95, lon: -77.15, alt: 3200, verticalRate: -900, track: 170, onGround: false }
+  );
+  assert.equal(arriving.verdict, 'consistent');
+});
+
+test('a normal cruise descent is not a landing somewhere else', () => {
+  // Stepping down at altitude, 200 NM out: not low, so not landing.
+  const cruise = routeFit(
+    { origin: BOS, destination: DFW },
+    { lat: 39.5, lon: -80.0, alt: 24000, verticalRate: -1200, track: 250, onGround: false }
+  );
+  assert.equal(cruise.verdict, 'consistent');
+});

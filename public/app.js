@@ -561,6 +561,12 @@ function tick() {
       track: state.track.points,
     });
   }
+
+  // A selected target's detail moves to the top of the rail, which is the only
+  // reason a click produces a visible result when the alert list is long. That
+  // was a property of the click handler, so anything else that set the
+  // selection left the panel laid out as though nothing were selected.
+  ui.focusDetail(Boolean(state.selectedKey && store.get(state.selectedKey)), { scroll: false });
   render(candidates);
   updateStatusLine();
 }

@@ -89,6 +89,16 @@ const slides = [
       'Closest Point of Approach by relative motion, the same alarm model an ARPA radar uses: a preset CPA limit and a warning time. Moored and anchored ships are excluded, or a harbor would drown the feed with pairs lying a cable apart at zero knots.',
   },
   {
+    eyebrow: 'When the data is wrong',
+    title: 'Seven routes in ten described a different flight',
+    bullets: [
+      'ADS-B broadcasts position, not schedule, so origin and destination come from a volunteer database keyed on the callsign. Airlines fly one number over several legs a day, and the database holds one of them.',
+      'Measured at Washington National: of ten arriving aircraft with route data, seven were reported on a leg between two airports that were neither where they sat nor where they had come from.',
+      'Four checks now test a route against the aircraft itself: does the flown plus remaining distance match the leg, is it pointed at the destination, is it parked at neither end, is it descending to land somewhere else. Eight of the ten were rejected, and neither correct route was.',
+      'What survives is still labeled reported, not known, with no arrival estimate and a link to a source that holds the day\u2019s schedule. A dashboard that states a wrong destination confidently is worse than one that admits the limit.',
+    ],
+  },
+  {
     eyebrow: 'Getting the boring parts right',
     title: 'Real airspace, and honest staleness',
     bullets: [
@@ -102,8 +112,8 @@ const slides = [
     eyebrow: 'By the numbers',
     title: 'What it took',
     stats: [
-      ['7,700', 'lines, no framework, no build step'],
-      ['45', 'unit tests, plus a real-browser smoke test'],
+      ['7,900', 'lines, no framework, no build step'],
+      ['50', 'unit tests, plus a real-browser smoke test'],
       ['16', 'restricted zones from FAA data'],
       ['4', 'live data sources, none needing a key'],
       ['$0', 'hosting: Cloudflare free tier'],
