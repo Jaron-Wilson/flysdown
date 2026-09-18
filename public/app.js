@@ -11,10 +11,11 @@
  * to a Worker cron later and alert without a browser open.
  */
 
-import { Feed, TargetStore, areaQuery, FEED_INTERVALS } from './js/feeds.js';
+import { Feed, TargetStore, areaQuery, FEED_INTERVALS, worstFeedIssue } from './js/feeds.js';
 import { ZoneStore, prepareZone } from './js/zones.js';
 import { evaluateAll, SEVERITY_RANK } from './js/detect.js';
 import { projectPath, circleRing, distanceNm, greatCirclePath } from './js/geo.js';
+import { routeFit } from './js/route.js';
 import { MapView } from './js/map.js';
 import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
@@ -376,11 +377,18 @@ function describeFeed(label, status) {
 }
 
 function updateStatusLine() {
-  ui.setStatus([
-    describeFeed('ADS-B', state.feeds.aircraft),
-    describeFeed('AIS', state.feeds.vessels),
-    `horizon ${Math.round(state.horizonSec / 60)} min`,
-  ].join('  |  '));
+  // Folding the health line away must not be able to hide a dead feed, so the
+  // worst state travels with the text and lights a dot on the fold button.
+  const issue = worstFeedIssue([state.feeds.aircraft, state.feeds.vessels]);
+
+  ui.setStatus(
+    [
+      describeFeed('ADS-B', state.feeds.aircraft),
+      describeFeed('AIS', state.feeds.vessels),
+      `horizon ${Math.round(state.horizonSec / 60)} min`,
+    ].join('  |  '),
+    { issue }
+  );
 }
 
 /* ---------- the tick: evaluate then render ---------- */
@@ -558,10 +566,17 @@ function buildRouteLegs() {
   if (!target || entry?.status !== 'ok') return [];
 
   const { origin, destination } = entry.route;
+
+  // A route that disagrees with the aircraft's own position and track is still
+  // drawn, because seeing the claim is how you judge it, but it is drawn as a
+  // claim: see the route-leg paint in js/map.js.
+  const fit = routeFit(entry.route, target).verdict === 'mismatch' ? 'mismatch' : 'ok';
+
   const legs = [];
   if (origin) {
     legs.push({
       leg: 'flown',
+      fit,
       airport: origin,
       coords: greatCirclePath(origin.lat, origin.lon, target.lat, target.lon, 64),
     });
@@ -569,6 +584,7 @@ function buildRouteLegs() {
   if (destination) {
     legs.push({
       leg: 'remaining',
+      fit,
       airport: destination,
       coords: greatCirclePath(target.lat, target.lon, destination.lat, destination.lon, 64),
     });

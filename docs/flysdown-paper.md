@@ -6,7 +6,7 @@
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
-Version 1.1, 17 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
+Version 1.2, 17 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 `Jaron-Wilson/flysdown`.
 
 <!-- toc -->
@@ -56,7 +56,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 6,627 lines across browser modules, edge functions, the shared
+The system is 7,127 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -174,10 +174,10 @@ broadcast where a flight came from or where it is going, because the aircraft
 is not telling you its schedule, only its state. Origin and destination
 therefore come from a fourth source: adsbdb, which resolves an airline callsign
 to origin and destination airports with coordinates, built on volunteer flight
-route data and published under the MIT licence with its data contributors
+route data and published under the MIT license with its data contributors
 credited **[documented]**.
 
-Three things about using it. Most general aviation and military callsigns have
+Four things about using it. Most general aviation and military callsigns have
 no scheduled route at all, and the API answers 404 for them, which is a normal
 result rather than an error: the interface says "no scheduled route for this
 callsign" instead of looking broken. A callsign's route does not change during
@@ -186,6 +186,40 @@ hour, which means one upstream request per callsign per six hours no matter how
 many people click on it. And unlike the ADS-B aggregators in Section 4, adsbdb
 answers the edge without complaint, verified from the deployed Worker
 **[measured]**, so this one needs no relay.
+
+The fourth thing is the one that decides whether any of this can be trusted. A
+callsign is a flight number, not a leg. The same number flies a different pair
+of airports on a different day, airlines reuse numbers, and volunteer data goes
+stale, so a lookup keyed on the callsign returns the route that callsign
+usually flies, which is not necessarily the route in front of you. Observed on
+17 September 2026: callsign BCS30A, a Boeing 737-800, resolved to Leipzig/Halle
+(EDDP) to Cologne Bonn (EDDK) while the aircraft was over France, 489 NM from
+Leipzig and 304 NM from Cologne on a leg that is 195 NM long **[measured]**.
+The panel drew that route and quoted a distance remaining and an arrival time
+from it, all of which were meaningless.
+
+Every reported route is therefore measured against the aircraft's own position
+and track before any of it is presented, by two checks in `js/route.js`. The
+first is a detour test: on a real leg, the distance from the origin to the
+aircraft plus the distance from the aircraft to the destination stays close to
+the length of the leg, because the aircraft is somewhere on it. Vectoring,
+holding and weather deviations add tens of miles; flying a different route adds
+hundreds, and in the case above the two legs summed to four times the length of
+the leg itself. A route is rejected when that excess passes the larger of 60 NM
+and 35 percent of the leg. The second is a bearing test: an aircraft more than
+25 NM from its destination and tracking more than 75 degrees away from it is
+not going there. Below 25 NM the heading is about the approach, not the
+destination, so the check is skipped rather than made to lie.
+
+Neither check can prove a route right, and they are not presented as doing so:
+a route with both endpoints that contradicts nothing is reported as consistent,
+a route with one usable endpoint stays unknown. What they do is stop the system
+asserting a destination the aircraft is demonstrably not flying to. When either
+fires, the route block is labeled unverified, the caveat names the three
+distances that disagree, the arrival estimate is withheld rather than computed
+from a route that is not being flown, and the legs on the map are drawn at low
+opacity: the claim stays visible, because seeing it is how a reader judges it,
+but it no longer looks like something this system knows.
 
 ## 3. Architecture
 
@@ -657,9 +691,12 @@ held for that target and then extended for as long as it stays selected, drawn
 as a solid bright line: it is what we watched, not what we were told. Its
 **route legs** are the published origin and destination, drawn as great circles
 from the origin airport to the aircraft's current position and on to the
-destination, with the airports marked and labelled. The panel adds the distance
+destination, with the airports marked and labeled. The panel adds the distance
 flown from the origin, the distance remaining and an arrival time at the
-current ground speed, and a button frames the whole flight.
+current ground speed, and a button frames the whole flight. When the route
+fails the plausibility checks of Section 2.4 the same legs are drawn at low
+opacity and the distances are relabeled as distances to the two airports, not
+as progress along a flight.
 
 ![**Figure 2.** A selected United flight from Philadelphia to Chicago O'Hare. The solid line behind the aircraft is its observed track; the dashed legs are the published route, interpolated as great circles from the origin airport through the aircraft to the destination. The rail lists distance flown, distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
 
@@ -686,9 +723,31 @@ origin. A regression test injects the exact string and asserts the panel is
 still on screen with zero document overflow. Any external text reaching page
 chrome is a layout hazard, and summarizing it is not sufficient alone.
 
+The summarizer then failed on a shape it had not been written for. It took
+everything before the first colon in an upstream detail line as the name of the
+source, which is right for `adsb.lol: HTTP 429 - ...` and wrong for a proxy
+that answers with a bare sentence: a Cloudflare 520 page reached the status line
+in full, as "no source available: The origin web server returned an invalid or
+incomplete response to Cloudflare. This typically indicates the origin is
+overloaded or misconfigured." **[measured]**. A source name is one short token
+and never contains a space, so a pre-colon segment with spaces in it is prose
+and is now reported as `upstream`, classified by content where possible
+("upstream not responding"), and every summary is clamped to 72 characters. The
+lesson generalizes past this system: parsing structure out of an error string
+works until something in the path substitutes its own error, and the fallback
+has to be a shrug rather than a quotation.
+
+The same complaint had a second half: those diagnostics were sharing a line
+with the site footer, where an upstream's bad day sat next to the brand links.
+Feed health now has its own line above the footer, clipped to one line with the
+full text on the element's title, and it folds away to a single button which
+keeps a severity dot when a feed is down, so hiding the diagnostics cannot hide
+a dead feed. The footer holds what a footer should: the three site links and
+the not-for-navigation notice.
+
 ## 8. Verification
 
-**Unit tests (26, no network).** The geometry and the rules: haversine and
+**Unit tests (38, no network).** The geometry and the rules: haversine and
 destination round-tripping, ray casting against known points, inside and
 projected alerts, severity escalation with closing time, altitude band
 exclusion, a descending target entering the band mid-projection, the small-zone
@@ -705,10 +764,22 @@ great-circle path drawn for a route: that its summed length matches the direct
 distance and that it bows poleward of the chord, and that a path across the
 antimeridian stays continuous.
 
-Two failed on first run and both were genuine: the unclamped altitude
-extrapolation of 5.2, and the great-circle convergence error in the test's own
-geometry in 5.1. A suite that passes entirely on first write is usually testing
-what the code does rather than what it should do.
+Twelve more cover the route and status work of Section 2.4: the BCS30A case as
+a mismatch with its detour measured, an aircraft on the leg and pointed at the
+destination as consistent, a 25 NM reroute as consistent rather than wrong, a
+target on the leg but flying away from it caught by bearing, an aircraft 8 NM
+out and 90 degrees off left alone because it is turning onto an approach,
+one-endpoint routes claiming nothing, the Cloudflare 520 page summarized to
+four words, named upstream failures keeping their names, arbitrary 400-character
+error bodies clamped, and a paused feed not counting as a fault.
+
+Four failed on first run and all four were genuine: the unclamped altitude
+extrapolation of 5.2, the great-circle convergence error in the test's own
+geometry in 5.1, the summarizer still promoting the word "The" to a source
+name, and a test of mine that asserted a destination-only route can never be
+contradicted when in fact its bearing check should fire. A suite that passes
+entirely on first write is usually testing what the code does rather than what
+it should do.
 
 **Browser smoke test (Playwright).** Loads the real page in headless Chromium,
 fails on any console or page error, waits for live targets, asserts nothing
@@ -777,6 +848,8 @@ attention on redistribution.
 | CPA and TCPA are the standard measures, with alarms on a preset CPA limit and TCPA warning time | IMO Resolution A.823(19), ARPA performance standards **[standard]** |
 | Origin and destination are not in ADS-B and come from adsbdb; 404 means no scheduled route | adsbdb documentation **[documented]**; live callsigns resolved and 404s observed **[measured]** |
 | adsbdb answers the Cloudflare edge, unlike the ADS-B aggregators | `/api/route` exercised from the deployed Worker **[measured]** |
+| A callsign-keyed route can contradict the aircraft: BCS30A resolved to EDDP-EDDK, 489 NM from one and 304 NM from the other on a 195 NM leg | Observed in the running system, 17 September 2026 **[measured]** |
+| A proxy error with no colon in it was quoted verbatim in the status line | Cloudflare 520 body observed in the interface **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
 ## 11. Author contributions
@@ -850,7 +923,7 @@ contributors. Nothing here is for navigation.
    <https://maplibre.org/maplibre-style-spec/layers/>
 18. OpenFreeMap keyless OpenStreetMap vector tiles. <https://openfreemap.org/>
 19. OpenStreetMap contributors. <https://www.openstreetmap.org/copyright>
-20. adsbdb, aircraft and flight route API (MIT licence; route data credited to
+20. adsbdb, aircraft and flight route API (MIT license; route data credited to
     PlaneBase, David Taylor and Jim Mason).
     <https://github.com/mrjackwills/adsbdb>
    <https://api.adsbdb.com>

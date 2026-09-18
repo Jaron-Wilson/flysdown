@@ -30,16 +30,59 @@ export function summarizeUpstreamFailure(json, status) {
 
   const reasons = details.map((entry) => {
     const text = String(entry);
-    const name = text.split(':')[0].trim() || 'source';
+    const name = sourceName(text);
     if (/\b429\b|too many requests/i.test(text)) return `${name} rate limited`;
     if (/\b40[13]\b|forbidden|unauthori[sz]ed/i.test(text)) return `${name} blocked`;
-    if (/timeout|\b52[0-9]\b|timed out/i.test(text)) return `${name} not responding`;
-    if (/\b5\d\d\b/.test(text)) return `${name} erroring`;
-    return name;
+    if (/timeout|timed out|\b5(?:2[0-9]|04)\b|origin web server|invalid or incomplete response|gateway/i.test(text)) {
+      return `${name} not responding`;
+    }
+    if (/\b5\d\d\b|overloaded|misconfigured/i.test(text)) return `${name} erroring`;
+    return `${name} failed`;
   });
 
-  if (!reasons.length) return json?.error || `HTTP ${status}`;
-  return `no source available: ${reasons.join(', ')}`;
+  if (!reasons.length) return clampReason(json?.error) || `HTTP ${status}`;
+  return clampReason(`no source available: ${reasons.join(', ')}`);
+}
+
+/**
+ * The name of the source an upstream detail line is about.
+ *
+ * Details arrive as "adsb.lol: HTTP 429 - <html>...", so the part before the
+ * colon is normally the source. Normally: a proxy in front of an upstream can
+ * answer with a bare sentence and no colon at all, and taking the whole
+ * sentence as a name is how a Cloudflare 520 page ("The origin web server
+ * returned an invalid or incomplete response...") ended up printed in the
+ * status line. Anything that does not look like a host or a short identifier
+ * is therefore reported as 'upstream'.
+ */
+function sourceName(text) {
+  // A source name is one short token and never contains a space, so a segment
+  // with any in it is prose and gets reported as 'upstream'. Splitting on
+  // whitespace instead would have promoted "The origin web server..." to a
+  // source called "The".
+  const head = String(text).split(':')[0].trim();
+  return /^[\w.-]{2,24}$/.test(head) ? head : 'upstream';
+}
+
+/** No amount of upstream prose may reach the interface. */
+function clampReason(text, limit = 72) {
+  if (!text) return '';
+  const flat = String(text).replace(/\s+/g, ' ').trim();
+  return flat.length <= limit ? flat : `${flat.slice(0, limit - 1).trimEnd()}\u2026`;
+}
+
+/**
+ * The worst thing wrong with any feed, or null when nothing is.
+ *
+ * Drives the dot on the feed line's fold button: folding the diagnostics away
+ * is allowed to hide the detail, not the fact that a feed is dead. A paused
+ * feed is not a fault, it is an instruction, so it is ignored here.
+ */
+export function worstFeedIssue(statuses) {
+  const states = (statuses || []).filter((s) => s && s.state !== 'paused').map((s) => s.state);
+  if (states.includes('down')) return 'down';
+  if (states.includes('degraded')) return 'degraded';
+  return null;
 }
 
 export class Feed {

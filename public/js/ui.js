@@ -6,6 +6,7 @@
  */
 
 import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
+import { routeFit } from './route.js';
 import { targetAgeSec } from './feeds.js';
 import { distanceNm } from './geo.js';
 import { INK } from './palette.js';
@@ -61,6 +62,9 @@ export const fmt = {
 const escapeHtml = (value) =>
   String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/** Remembers whether the feed health line is folded away. */
+const FEEDBAR_KEY = 'flysdown.feedbar.folded.v1';
+
 export class UI {
   constructor() {
     this.refs = {
@@ -81,6 +85,9 @@ export class UI {
       trackList: $('track-list'),
       trackNote: $('track-note'),
       feedToggles: $('feed-toggles'),
+      feedbar: $('feedbar'),
+      feedbarToggle: $('feedbar-toggle'),
+      feedbarDot: $('feedbar-dot'),
     };
     this.handlers = {};
     this.renderLegend();
@@ -99,6 +106,36 @@ export class UI {
     for (const button of document.querySelectorAll('.mobile-nav button')) {
       button.addEventListener('click', () => this.setView(button.dataset.view));
     }
+    this.initFeedbar();
+  }
+
+  /**
+   * The feed health line folds away, and stays folded between visits: it is
+   * diagnostics, useful when something looks wrong and noise the rest of the
+   * time. Folded, the button keeps a dot when a feed is not answering, so
+   * hiding the line cannot hide a dead feed.
+   */
+  initFeedbar() {
+    const { feedbar, feedbarToggle } = this.refs;
+    if (!feedbar || !feedbarToggle) return;
+    this.setFeedbarFolded(localStorage.getItem(FEEDBAR_KEY) === '1');
+    feedbarToggle.addEventListener('click', () => {
+      const folded = !feedbar.classList.contains('is-folded');
+      this.setFeedbarFolded(folded);
+      try {
+        localStorage.setItem(FEEDBAR_KEY, folded ? '1' : '0');
+      } catch {
+        // A browser with storage denied still gets the fold, just not the memory.
+      }
+    });
+  }
+
+  setFeedbarFolded(folded) {
+    const { feedbar, feedbarToggle } = this.refs;
+    if (!feedbar || !feedbarToggle) return;
+    feedbar.classList.toggle('is-folded', folded);
+    feedbarToggle.setAttribute('aria-expanded', String(!folded));
+    feedbarToggle.title = folded ? 'Show which feed served this data' : 'Hide the feed status line';
   }
 
   /** Switch the left rail's tab. Also used to jump the user to a control. */
@@ -373,10 +410,13 @@ export class UI {
       routeBlock = '<h3 class="block-title">Route</h3><p class="hint">No scheduled route for this callsign, which is normal for general aviation and military flights.</p>';
     } else if (isAircraft && route?.status === 'ok') {
       const { origin, destination, airline } = route.route;
-      const flownNm = origin ? distanceNm(origin.lat, origin.lon, target.lat, target.lon) : null;
-      const remainingNm = destination ? distanceNm(target.lat, target.lon, destination.lat, destination.lon) : null;
+      const fit = routeFit(route.route, target);
+      const wrong = fit.verdict === 'mismatch';
       const speed = target.groundSpeed;
-      const etaSec = remainingNm !== null && speed > 40 ? (remainingNm / speed) * 3600 : null;
+
+      // An arrival time computed off a route the aircraft is not flying is the
+      // most confident kind of wrong, so it is withheld rather than guessed.
+      const etaSec = !wrong && fit.remainingNm !== null && speed > 40 ? (fit.remainingNm / speed) * 3600 : null;
 
       const leg = (airport, label) =>
         airport
@@ -387,17 +427,30 @@ export class UI {
             </li>`
           : '';
 
+      const place = (airport) => escapeHtml(airport?.icao || airport?.iata || 'the airport');
+      let note = '<p class="hint">Reported for this callsign by adsbdb. ADS-B does not broadcast a destination, so this is the route the callsign usually flies, not a filed flight plan.</p>';
+      if (wrong && fit.reason === 'detour') {
+        note = `<p class="hint hint-warn">This does not match where the aircraft is. ${place(origin)} to ${place(destination)} is ${escapeHtml(fmt.nm(fit.totalNm))}, but the aircraft is ${escapeHtml(fmt.nm(fit.flownNm))} from ${place(origin)} and ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)}. Treat the route below as the callsign's usual one, not this flight's.</p>`;
+      } else if (wrong && fit.reason === 'bearing') {
+        note = `<p class="hint hint-warn">This does not match where the aircraft is heading: it is ${escapeHtml(fmt.nm(fit.remainingNm))} from ${place(destination)} and tracking ${Math.round(fit.bearingErrorDeg)}\u00b0 away from it. Treat the route below as unverified.</p>`;
+      }
+
+      const rows = wrong
+        ? `${fit.totalNm !== null ? `<dt>Reported leg</dt><dd>${escapeHtml(fmt.nm(fit.totalNm))}</dd>` : ''}
+           ${fit.flownNm !== null ? `<dt>From ${place(origin)}</dt><dd>${escapeHtml(fmt.nm(fit.flownNm))}</dd>` : ''}
+           ${fit.remainingNm !== null ? `<dt>To ${place(destination)}</dt><dd>${escapeHtml(fmt.nm(fit.remainingNm))}</dd>` : ''}`
+        : `${fit.flownNm !== null ? `<dt>Flown from origin</dt><dd>${escapeHtml(fmt.nm(fit.flownNm))}</dd>` : ''}
+           ${fit.remainingNm !== null ? `<dt>Remaining</dt><dd>${escapeHtml(fmt.nm(fit.remainingNm))}</dd>` : ''}
+           ${etaSec !== null ? `<dt>Arrival at this speed</dt><dd>${escapeHtml(fmt.duration(etaSec))}</dd>` : ''}`;
+
       routeBlock = `
-        <h3 class="block-title">Route${airline?.name ? ` \u00b7 ${escapeHtml(airline.name)}` : ''}</h3>
+        <h3 class="block-title">Route${airline?.name ? ` \u00b7 ${escapeHtml(airline.name)}` : ''}${wrong ? ' <span class="tag tag-warn">unverified</span>' : ''}</h3>
+        ${note}
         <ul class="detail-zones">
           ${leg(origin, 'From')}
           ${leg(destination, 'To')}
         </ul>
-        <dl class="kv">
-          ${flownNm !== null ? `<dt>Flown from origin</dt><dd>${escapeHtml(fmt.nm(flownNm))}</dd>` : ''}
-          ${remainingNm !== null ? `<dt>Remaining</dt><dd>${escapeHtml(fmt.nm(remainingNm))}</dd>` : ''}
-          ${etaSec !== null ? `<dt>Arrival at this speed</dt><dd>${escapeHtml(fmt.duration(etaSec))}</dd>` : ''}
-        </dl>
+        <dl class="kv">${rows}</dl>
         <button class="btn btn-sm" type="button" id="detail-route">Frame the whole route</button>`;
     }
 
@@ -626,8 +679,18 @@ export class UI {
     }
   }
 
-  setStatus(text) {
+  setStatus(text, { issue = null } = {}) {
     this.refs.statusText.textContent = text;
+    // Clipped to one line in CSS, so the whole of it lives on the title where
+    // it can be read without being able to shove the layout sideways.
+    this.refs.statusText.title = text;
+
+    const dot = this.refs.feedbarDot;
+    if (dot) {
+      const severity = issue === 'down' ? SEVERITY.critical : issue === 'degraded' ? SEVERITY.warning : null;
+      dot.hidden = !severity;
+      if (severity) dot.style.background = severity.color;
+    }
   }
 
   /* ---------- map overlays ---------- */

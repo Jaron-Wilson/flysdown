@@ -15,7 +15,7 @@ table separating what was measured from what is documented or standardized.
 It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
 contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
-`docs/flysdown-paper.pdf` is the same thing paginated (11 pages with figures),
+`docs/flysdown-paper.pdf` is the same thing paginated (12 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 `docs/flysdown-linkedin.pdf` is a 10 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
@@ -76,6 +76,12 @@ map: it is too close to the vessel orange to be told apart.
   selected, plus the published origin and destination airports as great circles
   with distance flown, distance remaining and an arrival estimate. ADS-B does
   not carry a schedule, so routes come from adsbdb, cached hard at the edge.
+- Checks a reported route before believing it. adsbdb keys routes on the
+  callsign, and a callsign is a flight number rather than a leg, so the answer
+  can be a route the aircraft is not flying today. If the two legs do not add up
+  to the length of the route, or the aircraft is well out and tracking away from
+  the destination, the route is labeled unverified, the arrival estimate is
+  withheld and the map legs are drawn faintly.
 - Timestamps every contact. Each target's age combines how long ago the
   receiver network last heard from it with how long ago we fetched that answer,
   so nothing claims to be fresher than it is. Contacts fade as their position

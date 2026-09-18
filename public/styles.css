@@ -62,7 +62,7 @@ html, body {
 
 body {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   background: var(--paper);
   color: var(--ink);
   font: 400 14px/1.5 var(--font);
@@ -350,6 +350,27 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 
 .block-note { font-size: 11px; color: var(--ink-muted); }
 .hint { color: var(--ink-muted); font-size: 12px; margin: 6px 0 10px; }
+/* A claim the system does not believe: a reported route that disagrees with
+   where the aircraft actually is. Bordered rather than colored red, because
+   it is a caveat on data, not an alert about an aircraft. */
+.hint-warn {
+  color: var(--ink-2);
+  border-left: 2px solid var(--warning);
+  padding-left: 9px;
+}
+.tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  vertical-align: middle;
+}
+.tag-warn { border-color: var(--warning); color: var(--warning); }
 
 /* ---------- stat tiles ---------- */
 
@@ -559,6 +580,70 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 .statusbar .disclaimer { margin-left: auto; text-align: right; }
 .statusbar .site-links { gap: 14px; font-size: 12px; }
 
+/* ---------- feed health line ----------
+
+   This used to sit in the footer, next to the brand links, and an upstream
+   error is not a footer: a few hundred characters of proxy prose pushed the
+   whole layout sideways. It now has its own line above the footer, it folds
+   away to just its button, and the text is clipped to one line no matter what
+   an upstream says, with the full text on the element's title. */
+
+.feedbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 5px 18px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+.feedbar #status-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+.feedbar-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.feedbar-toggle:hover { color: var(--ink); border-color: var(--border-strong); }
+.feedbar-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid currentColor;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transform: rotate(90deg);
+  transition: transform 120ms ease;
+}
+.feedbar.is-folded .feedbar-caret { transform: rotate(0deg); }
+.feedbar.is-folded #status-text { display: none; }
+.feedbar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
 /* ---------- table dialog ---------- */
 
 #table-dialog {
@@ -638,7 +723,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mobile-nav { display: none; }
 
 @media (max-width: 1040px) {
-  body { overflow: hidden; grid-template-rows: auto 1fr auto auto; }
+  body { overflow: hidden; grid-template-rows: auto 1fr auto auto auto; }
 
   /* The header was taking half the screen. Keep only what a thumb needs:
      the brand, where to look, whether each feed is live, and help. */

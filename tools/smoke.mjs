@@ -291,7 +291,9 @@ const layoutCheck = await page.evaluate(() => {
   // The exact shape that used to push the right hand panel off screen: the
   // upstream's whole nginx error page arriving as a feed status.
   const nasty = 'adsb.lol: HTTP 429 - <html> <head><title>429 Too Many Requests</title></head> <body> <center><h1>429 Too Many Requests</h1></center> <hr><center>nginx</center> </body> </html>,adsb.fi: HTTP 403 - <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]> <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]> <html class="no-,opensky: timeout';
-  window.flysdown.ui.setStatus(nasty);
+  // app.js passes the worst feed state alongside the text; a dead feed has to
+  // stay visible even when the diagnostics are folded away.
+  window.flysdown.ui.setStatus(nasty, { issue: 'down' });
   window.flysdown.ui.renderFeedToggles(
     { aircraft: false, vessels: false },
     { aircraft: { state: 'down', lastError: nasty, count: 0 }, vessels: { state: 'live', lastError: null, count: 12 } }
@@ -312,6 +314,83 @@ if (!layoutCheck.panelVisible || layoutCheck.documentOverflowPx > 2) {
   errors.push(`a feed error broke the layout: ${JSON.stringify(layoutCheck)}`);
 }
 await page.screenshot({ path: `${outDir}/03b-feed-error.png` });
+
+step('the feed health line folds away, and the footer stays a footer');
+const feedbar = await page.evaluate(() => {
+  const bar = document.getElementById('feedbar');
+  const footer = document.querySelector('.statusbar');
+  const clipped = document.getElementById('status-text');
+  const before = {
+    // The nasty status from the previous step is still in place: one line,
+    // clipped, with the whole of it on the title.
+    statusLines: Math.round(clipped.getBoundingClientRect().height),
+    titleHoldsFullText: (clipped.title || '').length > clipped.textContent.length - 1,
+    barAboveFooter: bar.getBoundingClientRect().bottom <= footer.getBoundingClientRect().top + 1,
+    footerText: footer.textContent.replace(/\s+/g, ' ').trim(),
+    footerLinks: [...footer.querySelectorAll('a')].map((a) => a.textContent.trim()),
+    dotShown: !document.getElementById('feedbar-dot').hidden,
+  };
+  document.getElementById('feedbar-toggle').click();
+  return {
+    ...before,
+    foldedHidesText: !document.getElementById('status-text').offsetParent,
+    remembered: localStorage.getItem('flysdown.feedbar.folded.v1'),
+  };
+});
+console.log(`  ${JSON.stringify(feedbar)}`);
+if (!feedbar.barAboveFooter) errors.push('the feed health line is not above the footer');
+if (feedbar.statusLines > 24) errors.push(`the feed status wrapped to ${feedbar.statusLines}px instead of staying one clipped line`);
+if (!feedbar.titleHoldsFullText) errors.push('the full status text is not on the title attribute');
+if (!feedbar.foldedHidesText) errors.push('folding the feed line did not hide the status text');
+if (feedbar.remembered !== '1') errors.push('the folded state was not remembered');
+if (!feedbar.dotShown) errors.push('a down feed did not light the dot on the fold button');
+if (/ADS-B:|AIS:|horizon/.test(feedbar.footerText)) errors.push(`feed diagnostics are still in the footer: ${feedbar.footerText}`);
+if (feedbar.footerLinks.join(',') !== 'jaronwilson.dev,jaronwilson.org,LinkedIn') {
+  errors.push(`unexpected footer links: ${feedbar.footerLinks.join(',')}`);
+}
+if (!/^jaronwilson\.dev jaronwilson\.org LinkedIn Built by Jaron Wilson\. Not for navigation:/.test(feedbar.footerText)) {
+  errors.push(`the footer is not links then the disclaimer: ${feedbar.footerText}`);
+}
+
+// Put it back, so the remaining steps and the screenshots see the normal page.
+await page.evaluate(() => document.getElementById('feedbar-toggle').click());
+
+step('a route that disagrees with the aircraft is labeled, not asserted');
+const routeCheck = await page.evaluate(async () => {
+  const { store, routes, ui, state, buildRouteLegs } = window.flysdown;
+  const aircraft = [...store.all()].find((tgt) => tgt.kind === 'aircraft' && tgt.callsign);
+  if (!aircraft) return { skipped: 'no aircraft with a callsign on screen' };
+
+  // Leipzig to Cologne, the route reported for BCS30A while it was over
+  // France: a real adsbdb answer for a leg the aircraft was not flying.
+  routes.set(aircraft.callsign, {
+    status: 'ok',
+    route: {
+      origin: { icao: 'EDDP', municipality: 'Leipzig', name: 'Leipzig/Halle Airport', lat: 51.4239, lon: 12.2364 },
+      destination: { icao: 'EDDK', municipality: 'Cologne', name: 'Cologne Bonn Airport', lat: 50.8659, lon: 7.1427 },
+      airline: { name: 'European Air Transport' },
+    },
+  });
+  state.selectedKey = aircraft.key;
+  ui.renderDetail(aircraft, { evaluation: null, approaches: [], route: routes.get(aircraft.callsign), track: [] });
+
+  const panel = document.getElementById('detail').textContent.replace(/\s+/g, ' ');
+  return {
+    callsign: aircraft.callsign,
+    flagged: panel.includes('unverified'),
+    explains: /does not match where the aircraft is/.test(panel),
+    withholdsArrival: !panel.includes('Arrival at this speed'),
+    legsDimmed: buildRouteLegs().every((leg) => leg.fit === 'mismatch'),
+  };
+});
+console.log(`  ${JSON.stringify(routeCheck)}`);
+if (!routeCheck.skipped) {
+  if (!routeCheck.flagged) errors.push('a contradicted route was not marked unverified');
+  if (!routeCheck.explains) errors.push('a contradicted route did not say why it looks wrong');
+  if (!routeCheck.withholdsArrival) errors.push('an arrival time was quoted off a route the aircraft is not flying');
+  if (!routeCheck.legsDimmed) errors.push('the map legs of a contradicted route were not marked as a mismatch');
+}
+await page.evaluate(() => window.flysdown.ui.renderDetail(null, {}));
 
 step('drawing a circular zone');
 await page.click('.tab[data-tab="areas"]');

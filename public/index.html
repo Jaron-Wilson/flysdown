@@ -220,8 +220,17 @@
   <button type="button" data-view="areas">Areas</button>
 </nav>
 
-<footer class="statusbar">
+<!-- ============ feed health, on its own line and foldable ============ -->
+<div class="feedbar" id="feedbar">
+  <button type="button" class="feedbar-toggle" id="feedbar-toggle" aria-expanded="true" aria-controls="status-text">
+    <span class="feedbar-caret" aria-hidden="true"></span>
+    <span>Feeds</span>
+    <span class="feedbar-dot" id="feedbar-dot" hidden title="A feed is not answering"></span>
+  </button>
   <span id="status-text">Starting up</span>
+</div>
+
+<footer class="statusbar">
   <span class="site-links">
     <a class="social" href="https://jaronwilson.dev/">jaronwilson.dev</a>
     <a class="social" href="https://jaronwilson.org/">jaronwilson.org</a>
