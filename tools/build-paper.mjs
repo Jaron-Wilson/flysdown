@@ -71,18 +71,23 @@ const html = `<!doctype html>
     --accent: #b3542b;
   }
 
-  @page { size: letter; margin: 0.45in 0.5in 0.4in; }
+  /* Chromium leaves the @page margin area unpainted whatever the root
+     background says, so the side margins are zero and recreated as body
+     padding, and the top and bottom strips, which Chromium reserves for its
+     header and footer templates, are painted from inside those templates. */
+  @page { size: letter; margin: 0.45in 0 0.4in 0; }
 
   /* The root element's background is the page canvas in paged media, so this
      is what fills the margins too. On body alone it stopped at the text box
      and left a white frame around every page. */
-  html { font-size: 8pt; background: var(--paper); }
+  html { font-size: 8pt; background: var(--paper); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     line-height: 1.35;
     color: var(--ink);
     background: transparent;
     margin: 0;
+    padding: 0 0.5in;
     hyphens: auto;
   }
 
@@ -206,12 +211,14 @@ await page.pdf({
   format: 'Letter',
   printBackground: true,
   displayHeaderFooter: true,
-  headerTemplate: '<div></div>',
+  headerTemplate:
+    '<div style="position:fixed;left:0;right:0;top:0;bottom:0;background:#faf8f4;-webkit-print-color-adjust:exact;"></div>',
   footerTemplate:
-    '<div style="width:100%;font:7.5pt Inter,system-ui,sans-serif;color:#6b6862;padding:0 0.5in;display:flex;justify-content:space-between;">' +
+    '<div style="position:fixed;left:0;right:0;top:0;bottom:0;background:#faf8f4;-webkit-print-color-adjust:exact;"></div>' +
+    '<div style="position:fixed;left:0;right:0;bottom:0.12in;font:7.5pt Inter,system-ui,sans-serif;color:#6b6862;padding:0 0.5in;display:flex;justify-content:space-between;">' +
     '<span>flysdown &middot; jaronwilson.dev</span>' +
     '<span class="pageNumber"></span></div>',
-  margin: { top: '0.45in', bottom: '0.4in', left: '0.5in', right: '0.5in' },
+  margin: { top: '0.45in', bottom: '0.4in', left: '0', right: '0' },
 });
 
 await browser.close();
