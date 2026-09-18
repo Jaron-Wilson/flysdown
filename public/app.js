@@ -181,7 +181,7 @@ const feeds = {
     },
     onStatus: (name, status) => {
       state.feeds[name] = status;
-      ui.renderFeedChips(state.feeds);
+      ui.renderFeedToggles(state.paused, state.feeds);
       updateStatusLine();
     },
   }),
@@ -196,7 +196,7 @@ const feeds = {
     },
     onStatus: (name, status) => {
       state.feeds[name] = status;
-      ui.renderFeedChips(state.feeds);
+      ui.renderFeedToggles(state.paused, state.feeds);
       updateStatusLine();
     },
   }),
@@ -872,7 +872,6 @@ zones.onChange(() => {
   // not stare at an unexplained map while the zone file downloads.
   if (!UI.hasBeenWelcomed()) ui.showWelcome();
   loadTracking();
-  ui.renderFeedChips(state.feeds);
   ui.renderFeedToggles(state.paused, state.feeds);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
   try {

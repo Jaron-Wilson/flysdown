@@ -228,7 +228,7 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
 
 /* One pause control per feed, each showing that feed's own state. */
 .feed-toggles { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
-.feed-toggle { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.feed-toggle { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .feed-toggle .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .btn.feed-toggle[aria-pressed="true"] { background: #26262a; border-color: var(--border-strong); color: var(--ink-2); }
 
@@ -644,6 +644,8 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .topbar-controls { gap: 8px; flex: 1 1 auto; }
   .topbar-controls select { max-width: 190px; font-size: 12.5px; padding: 6px 8px; }
   .feed-toggle { padding: 5px 9px; font-size: 12px; }
+  /* The Overview tiles carry the counts; on a phone the toggle just needs its state. */
+  .feed-count { display: none; }
   .topbar-right { margin-left: auto; gap: 6px; }
   .feed-chips { gap: 6px; }
   /* Health chips shrink to the dot and the name; the counts live on the map. */

@@ -73,7 +73,6 @@ export class UI {
       zoneList: $('zone-list'),
       zoneCount: $('zone-count'),
       legend: $('legend'),
-      feedChips: $('feed-chips'),
       statusText: $('status-text'),
       tooltip: $('map-tooltip'),
       banner: $('map-banner'),
@@ -513,6 +512,9 @@ export class UI {
   /* ---------- feed health ---------- */
 
   renderFeedChips(feeds) {
+    // The header chips were removed as clutter; the toggles carry the state
+    // now. Kept as a no-op so nothing that still calls it has to change.
+    if (!this.refs.feedChips) return;
     this.refs.feedChips.innerHTML = Object.entries(feeds)
       .map(([name, status]) => {
         const state = status.state || 'idle';
@@ -603,10 +605,16 @@ export class UI {
     ]
       .map(([kind, label]) => {
         const isPaused = Boolean(paused[kind]);
-        const state = feeds[kind]?.state || 'idle';
+        const status = feeds[kind] || {};
+        const state = status.state || 'idle';
         const dot = isPaused ? SEVERITY.notice.color : state === 'live' ? SEVERITY.good.color : state === 'down' ? SEVERITY.critical.color : SEVERITY.warning.color;
-        return `<button class="btn btn-sm feed-toggle" type="button" data-feed="${kind}" aria-pressed="${isPaused}" title="${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed">
-            <span class="dot" style="background:${dot}"></span>${label}: ${isPaused ? 'paused' : 'live'}
+        // The toggle is the one place in the header that says how each feed
+        // is doing: its state, and how many targets it is carrying.
+        const word = isPaused ? 'paused' : state === 'down' ? 'down' : state === 'degraded' ? 'stale' : state === 'live' ? 'live' : 'starting';
+        const count = Number.isFinite(status.count) && state !== 'idle' ? `<span class="feed-count"> \u00b7 ${int(status.count)}</span>` : '';
+        const detail = status.lastError ? `. ${status.lastError}` : '';
+        return `<button class="btn btn-sm feed-toggle" type="button" data-feed="${kind}" aria-pressed="${isPaused}" title="${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed${escapeHtml(detail)}">
+            <span class="dot" style="background:${dot}"></span>${label}: ${word}${count}
           </button>`;
       })
       .join('');

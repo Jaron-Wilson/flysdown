@@ -73,12 +73,15 @@ const html = `<!doctype html>
 
   @page { size: letter; margin: 0.45in 0.5in 0.4in; }
 
-  html { font-size: 8pt; }
+  /* The root element's background is the page canvas in paged media, so this
+     is what fills the margins too. On body alone it stopped at the text box
+     and left a white frame around every page. */
+  html { font-size: 8pt; background: var(--paper); }
   body {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     line-height: 1.35;
     color: var(--ink);
-    background: var(--paper);
+    background: transparent;
     margin: 0;
     hyphens: auto;
   }

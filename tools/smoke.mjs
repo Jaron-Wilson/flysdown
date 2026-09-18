@@ -291,10 +291,11 @@ const layoutCheck = await page.evaluate(() => {
   // The exact shape that used to push the right hand panel off screen: the
   // upstream's whole nginx error page arriving as a feed status.
   const nasty = 'adsb.lol: HTTP 429 - <html> <head><title>429 Too Many Requests</title></head> <body> <center><h1>429 Too Many Requests</h1></center> <hr><center>nginx</center> </body> </html>,adsb.fi: HTTP 403 - <!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]--> <!--[if IE 7]> <html class="no-js ie7 oldie" lang="en-US"> <![endif]--> <!--[if IE 8]> <html class="no-,opensky: timeout';
-  window.flysdown.ui.renderFeedChips({
-    aircraft: { state: 'down', lastError: nasty, count: 0 },
-    vessels: { state: 'live', lastError: null, count: 12, latencyMs: 200 },
-  });
+  window.flysdown.ui.setStatus(nasty);
+  window.flysdown.ui.renderFeedToggles(
+    { aircraft: false, vessels: false },
+    { aircraft: { state: 'down', lastError: nasty, count: 0 }, vessels: { state: 'live', lastError: null, count: 12 } }
+  );
   const panel = document.querySelector('.panel-right');
   const rect = panel.getBoundingClientRect();
   return {
@@ -302,7 +303,8 @@ const layoutCheck = await page.evaluate(() => {
     panelRight: Math.round(rect.right),
     windowWidth: window.innerWidth,
     panelVisible: rect.width > 40 && rect.right <= window.innerWidth + 2,
-    chipText: document.querySelector('.feed-chips .chip')?.textContent.trim().slice(0, 70),
+    toggleText: document.querySelector('.feed-toggle')?.textContent.trim().slice(0, 40),
+    statusText: document.getElementById('status-text').textContent.slice(0, 40),
   };
 });
 console.log(`  ${JSON.stringify(layoutCheck)}`);
