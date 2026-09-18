@@ -47,12 +47,12 @@ export const INK = {
 
 /** Ordinal ramp: low altitude dark, high altitude light. */
 export const ALTITUDE_BANDS = [
-  { maxFt: 2500, color: '#184f95', label: 'below 2,500 ft' },
-  { maxFt: 10000, color: '#256abf', label: '2,500 - 10,000 ft' },
-  { maxFt: 20000, color: '#3987e5', label: '10,000 - 20,000 ft' },
-  { maxFt: 30000, color: '#6da7ec', label: '20,000 - 30,000 ft' },
-  { maxFt: 40000, color: '#9ec5f4', label: '30,000 - 40,000 ft' },
-  { maxFt: Infinity, color: '#cde2fb', label: '40,000 ft and above' },
+  { maxFt: 2500, color: '#184f95', label: 'below 2,500 ft', short: 'under 2.5k' },
+  { maxFt: 10000, color: '#256abf', label: '2,500 - 10,000 ft', short: '2.5k to 10k' },
+  { maxFt: 20000, color: '#3987e5', label: '10,000 - 20,000 ft', short: '10k to 20k' },
+  { maxFt: 30000, color: '#6da7ec', label: '20,000 - 30,000 ft', short: '20k to 30k' },
+  { maxFt: 40000, color: '#9ec5f4', label: '30,000 - 40,000 ft', short: '30k to 40k' },
+  { maxFt: Infinity, color: '#cde2fb', label: '40,000 ft and above', short: '40k and up' },
 ];
 
 export const GROUND_COLOR = '#898781';

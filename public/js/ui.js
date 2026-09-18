@@ -226,9 +226,11 @@ export class UI {
       counts[index === -1 ? ALTITUDE_BANDS.length - 1 : index] += 1;
     }
 
+    // Short labels here; the legend spells the bands out in full. The long
+    // form overflowed its column and ran into the bars.
     const rows = [
-      ...ALTITUDE_BANDS.map((band, i) => ({ label: band.label, count: counts[i], color: band.color })),
-      { label: 'on the ground', count: ground, color: GROUND_COLOR },
+      ...ALTITUDE_BANDS.map((band, i) => ({ label: band.short, title: band.label, count: counts[i], color: band.color })),
+      { label: 'on ground', title: 'on the ground', count: ground, color: GROUND_COLOR },
     ].reverse();
 
     const max = Math.max(1, ...rows.map((r) => r.count));
@@ -236,7 +238,7 @@ export class UI {
     this.refs.altChart.innerHTML = rows
       .map(
         (row) => `
-        <div class="chart-row" title="${escapeHtml(row.label)}: ${int(row.count)} aircraft">
+        <div class="chart-row" title="${escapeHtml(row.title)}: ${int(row.count)} aircraft">
           <span class="chart-label">${escapeHtml(row.label)}</span>
           <span class="bar-track"><span class="bar-fill" style="width:${(row.count / max) * 100}%;background:${row.color}"></span></span>
           <span class="chart-value">${int(row.count)}</span>
