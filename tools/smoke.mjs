@@ -379,11 +379,26 @@ if (feedbar.remembered !== '1') errors.push('the folded state was not remembered
 if (!feedbar.dotShown) errors.push('a down feed did not light the dot on the fold button');
 if (!feedbar.themeMatchesButtons) errors.push('the feed fold button is styled unlike the rest of the buttons');
 if (/ADS-B:|AIS:|horizon/.test(feedbar.footerText)) errors.push(`feed diagnostics are still in the footer: ${feedbar.footerText}`);
-if (feedbar.footerLinks.join(',') !== 'jaronwilson.dev,jaronwilson.org,LinkedIn') {
+if (feedbar.footerLinks.join(',') !== 'jaronwilson.dev,jaronwilson.org,LinkedIn,Paper,Slides') {
   errors.push(`unexpected footer links: ${feedbar.footerLinks.join(',')}`);
 }
-if (!/^jaronwilson\.dev jaronwilson\.org LinkedIn Built by Jaron Wilson\. Not for navigation:/.test(feedbar.footerText)) {
+if (!/^jaronwilson\.dev jaronwilson\.org LinkedIn Paper Slides Built by Jaron Wilson\. Not for navigation:/.test(feedbar.footerText)) {
   errors.push(`the footer is not links then the disclaimer: ${feedbar.footerText}`);
+}
+
+// The paper and slides are served by the site itself, so the links have to
+// resolve to real PDFs, not to a page that merely looks like one.
+const docs = await page.evaluate(async () => {
+  const out = {};
+  for (const a of document.querySelectorAll('.statusbar a[href*="docs/"]')) {
+    const res = await fetch(a.href, { method: 'HEAD' });
+    out[a.textContent.trim()] = { status: res.status, type: res.headers.get('content-type') };
+  }
+  return out;
+});
+console.log(`  docs: ${JSON.stringify(docs)}`);
+for (const [label, info] of Object.entries(docs)) {
+  if (info.status !== 200 || !/pdf/.test(info.type || '')) errors.push(`the ${label} link does not serve a PDF: ${JSON.stringify(info)}`);
 }
 
 // Put it back, so the remaining steps and the screenshots see the normal page.

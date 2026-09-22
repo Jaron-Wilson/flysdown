@@ -27,7 +27,10 @@ const STAGED = '.deploy';
 const stamp = await buildStamp();
 
 await rm(STAGED, { recursive: true, force: true });
-await cp(SOURCE, STAGED, { recursive: true });
+// Dereference: public/docs is a link to the repository's docs/ folder, so the
+// paper and slides are served from the one copy that the build scripts write,
+// rather than a second copy of every PDF committed alongside the first.
+await cp(SOURCE, STAGED, { recursive: true, dereference: true });
 
 await patch(`${STAGED}/index.html`, /<meta name="build" content="[^"]*">/, `<meta name="build" content="${stamp}">`);
 await patch(`${STAGED}/app.js`, /^const BUILD_STAMP = '[^']*';$/m, `const BUILD_STAMP = '${stamp}';`);

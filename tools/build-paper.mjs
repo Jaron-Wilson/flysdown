@@ -155,6 +155,11 @@ const html = `<!doctype html>
     color: var(--muted);
   }
   tr { break-inside: avoid; page-break-inside: avoid; }
+  /* A line that introduces a block stays on the page with it. The vessel
+     close-approach formula once ended up alone at the top of a page, a page
+     away from the sentence leading into it. */
+  p:has(+ pre), p:has(+ table), p:has(+ figure) { break-after: avoid; page-break-after: avoid; }
+  table { break-inside: avoid; page-break-inside: avoid; }
 
   pre {
     background: var(--surface);

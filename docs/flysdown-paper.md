@@ -1,6 +1,6 @@
 # Project Flys Down: a live ADS-B and AIS dashboard with geofence projection
 
-**How the system works, why it is built this way, and where every fact in it came from**
+**A white paper: how the system works, why it is built this way, how it was built, and where every fact in it came from**
 
 <p class="authors"><span class="name">Jaron M. Wilson</span><sup>1</sup> and <span class="name">Claude</span><sup>2</sup></p>
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
@@ -38,7 +38,7 @@ what it can defend and labels the rest as reported rather than known.
 
 Claims are tagged by provenance. **[measured]** means obtained by instrumenting
 this system between 16 and 22 September 2026. **[documented]** means from a
-provider's own documentation, cited in Section 13. **[standard]** means from a
+provider's own documentation, cited in Section 16. **[standard]** means from a
 published standard or regulation. Section 10 collects the load-bearing claims in one table.
 
 ## 1. Scope
@@ -291,17 +291,21 @@ refute.
 
 ## 3. Architecture
 
-```
-browser (public/)                    Cloudflare edge (functions/)      upstreams
-app.js      orchestration            /api/aircraft                     adsb.lol
- js/feeds   polling, history  --->     normalize, quantize, cache  ---> (adsb.fi and
- js/detect  rules engine               relay lookup, stale fallback      OpenSky are
- js/geo     geodesy                                                      relay-only)
- js/zones   zone store        --->    /api/vessels                 ---> Digitraffic
- js/map     MapLibre layers             merge positions + metadata
- js/draw    zone drawing
- js/ui      panels                    D1  <---  tools/relay.mjs (ordinary IP)
-```
+| Runs in | Piece | What it does |
+| --- | --- | --- |
+| Browser (`public/`) | `app.js` | Orchestration: polling, selection, per-target URLs, one render per update |
+| | `js/feeds.js` | Polls the edge, holds the target store and its tiered position history |
+| | `js/detect.js` | Rules engine: zones, projection, squawks, descent, orbit, landing, vessel close approach |
+| | `js/route.js` | Route plausibility checks and airport codes |
+| | `js/geo.js`, `js/zones.js` | Geodesy, and the zone store with its FAA geometry |
+| | `js/map.js`, `js/draw.js`, `js/ui.js` | MapLibre layers, drawing zones and areas, the panels |
+| Edge (`functions/api/`) | `/api/aircraft` | Normalizes, quantizes and caches; reads a relay snapshot first, falls back to stale |
+| | `/api/vessels` | Merges Digitraffic positions with vessel metadata |
+| | `/api/route` | Resolves a callsign to a reported route through adsbdb, cached for hours |
+| | `/api/relay` | Tells the relay which areas are being watched, and stores its snapshots in D1 |
+| Relay (`tools/relay.mjs`) | an ordinary IP | Fetches adsb.fi and adsb.lol for the watched areas and pushes them to the edge |
+| Upstreams | ADS-B | adsb.lol from the edge; adsb.fi and OpenSky through the relay only |
+| | AIS, routes, airspace | Digitraffic and adsbdb from the edge; FAA Special Use Airspace at build time |
 
 The browser is plain ES modules, no framework, no build step. That was decided
 explicitly: a live map is overwhelmingly client-side rendering work, and the
@@ -311,8 +315,8 @@ host for no functional gain. The detection engine and its geodesy are pure
 functions with no DOM or map dependency, specifically so they can move into a
 scheduled Worker or another language later without rewriting the rules.
 
-The edge layer is two Cloudflare Pages Functions **[documented]**, one per
-feed, plus a relay endpoint. They exist because the upstreams send no CORS
+The edge layer is four Cloudflare Pages Functions **[documented]**: one per
+feed, the route lookup, and the relay endpoint. They exist because the upstreams send no CORS
 headers so a browser cannot call them; secrets stay server-side; parameters can
 be quantized so many viewers collapse onto one cache entry; and one cache entry
 serves every viewer instead of each viewer generating upstream load.
@@ -526,8 +530,9 @@ it closes without any state being kept. Alert identifiers are stable
 (`targetId:rule:zoneId`) so the interface tracks an alert across updates instead
 of flashing a new one every five seconds.
 
-Orbit detection needs history, so the browser keeps up to 150 positions per
-target over a 10 minute window; the rule sums absolute heading changes and
+Orbit detection needs history, so the rule judges the last ten minutes of each
+target's retained positions, whatever Section 7.4 says is retained; it sums
+absolute heading changes and
 requires the bounding circle of those positions to stay small, separating a hold
 or survey orbit from an aircraft simply turning en route. Rapid descent uses two
 thresholds because 3,500 feet per minute at cruise is routine and the same rate
@@ -557,11 +562,8 @@ Reduce the pair to relative motion. Convert both positions into a local tangent
 plane in nautical miles, take the relative position vector **r** and the
 relative velocity **v** (each vessel's speed over ground resolved onto its
 course over ground), and the time of closest approach is where the range stops
-shrinking:
-
-```
-TCPA = -(r . v) / |v|^2          CPA = | r + v * TCPA |
-```
+shrinking, *TCPA* = −(**r** · **v**) / |**v**|², at which moment the two
+are *CPA* = |**r** + **v** *TCPA*| apart.
 
 A negative or zero TCPA means the pair has already passed its closest point or
 is opening, in which case the closest approach is simply the present range. A
@@ -1040,7 +1042,100 @@ attention on redistribution.
 | Pages served application modules with `max-age=14400, must-revalidate`, hiding a deployed fix for four hours, and will not honor a shorter value in `_headers` | Response headers read from the live site before and after a `_headers` change **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
-## 11. Author contributions
+## 11. Development method: directing an AI implementer
+
+This system was built by one person directing an AI coding agent, Claude,
+through Anthropic's Claude Code, over four working days and 27 commits between
+16 and 22 September 2026. That arrangement is worth describing as a method in
+its own right, because it shaped both what went right and what went wrong.
+
+The division of labor was deliberate. The first author owned the goals, the
+constraints and every decision with more than one reasonable answer: the stack,
+chosen from a set of offered alternatives; the relay, chosen from four options
+once the egress problem had been measured; the feature scope; the visual
+identity, matched to his own sites; and acceptance, meaning whether a change
+was actually right when used. The AI owned implementation, instrumentation,
+measurement, tests and first drafts of the documentation, each in response to a
+specific request.
+
+The working loop was short and always ran through the deployed system rather
+than a description of it:
+
+1. A request or a defect report, in plain words ("clicking for detail on boats
+   does not work", "it did not come from that spot").
+2. A reproduction, preferably a measurement rather than a reading of the code.
+3. A root cause, stated before any fix was written.
+4. A fix, deployed to production.
+5. A guard: a unit test, a browser smoke-test assertion, an overflow check or a
+   pixel check, so that the same defect could not come back silently.
+6. Acceptance by the first author, using the live site.
+
+Two properties of an AI implementer made steps 2 and 5 non-negotiable. It is
+fast, which means a wrong assumption reaches production quickly; and it can be
+confidently wrong, which means its own report that something works is not
+evidence that it does. The record in Section 12 shows both: the AI introduced
+the page-margin workaround that shipped blank pages, the retention change that
+ran a desktop out of memory, and a text substitution that silently did nothing.
+The guards caught the first; the first author caught the other two. The
+provenance tags used throughout this paper are the same discipline applied to
+prose: a claim is marked as measured, documented or standard so that neither
+author has to be taken on trust.
+
+## 12. Defects found in use
+
+The defects below were found by using the deployed system. Most were found by
+the first author, working from the live site; the rest were caught by the
+guards added in earlier rounds, which is the point of adding them.
+
+| Defect | Found by | Root cause | Fix and guard |
+| --- | --- | --- | --- |
+| Clicking a ship appeared to do nothing | J.M.W. | Its detail rendered below the fold of a long alert list | Detail moves to the top of the rail on selection; the smoke test clicks a vessel and checks it is on screen |
+| Right-hand panel vanished during an outage | J.M.W. | A few hundred characters of upstream error page widened a no-wrap header | Errors summarized to a few words and the layout width-locked; a test injects the exact string (Section 7.5) |
+| No aircraft in production | J.M.W. | Aggregators rate-limit or block shared cloud egress addresses | The relay of Section 4, his choice of four measured options |
+| A drawn box did nothing | J.M.W. | A code patch that did not check its target had silently matched nothing | Every patch now asserts that it matched before writing |
+| Altitude chart showed stray gray lines | J.M.W. | The bars were inline elements and had never rendered at all | Rendered as blocks |
+| Last slide of the deck clipped | J.M.W. | Copy longer than the fixed square slide | Slides auto-fit, and the build fails on any overflow |
+| White frame around every page of this paper | J.M.W. | Chromium leaves page margins unpainted | CSS page margin boxes, following his `@page` suggestion; every page edge checked by pixel |
+| A blank paper committed | Guard | A header-template workaround covered each page | A dark-pixel count on every page before commit |
+| Status text leaking a proxy error page | J.M.W. | A source name parsed as everything before the first colon | Names must be one token and every summary is clamped; a unit test on the exact text |
+| Routes belonging to a different flight | J.M.W. | A callsign is a flight number, not a leg (Section 2.4) | Four plausibility checks, after measuring seven wrong in ten at DCA |
+| A fixed defect still visible | J.M.W. | The platform caches scripts for four hours and ignores shorter settings | A build stamp that lets a stale page say so (Section 9) |
+| Airport codes shown as ICAO | J.M.W. | The data's identifier, not the one people read | IATA first, with the K and C conventions as fallback; unit tested |
+| A line from the origin that no flight flew | J.M.W. | A great circle to the current position claimed an unobserved path | The origin is marked, never drawn to; the smoke test asserts it |
+| A desktop ran out of memory | J.M.W. | Every target's full history re-rendered as trails on every tick | Tiered retention and 20-point trails, measured flat (Section 7.4) |
+| Vessel detail below the fold again | Guard | Selection layout lived only in the click handler | Layout follows the selection state on every update |
+| A button off the site's theme | J.M.W. | Styled on its own rather than as a standard button | Uses the shared button style; the smoke test compares its computed style |
+
+## 13. Lessons learned
+
+1. **Measure before choosing an architecture.** The obvious design, fetching
+   from the edge, failed for a reason no reading of the documentation would
+   have revealed: the edge shares its egress addresses with everyone else.
+2. **Test from outside.** Most of the defects in Section 12 were found by
+   using the deployed site, not by the tests written alongside the code. The
+   tests then kept them from coming back.
+3. **Give every fix a guard.** A regression test, an overflow check or a pixel
+   check turns "fixed" from a claim into something the build enforces.
+4. **Verify the artifact, not a view of it.** A screenshot of a PDF viewer
+   looked fine while the committed file was blank; counting pixels on the file
+   itself caught it.
+5. **Label what you cannot verify, and check it where you can.** Route data was
+   wrong seven times in ten at one airport; the fix was to test it against the
+   aircraft and say plainly what remains a claim.
+6. **Two sources of the same kind of data are not corroboration.** A second
+   route database disagreed with the first on every callsign sampled,
+   including one where the first was right.
+7. **Know the platform's defaults.** A four-hour script cache made a deployed
+   fix invisible to the person who had reported the bug.
+8. **Bound everything per viewer, and let rules own their windows.** Keeping
+   more history for every target cost memory in a straight line, and silently
+   changed what the orbit rule meant.
+9. **An AI implementer is a multiplier, not an authority.** It made this
+   system possible in days rather than weeks, and it also introduced several
+   of the defects above. Requirements, judgment and acceptance stayed human,
+   and measurement is what made its work checkable.
+
+## 14. Author contributions
 
 J.M.W. conceived the project and directed it throughout. He set the
 requirements and the priorities, chose the platform after being offered the
@@ -1052,46 +1147,41 @@ while the map is scrolled elsewhere, per-feed pausing, vessel close-approach
 prediction, flight history and routes, the tabbed navigation, per-target URLs,
 and landing detection. He runs the relay on his own infrastructure.
 
-He also did the acceptance testing, and it is the reason much of this system is
-correct rather than merely finished. Working from the deployed build rather
-than from a description of it, he found: the vessel detail panel opening off
-screen on a phone (Section 7.5); upstream error text widening the layout until
-the right-hand panel left the screen (Section 7.5); a drawn box that silently
-did nothing; an altitude chart whose bars had never rendered; text clipped off
-the last slide of the deck; reference URLs breaking mid-link in the typeset
-paper; a white frame around every page of that paper, for which he proposed the
-`@page` approach that led to the fix (Section 9); airport identifiers shown as
-ICAO rather than the codes people read (Section 7.4); a straight line drawn
-from a departure airport that no aircraft had flown, in his words because "it
-did not come from that spot" (Section 7.4); the page running a large desktop
-out of memory, which led to the tiered retention of Section 7.4; and the route
-data failure that
-Section 2.4 now quantifies, which he found by checking about twenty arrivals
-into Washington National against an independent source by hand. Each of those
-is a defect that testing from the outside catches and testing from the inside
-does not. He reviewed this text.
+He also did the research and the acceptance testing, and they are the reason
+much of this system is correct rather than merely finished. He verified
+reported routes flight by flight against an independent schedule source, which
+is how the route failure of Section 2.4 was found and then measured, and he
+investigated receiver hardware for a first-party ADS-B feed. Working from the deployed build rather than from a
+description of it, he found fourteen of the sixteen defects in Section 12,
+including the one that shaped the design most: the absence of live aircraft in
+production that led to the relay. Each of them is a defect that testing from
+the outside catches and testing from the inside does not. He directed the
+method of Section 11 and reviewed this text.
 
-Claude (Anthropic) implemented the software, ran the measurements reported as
+Claude (Anthropic) implemented most of the software, ran the measurements reported as
 **[measured]**, wrote the unit and browser tests, produced the figures, and
 drafted this paper, all under the direction of the first author. The
 provenance tags in the text and the table in Section 10 exist so that a reader
 can check any load-bearing claim against its source rather than trust either
 author.
 
-## 12. Availability
+## 15. Availability
 
 The system is live at `flysdown.jaronwilson.dev`, served from Cloudflare
 Pages. The source, including the tests,
 the tools that regenerate the zone file, the figures and this document, is in
 the repository `Jaron-Wilson/flysdown` (private at the time of writing;
-contact the first author). Aircraft data is used under adsb.fi's personal,
+contact the first author). This paper and its slide version are published at
+`flysdown.jaronwilson.dev/docs/flysdown-paper.pdf` and
+`flysdown.jaronwilson.dev/docs/flysdown-linkedin.pdf`, linked from the
+dashboard's footer. Aircraft data is used under adsb.fi's personal,
 non-commercial terms with the required citation, and under adsb.lol's ODbL
 1.0. Vessel data is Fintraffic Digitraffic, CC BY 4.0. Airspace geometry is
 the FAA's, in the public domain. Route data is from adsbdb (MIT). The basemap
 is OpenFreeMap, built on OpenStreetMap data, copyright OpenStreetMap
 contributors. Nothing here is for navigation.
 
-## 13. References
+## 16. References
 
 1. RTCA DO-260B, *MOPS for 1090 MHz Extended Squitter ADS-B*; ICAO Annex 10 Vol IV.
 2. readsb JSON output reference.
