@@ -227,6 +227,7 @@ const feeds = {
  * remembered too rather than asked again on every click.
  */
 const routes = new Map();
+const MAX_ROUTE_ENTRIES = 300;
 
 async function ensureRoute(callsign) {
   if (!callsign || routes.has(callsign)) return;
@@ -238,6 +239,10 @@ async function ensureRoute(callsign) {
   } catch {
     routes.set(callsign, { status: 'none' });
   }
+  // One entry per callsign ever looked at, for as long as the page is open,
+  // was unbounded. The edge caches lookups for hours, so forgetting the oldest
+  // costs one cheap request if it is ever clicked again.
+  while (routes.size > MAX_ROUTE_ENTRIES) routes.delete(routes.keys().next().value);
   // The panel and the map both want it, and it arrived after they rendered.
   const target = state.selectedKey ? store.get(state.selectedKey) : null;
   if (target && target.callsign === callsign) {
@@ -630,13 +635,8 @@ function render(candidates = visibleTargets()) {
     showLabels: state.filters.labels,
   });
 
-  const shownKeys = new Set(shown.map((t) => t.key));
-  mapView.setData('trails', state.filters.trails
-    ? [
-        ...(state.filters.aircraft ? store.trailFeatures('aircraft') : []),
-        ...(state.filters.vessels ? store.trailFeatures('vessel') : []),
-      ].filter((feature) => shownKeys.has(feature.properties.key))
-    : []);
+  // Only what is on screen, and only its recent tail: see trailFeatures.
+  mapView.setData('trails', state.filters.trails ? store.trailFeatures(shown) : []);
 
   ui.renderStats({
     aircraftCount: aircraft.length,

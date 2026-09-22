@@ -6,7 +6,7 @@
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
-Version 1.3, 18 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
+Version 1.4, 22 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 `Jaron-Wilson/flysdown`.
 
 <!-- toc -->
@@ -37,7 +37,7 @@ that reject a route the aircraft is demonstrably not flying: the system reports
 what it can defend and labels the rest as reported rather than known.
 
 Claims are tagged by provenance. **[measured]** means obtained by instrumenting
-this system between 16 and 18 September 2026. **[documented]** means from a
+this system between 16 and 22 September 2026. **[documented]** means from a
 provider's own documentation, cited in Section 13. **[standard]** means from a
 published standard or regulation. Section 10 collects the load-bearing claims in one table.
 
@@ -64,7 +64,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 7,876 lines across browser modules, edge functions, the shared
+The system is 8,033 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -811,12 +811,40 @@ There is no honest way to draw the rest. Historical tracks are not available
 from any keyless source: the trace endpoints of globe.adsb.fi,
 globe.airplanes.live and globe.adsbexchange.com all answer 403, and
 api.adsb.lol has no trace route at all, measured from an ordinary residential
-address rather than from the edge **[measured]**. The observed window is
-therefore widened instead, to 45 minutes and 400 positions per target, and the
-panel says what the line is: positions actually watched, still extending, with
-nothing before this system first saw the target.
+address rather than from the edge **[measured]**. The panel therefore says
+what the line is: positions actually watched, still extending, with nothing
+before this system first saw the target.
 
-![**Figure 2.** A selected United flight from Philadelphia to Chicago O'Hare. The solid line behind the aircraft is its observed track; the dashed legs are the published route, interpolated as great circles from the origin airport through the aircraft to the destination. The rail lists distance flown, distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
+The first attempt to make that line longer widened the observed window for
+every target to 45 minutes and 400 positions, and it ran a large desktop out
+of memory, which the first author reported. Measured in a browser over a busy
+view of about 790 targets, whole-browser memory climbed in a straight line,
+from 888 MB to 981 MB between the first and eighth minute and still rising,
+because every target's entire history was also being rebuilt into trail
+geometry and handed to the map on every five-second tick: 26,335 coordinates
+per render at eight minutes, growing by about 3,300 a minute toward a plateau
+more than ten times that **[measured]**. The retained history was not the
+problem in itself. Using all of it everywhere was.
+
+Retention is now tiered. The selected target keeps 45 minutes and 400
+positions at full resolution, because it is the one whose track is drawn.
+Every other target keeps 15 minutes, which is what the landing rule's window
+needs, thinned to one position every 15 seconds unless it has turned 8
+degrees, changed altitude by 500 feet, touched down or moved 2 NM, so turns and
+arrivals keep full detail while straight cruise costs a quarter as much. The
+newest position is always kept as a provisional head so a thinned trail still
+reaches its icon, and trails draw only the last 20 positions of the targets
+actually on screen. Re-measured under the same conditions, trail geometry
+settled at about 11,800 coordinates per render by the sixth minute and stayed
+there, and browser memory went from 898 MB to 937 MB over the same seven
+minutes and was flat for the last three **[measured]**.
+
+It also exposed a coupling worth recording. The orbit rule summed turns over
+the whole retained history, so widening retention had silently changed what
+counted as an orbit. The rule now judges its own ten-minute window, whatever
+is retained, and a test pins that down.
+
+![**Figure 2.** A selected flight. The solid line behind the aircraft is its observed track, the positions this system actually watched; the dashed leg ahead is the reported route on to its destination as a great circle. The departure airport is marked but not drawn to, for the reason given above. The rail lists the distance remaining and an arrival time at the current ground speed.](figures/fig2-route.jpg)
 
 The legs are interpolated rather than drawn as straight lines, because a
 straight line between two airports is wrong on a Mercator projection: the
@@ -865,7 +893,7 @@ the not-for-navigation notice.
 
 ## 8. Verification
 
-**Unit tests (50, no network).** The geometry and the rules: haversine and
+**Unit tests (57, no network).** The geometry and the rules: haversine and
 destination round-tripping, ray casting against known points, inside and
 projected alerts, severity escalation with closing time, altitude band
 exclusion, a descending target entering the band mid-projection, the small-zone
@@ -1008,6 +1036,7 @@ attention on redistribution.
 | hexdb.io disagrees with adsbdb on every sampled callsign it knows, including one where adsbdb was right | Both sources queried for ten callsigns **[measured]** |
 | Seven of ten routes wrong among aircraft on the ground or descending at Washington National; eight of ten flagged afterwards, with no correct route rejected | Live feed and route lookups compared against position, altitude and vertical rate, 18 September 2026 **[measured]** |
 | No keyless source serves a flight's historical track: every trace endpoint probed answers 403 | globe.adsb.fi, globe.airplanes.live, globe.adsbexchange.com and api.adsb.lol probed from a residential address **[measured]** |
+| Keeping 45 minutes of history for every target grew the browser linearly (888 to 981 MB in seven minutes at ~790 targets); tiered retention and 20-point trails flattened it (898 to 937 MB, flat for the last three) | Whole-browser memory and per-render trail coordinates sampled over the same view before and after **[measured]** |
 | Pages served application modules with `max-age=14400, must-revalidate`, hiding a deployed fix for four hours, and will not honor a shorter value in `_headers` | Response headers read from the live site before and after a `_headers` change **[measured]** |
 | 275 vessels gave 4 approach alerts at 1 NM, 27 at 5 NM; tightest 0.32 NM in 2m 14s | Detector run against live Baltic traffic **[measured]** |
 
@@ -1034,7 +1063,9 @@ paper; a white frame around every page of that paper, for which he proposed the
 `@page` approach that led to the fix (Section 9); airport identifiers shown as
 ICAO rather than the codes people read (Section 7.4); a straight line drawn
 from a departure airport that no aircraft had flown, in his words because "it
-did not come from that spot" (Section 7.4); and the route data failure that
+did not come from that spot" (Section 7.4); the page running a large desktop
+out of memory, which led to the tiered retention of Section 7.4; and the route
+data failure that
 Section 2.4 now quantifies, which he found by checking about twenty arrivals
 into Washington National against an independent source by hand. Each of those
 is a defect that testing from the outside catches and testing from the inside

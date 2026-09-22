@@ -8,11 +8,35 @@ import { distanceNm } from './geo.js';
 
 const AIRCRAFT_INTERVAL_MS = 5000;
 const VESSEL_INTERVAL_MS = 15000;
-const MAX_HISTORY_POINTS = 400;
-// How much observed track to keep per target. This is the only record of
-// where an aircraft has actually been: no keyless ADS-B source serves history
-// (every trace endpoint probed answers 403), so what is not kept here is gone.
-const HISTORY_WINDOW_MS = 45 * 60 * 1000;
+// How much observed track to keep, in two tiers.
+//
+// Every target keeps a short, thinned history: enough for the landing rule's
+// fifteen-minute window and the orbit rule's ten, at a point every fifteen
+// seconds unless it turns, climbs, descends or jumps. It was 45 minutes and
+// 400 positions for every target, and that cost memory in a straight line: at
+// a zoom showing ~790 targets the whole browser grew from 763 MB to 981 MB in
+// eight minutes and was still climbing, because the history was also being
+// re-sent to the map as trail geometry on every tick.
+//
+// The selected target keeps the long history, because it is the one whose
+// observed track is drawn. That is still the only record of where an aircraft
+// has been: no keyless ADS-B source serves history (every trace endpoint
+// probed answers 403).
+const HISTORY_WINDOW_MS = 15 * 60 * 1000;
+const MAX_HISTORY_POINTS = 120;
+const PROTECTED_WINDOW_MS = 45 * 60 * 1000;
+const PROTECTED_MAX_POINTS = 400;
+
+// Thinning: a new position is kept only if one of these has changed enough
+// since the last kept one. Turns are kept at full detail because the orbit
+// rule sums them.
+const THIN_INTERVAL_MS = 15000;
+const THIN_TURN_DEG = 8;
+const THIN_ALT_FT = 500;
+const THIN_MOVE_NM = 2;
+
+// Trails are a tail, not a record: this many recent points per target.
+export const TRAIL_POINTS = 20;
 const DROP_AFTER_MS = 3 * 60 * 1000;
 // How long a target inside the covered area may go unreported before it is
 // dropped. Long enough to ride out one missed poll, short enough that the map
@@ -219,6 +243,22 @@ export class Feed {
 }
 
 /** Is this target inside any of the covered areas? */
+/** Has enough changed since the last kept position to keep this one? */
+export function worthKeeping(committed, sample) {
+  if (!committed) return true;
+  if (sample.t - committed.t >= THIN_INTERVAL_MS) return true;
+  if (typeof committed.track === 'number' && typeof sample.track === 'number') {
+    const turn = Math.abs(((sample.track - committed.track + 540) % 360) - 180);
+    if (turn >= THIN_TURN_DEG) return true;
+  }
+  if (typeof committed.alt === 'number' && typeof sample.alt === 'number' && Math.abs(sample.alt - committed.alt) >= THIN_ALT_FT) {
+    return true;
+  }
+  // A ground/airborne change is exactly what the landing rule looks for.
+  if ((committed.alt === null) !== (sample.alt === null)) return true;
+  return distanceNm(committed.lat, committed.lon, sample.lat, sample.lon) >= THIN_MOVE_NM;
+}
+
 function insideAny(target, coverages) {
   return coverages.some((area) => distanceNm(target.lat, target.lon, area.lat, area.lon) <= area.radiusNm);
 }
@@ -272,15 +312,27 @@ export class TargetStore {
 
       const movedNm = last ? distanceNm(last.lat, last.lon, raw.lat, raw.lon) : Infinity;
       if (!last || movedNm > 0.02) {
-        history.push({
+        const sample = {
           t: fetchedAt,
           lat: raw.lat,
           lon: raw.lon,
           alt: raw.alt ?? null,
           track: raw.track ?? raw.cog ?? raw.heading ?? null,
-        });
-        while (history.length > MAX_HISTORY_POINTS) history.shift();
-        while (history.length > 2 && fetchedAt - history[0].t > HISTORY_WINDOW_MS) history.shift();
+        };
+        const isProtected = key === this.protectedKey;
+
+        // History is committed points plus at most one provisional "head" at
+        // the end, which is always the latest position. Without the head, a
+        // thinned trail would stop up to fifteen seconds short of its icon.
+        const committed = last?.head ? history[history.length - 2] : last;
+        const keep = isProtected || worthKeeping(committed, sample);
+        if (last?.head) history.pop();
+        history.push(keep ? sample : { ...sample, head: true });
+
+        const maxPoints = isProtected ? PROTECTED_MAX_POINTS : MAX_HISTORY_POINTS;
+        const windowMs = isProtected ? PROTECTED_WINDOW_MS : HISTORY_WINDOW_MS;
+        while (history.length > maxPoints) history.shift();
+        while (history.length > 2 && fetchedAt - history[0].t > windowMs) history.shift();
       }
 
       this.targets.set(key, { ...raw, kind, key, history, updatedAt: fetchedAt });
@@ -335,15 +387,23 @@ export class TargetStore {
     return this.targets.get(key) || null;
   }
 
-  trailFeatures(kind, { minPoints = 2 } = {}) {
+  /**
+   * Trail geometry for the targets actually on screen: the recent tail of each
+   * one, not its whole history. This used to walk every target in the store,
+   * turn its entire history into coordinates and let the caller throw away the
+   * ones off screen, on every tick: 26,000 coordinates per render at eight
+   * minutes, growing for as long as the page stayed open.
+   */
+  trailFeatures(targets, { maxPoints = TRAIL_POINTS } = {}) {
     const features = [];
-    for (const target of this.targets.values()) {
-      if (kind && target.kind !== kind) continue;
-      if (target.history.length < minPoints) continue;
+    for (const target of targets) {
+      const history = target.history || [];
+      if (history.length < 2) continue;
+      const tail = history.length > maxPoints ? history.slice(-maxPoints) : history;
       features.push({
         type: 'Feature',
         properties: { key: target.key, kind: target.kind },
-        geometry: { type: 'LineString', coordinates: target.history.map((h) => [h.lon, h.lat]) },
+        geometry: { type: 'LineString', coordinates: tail.map((h) => [h.lon, h.lat]) },
       });
     }
     return features;

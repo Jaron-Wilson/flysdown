@@ -112,8 +112,8 @@ const slides = [
     eyebrow: 'By the numbers',
     title: 'What it took',
     stats: [
-      ['7,900', 'lines, no framework, no build step'],
-      ['50', 'unit tests, plus a real-browser smoke test'],
+      ['8,000', 'lines, no framework, no build step'],
+      ['57', 'unit tests, plus a real-browser smoke test'],
       ['16', 'restricted zones from FAA data'],
       ['4', 'live data sources, none needing a key'],
       ['$0', 'hosting: Cloudflare free tier'],

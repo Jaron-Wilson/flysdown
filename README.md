@@ -15,7 +15,7 @@ table separating what was measured from what is documented or standardized.
 It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
 contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
-`docs/flysdown-paper.pdf` is the same thing paginated (13 pages with figures),
+`docs/flysdown-paper.pdf` is the same thing paginated (14 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 `docs/flysdown-linkedin.pdf` is an 11 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
@@ -87,8 +87,11 @@ map: it is too close to the vessel orange to be told apart.
 - Draws only the path it has actually watched. The departure airport is marked
   but never drawn to: a straight line from there to the aircraft claims a path
   no flight flies. No keyless source serves a flight's earlier track (every
-  trace endpoint probed answers 403), so the observed window is 45 minutes and
-  400 positions per target and the panel says what the line is.
+  trace endpoint probed answers 403), so the panel says what the line is. The
+  selected target keeps 45 minutes and 400 positions at full resolution; every
+  other target keeps 15 minutes, thinned to a point every 15 s unless it turns,
+  climbs, descends or lands, and trails draw only the last 20 points. Keeping
+  the long history for everything ran a large desktop out of memory.
 - Checks a reported route before believing it. adsbdb keys routes on the
   callsign, and a callsign is a flight number rather than a leg, so the answer
   can be a route the aircraft is not flying today. If the two legs do not add up

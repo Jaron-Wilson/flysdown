@@ -31,6 +31,7 @@ export const DEFAULTS = {
   orbitTurnDeg: 270,        // cumulative turn that counts as a hold/orbit
   orbitRadiusNm: 12,
   orbitMinSec: 150,
+  orbitWindowSec: 600,      // the orbit rule judges the last ten minutes, whatever is retained
   landedAltFt: 250,         // at or below this, with taxi speed, counts as down
   landedSpeedKt: 60,
   airborneAltFt: 1000,      // a previous sample this high means it was flying
@@ -159,7 +160,13 @@ function positionPhrase(target, alt) {
  * or surveying rather than going somewhere.
  */
 export function detectOrbit(target, opts = DEFAULTS) {
-  const history = target.history || [];
+  // A rule's window is part of what the rule means. It used to be the whole
+  // retained history, so widening retention to 45 minutes quietly changed
+  // what counted as an orbit: almost any aircraft that had flown 45 minutes
+  // had turned 270 degrees, and almost none had stayed inside 12 NM doing it.
+  const all = target.history || [];
+  const since = all.length ? all[all.length - 1].t - (opts.orbitWindowSec ?? DEFAULTS.orbitWindowSec) * 1000 : 0;
+  const history = all.filter((h) => h.t >= since);
   if (history.length < 5) return null;
   const spanSec = (history[history.length - 1].t - history[0].t) / 1000;
   if (spanSec < opts.orbitMinSec) return null;
