@@ -6,7 +6,7 @@
 <p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude, through Claude Code, working under the direction of the first author; see Development method.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
-Version 1.4, 22 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
+Version 1.5, 23 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 `Jaron-Wilson/flysdown`.
 
 <!-- toc -->
@@ -56,8 +56,9 @@ further watch zones (circle or polygon), set their floor, ceiling and whether
 they apply to aircraft, ships or both, and export or import them as GeoJSON.
 By default it tracks only the area on screen, or an
 operator can pin circles and boxes that keep loading while the map is scrolled
-anywhere else. Selecting an aircraft draws the track it has been
-observed flying plus its published origin and destination as great circles.
+anywhere else. Selecting an aircraft draws the track it has actually been
+observed flying, marks its reported origin, and draws the leg on to its
+reported destination as a great circle.
 Each feed pauses independently, every contact is timestamped, and the interface
 reports which path served its data and how old that data is.
 
@@ -66,7 +67,7 @@ straight-line dead reckoning: no turns, no wind, no flight plan, no controller
 instruction. NOTAM activation is not modeled, so a restricted area that is cold
 today is still drawn.
 
-The system is 8,033 lines across browser modules, edge functions, the shared
+The system is 8,329 lines across browser modules, edge functions, the shared
 fetch layer, the relay, tooling and tests **[measured]**, with no build step and
 no framework. MapLibre GL JS is vendored as one 954 KB file so the page does not
 depend on a third-party script host at runtime.
@@ -1301,10 +1302,9 @@ The system is live at `flysdown.jaronwilson.dev`, served from Cloudflare
 Pages. The source, including the tests,
 the tools that regenerate the zone file, the figures and this document, is in
 the public repository <https://github.com/Jaron-Wilson/flysdown> under the MIT
-license. The bundled MapLibre GL JS keeps its own BSD 3-Clause license. This paper and its slide version are published at
-`flysdown.jaronwilson.dev/docs/flysdown-paper.pdf` and
-`flysdown.jaronwilson.dev/docs/flysdown-linkedin.pdf`, linked from the
-dashboard's footer. Aircraft data is used under adsb.fi's personal,
+license. The bundled MapLibre GL JS keeps its own BSD 3-Clause license. This paper and its slide version are published together at
+<https://flysdown.jaronwilson.dev/docs/>, and linked from the dashboard's
+footer. Aircraft data is used under adsb.fi's personal,
 non-commercial terms with the required citation, and under adsb.lol's ODbL
 1.0. Vessel data is Fintraffic Digitraffic, CC BY 4.0. Airspace geometry is
 the FAA's, in the public domain. Route data is from adsbdb (MIT). The basemap

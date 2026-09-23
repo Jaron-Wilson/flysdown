@@ -451,6 +451,35 @@ if (!hashCheck.skipped) {
   }
 }
 
+step('the papers page at /docs/');
+const docsPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const docsResponse = await docsPage.goto(new URL('docs/', url).href, { waitUntil: 'load' });
+const docsCheck = await docsPage.evaluate(async () => {
+  const links = [...document.querySelectorAll('a[href$=".pdf"]')].map((a) => a.getAttribute('href'));
+  const images = await Promise.all([...document.querySelectorAll('img')].map(async (img) => {
+    if (!img.complete) await new Promise((r) => { img.onload = r; img.onerror = r; });
+    return { src: img.getAttribute('src'), loaded: img.naturalWidth > 0 };
+  }));
+  return {
+    title: document.title,
+    // Pages answers unknown paths with the dashboard, so make sure this is
+    // the papers page and not the map.
+    isPapersPage: Boolean(document.querySelector('.papers')) && !document.getElementById('map'),
+    paperLinked: links.includes('flysdown-paper.pdf'),
+    slidesLinked: links.includes('flysdown-linkedin.pdf'),
+    images,
+    ogImage: document.querySelector('meta[property="og:image"]')?.content || null,
+  };
+});
+console.log(`  ${docsResponse.status()} ${JSON.stringify(docsCheck)}`);
+if (!docsCheck.isPapersPage) errors.push('/docs/ does not serve the papers page');
+if (!docsCheck.paperLinked || !docsCheck.slidesLinked) errors.push(`/docs/ is missing a document link: ${JSON.stringify(docsCheck)}`);
+// The images are links into docs/ that only the deploy staging resolves.
+if (!/127\.0\.0\.1|localhost/.test(url) && docsCheck.images.some((i) => !i.loaded)) {
+  errors.push(`/docs/ has an image that did not load: ${JSON.stringify(docsCheck.images)}`);
+}
+await docsPage.close();
+
 step('a cached older build announces itself');
 const staleCheck = await page.evaluate(() => {
   const meta = document.querySelector('meta[name="build"]');

@@ -236,6 +236,16 @@ await page.pdf({
   margin: { top: '0.45in', bottom: '0.4in', left: '0', right: '0' },
 });
 
+// A first-page image for the /docs/ page and link previews, taken from the
+// same render as the PDF so the two cannot drift apart. Letter at 96 dpi,
+// with the top margin the printed page has.
+await page.setViewportSize({ width: 816, height: 1056 });
+await page.emulateMedia({ media: 'print' });
+await page.evaluate(() => { document.body.style.paddingTop = '0.45in'; window.scrollTo(0, 0); });
+const thumb = output.replace(/\.pdf$/, '.jpg');
+await page.screenshot({ path: thumb, type: 'jpeg', quality: 82, clip: { x: 0, y: 0, width: 816, height: 1056 } });
+console.log(`${thumb}: first-page image`);
+
 await browser.close();
 
 // Page count straight out of the PDF, so the target is measured not guessed.

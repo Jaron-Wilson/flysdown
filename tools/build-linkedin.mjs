@@ -31,9 +31,9 @@ const [dcShot, routeShot, shipShot] = await Promise.all([
 const slides = [
   {
     kind: 'cover',
-    eyebrow: 'Side project &middot; September 2026',
+    eyebrow: 'No-Fly Zone Detector &middot; September 2026',
     title: 'Project Flys Down',
-    lede: 'Live aircraft and ships on one map, with a detection engine that warns before something enters restricted airspace.',
+    lede: 'Live air traffic, and a warning before an aircraft enters restricted airspace, not after.',
     meta: 'flysdown.jaronwilson.dev',
   },
   {
@@ -112,12 +112,12 @@ const slides = [
     eyebrow: 'By the numbers',
     title: 'What it took',
     stats: [
-      ['8,000', 'lines, no framework, no build step'],
+      ['8,300', 'lines, no framework, no build step'],
       ['57', 'unit tests, plus a real-browser smoke test'],
       ['16', 'restricted zones from FAA data'],
       ['4', 'live data sources, none needing a key'],
       ['$0', 'hosting: Cloudflare free tier'],
-      ['13', 'page write-up of how it all works'],
+      ['18', 'page write-up of how it all works'],
     ],
   },
   {
@@ -397,6 +397,12 @@ if (clipped.length) {
 }
 
 await page.pdf({ path: output, width: '1080px', height: '1080px', printBackground: true, pageRanges: `1-${slides.length}` });
+
+// The cover slide as an image, for the /docs/ page and link previews.
+const cover = await page.$('.slide');
+const coverPath = output.replace(/\.pdf$/, '.jpg');
+await cover.screenshot({ path: coverPath, type: 'jpeg', quality: 84 });
+console.log(`${coverPath}: cover image`);
 
 // --png <dir> also writes each slide as an image, for platforms that want
 // pictures rather than a document.

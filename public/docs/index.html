@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papers - Project Flys Down</title>
+<meta name="description" content="The white paper and slides for Project Flys Down: live ADS-B no-fly-zone detection, how it works and how it was built.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="Project Flys Down: the white paper and slides">
+<meta property="og:description" content="How a live ADS-B no-fly-zone detector works, why it is built this way, how it was built with an AI coding agent, and what went wrong along the way.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://flysdown.jaronwilson.dev/docs/">
+<meta property="og:image" content="https://flysdown.jaronwilson.dev/docs/flysdown-paper.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* The papers are light, so this page is too: the tokens are the same ones
+     jaronwilson.dev and the PDFs use. */
+  :root {
+    --paper: #faf8f4;
+    --surface: #ffffff;
+    --ink: #1a1a17;
+    --ink-2: #3d3b36;
+    --muted: #6b6862;
+    --border: #e8e4dc;
+    --accent: #b3542b;
+    --radius: 14px;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font: 400 16px/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { width: min(1040px, 100% - 40px); margin: 0 auto; }
+
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: max(18px, env(safe-area-inset-top)) 0 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
+  .brand-mark {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font: 600 14px/1 var(--serif);
+  }
+  .brand strong { font: 600 19px/1.1 var(--serif); letter-spacing: -0.01em; }
+  .live {
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    white-space: nowrap;
+  }
+  .live:hover { border-color: var(--accent); color: var(--accent); }
+  .live-short { display: none; }
+
+  .hero { padding: 56px 0 28px; max-width: 720px; }
+  .eyebrow {
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  h1 {
+    margin: 10px 0 14px;
+    font: 600 clamp(30px, 5vw, 46px)/1.08 var(--serif);
+    letter-spacing: -0.02em;
+  }
+  .lede { margin: 0; color: var(--ink-2); font-size: 18px; }
+  .byline { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+
+  .papers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    padding: 20px 0 56px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .thumb {
+    display: block;
+    background: #f1ede5;
+    border-bottom: 1px solid var(--border);
+    padding: 26px 26px 0;
+    text-decoration: none;
+    overflow: hidden;
+  }
+  .thumb img {
+    display: block;
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 6px 6px 0 0;
+    box-shadow: 0 10px 30px rgba(26, 26, 23, 0.14), 0 1px 3px rgba(26, 26, 23, 0.1);
+    transition: transform 160ms ease;
+  }
+  .thumb:hover img { transform: translateY(-3px); }
+  .body { display: flex; flex-direction: column; gap: 10px; padding: 22px 24px 24px; flex: 1; }
+  .kind { color: var(--muted); font-size: 13px; font-weight: 500; }
+  .card h2 { margin: 0; font: 600 23px/1.2 var(--serif); letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--ink-2); }
+  .inside { margin: 4px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14.5px; }
+  .inside li { margin: 2px 0; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 12px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.06); }
+
+  footer.bottom {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding: 22px 0 max(28px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  footer.bottom nav { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  footer.bottom a { text-decoration: none; }
+  footer.bottom a:hover { color: var(--accent); }
+
+  @media (max-width: 760px) {
+    .wrap { width: min(1040px, 100% - 28px); }
+    .hero { padding: 34px 0 18px; }
+    .lede { font-size: 16.5px; }
+    .papers { grid-template-columns: 1fr; gap: 18px; padding-bottom: 36px; }
+    .thumb { padding: 18px 18px 0; }
+    .thumb img { height: 230px; }
+    .body { padding: 18px 18px 20px; }
+    .live { padding: 7px 12px; font-size: 13.5px; }
+    .live-long { display: none; }
+    .live-short { display: inline; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="/" aria-label="Project Flys Down, the live map">
+        <span class="brand-mark" aria-hidden="true">FD</span>
+        <strong>Project Flys Down</strong>
+      </a>
+      <a class="live" href="/"><span class="live-long">Open the live map</span><span class="live-short">Live map</span></a>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Papers</div>
+      <h1>How it works, and how it was built</h1>
+      <p class="lede">Project Flys Down is a no-fly-zone detector for live air traffic: it reads the ADS-B reports aircraft broadcast about themselves and warns before one enters restricted airspace, not after. These are the full write-up and the short version.</p>
+      <p class="byline">Jaron M. Wilson and Claude (Anthropic)</p>
+    </section>
+
+    <section class="papers" aria-label="Documents">
+      <article class="card">
+        <a class="thumb" href="flysdown-paper.pdf" aria-label="Open the white paper">
+          <img src="flysdown-paper.jpg" alt="The first page of the white paper" width="816" height="1056" loading="lazy">
+        </a>
+        <div class="body">
+          <span class="kind">White paper &middot; PDF</span>
+          <h2>How the system works, why it is built this way, and how it was built</h2>
+          <p>The full account, with every load-bearing claim tagged as measured, documented or standard, and a source for each.</p>
+          <ul class="inside">
+            <li>How ADS-B works, and every field used with the reason for it</li>
+            <li>The detection engine: projection, zones, emergencies, landings</li>
+            <li>Why the free ADS-B services refuse cloud servers, and the relay built around it</li>
+            <li>Route data measured wrong seven times in ten, and the checks that catch it</li>
+            <li>Directing an AI coding agent, the defects found in use, and lessons learned</li>
+          </ul>
+          <div class="actions">
+            <a class="btn primary" href="flysdown-paper.pdf">Read the white paper</a>
+            <a class="btn" href="flysdown-paper.pdf" download>Download</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <a class="thumb" href="flysdown-linkedin.pdf" aria-label="Open the slides">
+          <img src="flysdown-linkedin.jpg" alt="The cover slide" width="1080" height="1080" loading="lazy">
+        </a>
+        <div class="body">
+          <span class="kind">Slides &middot; PDF</span>
+          <h2>The short version</h2>
+          <p>The same story as a set of square slides, made for reading on a phone: what it does, the hard parts, and what the numbers came to.</p>
+          <div class="actions">
+            <a class="btn primary" href="flysdown-linkedin.pdf">View the slides</a>
+            <a class="btn" href="flysdown-linkedin.pdf" download>Download</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="bottom">
+      <span>Built by Jaron Wilson. Not for navigation.</span>
+      <nav aria-label="Elsewhere">
+        <a href="/">Live map</a>
+        <a href="https://github.com/Jaron-Wilson/flysdown">Source on GitHub</a>
+        <a href="https://jaronwilson.dev/">jaronwilson.dev</a>
+        <a href="https://jaronwilson.org/">jaronwilson.org</a>
+        <a href="https://www.linkedin.com/in/jaron-wilson/">LinkedIn</a>
+      </nav>
+    </footer>
+  </div>
+</body>
+</html>
