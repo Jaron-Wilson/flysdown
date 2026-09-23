@@ -18,8 +18,10 @@ live system by `npm run figures`, and a contents list.
 `docs/flysdown-paper.pdf` is the same thing paginated (16 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 Both PDFs are published by the site itself at `/docs/flysdown-paper.pdf` and
-`/docs/flysdown-linkedin.pdf` (`public/docs` is a link to `docs/`, dereferenced
-when `tools/stamp.mjs` stages the deploy), and linked from the footer.
+`/docs/flysdown-linkedin.pdf`, and linked from the footer. `public/docs` holds
+one link per published file, pointing into `docs/`, and `tools/stamp.mjs`
+refuses to deploy if what it stages differs from what is tracked there, so a
+file dropped into `docs/` is never published by accident.
 `docs/flysdown-linkedin.pdf` is an 11 slide square carousel of the same story,
 sized for LinkedIn's document posts, which render a PDF one page per card.
 
