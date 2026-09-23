@@ -9,7 +9,7 @@
  * rendered here. That is fine for catching wiring and layout problems.
  */
 
-import { chromium } from 'playwright';
+import { chromium, devices } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 
 const url = process.argv[2] || 'http://127.0.0.1:8795/';
@@ -397,7 +397,11 @@ const docs = await page.evaluate(async () => {
   return out;
 });
 console.log(`  docs: ${JSON.stringify(docs)}`);
+// Local dev serves public/ as it sits, and public/docs holds links to the PDFs
+// that only the deploy staging resolves, so this is a check on a deployment.
+const isLocal = /127\.0\.0\.1|localhost/.test(url);
 for (const [label, info] of Object.entries(docs)) {
+  if (isLocal) break;
   if (info.status !== 200 || !/pdf/.test(info.type || '')) errors.push(`the ${label} link does not serve a PDF: ${JSON.stringify(info)}`);
 }
 
@@ -669,6 +673,123 @@ if (!landedCheck.panelSaysLanded) errors.push('the panel did not say the target 
 if (!landedCheck.inRail) errors.push('the landing did not appear in the alerts rail');
 if (landedCheck.badgeCountsIt) errors.push('the alert badge counted a landing as something wrong');
 await page.screenshot({ path: `${outDir}/06-landed.png` });
+
+// Real phone emulation: touch, a device pixel ratio and a phone user agent,
+// in a fresh visit so the welcome card shows. The desktop page resized to a
+// phone width, above, cannot catch what only a touch screen does.
+step('real phones: welcome, header, map overlays, the target sheet');
+for (const name of ['iPhone 13', 'Pixel 7']) {
+  const context = await browser.newContext({ ...devices[name] });
+  const phone = await context.newPage();
+  phone.on('pageerror', (err) => errors.push(`${name} pageerror: ${err.message}`));
+  await phone.goto(url, { waitUntil: 'load', timeout: 60000 });
+  await phone.waitForFunction(() => !document.getElementById('welcome').hidden, null, { timeout: 15000 }).catch(() => {});
+
+  const welcome = await phone.evaluate(() => {
+    const card = document.querySelector('.welcome-card').getBoundingClientRect();
+    const actions = document.querySelector('.welcome-actions').getBoundingClientRect();
+    return { cardTop: Math.round(card.top), actionsOnScreen: actions.top >= 0 && actions.bottom <= innerHeight + 1 };
+  });
+
+  await phone.locator('#welcome [data-start="dc"]').tap();
+  await phone.waitForFunction(() => (window.flysdown?.store?.all().length || 0) > 3, null, { timeout: 60000 }).catch(() => {});
+  await phone.waitForTimeout(2500);
+
+  const layout = await phone.evaluate(() => {
+    const box = (sel) => document.querySelector(sel)?.getBoundingClientRect() || null;
+    const shown = (el) => Boolean(el) && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().height > 0;
+    const overlap = (a, b) => Boolean(a && b) && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+    const header = box('.topbar');
+    const map = box('#map');
+    const nav = box('.mobile-nav');
+    const attrib = document.querySelector('.maplibregl-ctrl-attrib');
+    const zoom = document.querySelector('.maplibregl-ctrl-zoom-in')?.closest('.maplibregl-ctrl-group');
+    return {
+      headerPx: Math.round(header.height),
+      mapEndsAboveNav: map.bottom <= nav.top + 1,
+      feedbarHidden: !shown(document.getElementById('feedbar')),
+      zoomHidden: !shown(zoom),
+      creditsCollapsed: Boolean(attrib) && !attrib.classList.contains('maplibregl-compact-show'),
+      pinClearOfCredits: !overlap(box('.map-actions'), attrib?.getBoundingClientRect()),
+      overflowX: document.documentElement.scrollWidth - innerWidth,
+      bannerClosable: document.getElementById('map-banner').hidden || Boolean(document.querySelector('#map-banner .banner-close')),
+    };
+  });
+
+  // Close whatever banner is up and make sure that one stays closed. Which
+  // banner it is depends on the feed's state at the time: a lower-priority
+  // one appearing in its place is correct, the same one returning is not.
+  const closer = phone.locator('#map-banner .banner-close');
+  if (await closer.isVisible().catch(() => false)) {
+    const closed = await phone.evaluate(() => document.querySelector('#map-banner .banner-text')?.textContent || '');
+    await closer.tap();
+    await phone.waitForTimeout(6000);
+    layout.bannerStaysDismissed = await phone.evaluate((text) => {
+      const banner = document.getElementById('map-banner');
+      return banner.hidden || (banner.querySelector('.banner-text')?.textContent || '') !== text;
+    }, closed);
+  }
+
+  const sheet = await phone.evaluate(async () => {
+    const target = window.flysdown.store.all().find((t) => window.flysdown.store.get(t.key));
+    if (!target) return { skipped: true };
+    window.flysdown.mapView.onSelect(target.key);
+    await new Promise((r) => setTimeout(r, 1100));
+    const block = document.getElementById('detail-block').getBoundingClientRect();
+    const nav = document.querySelector('.mobile-nav').getBoundingClientRect();
+    const header = document.querySelector('.topbar').getBoundingClientRect();
+    const mapBox = document.getElementById('map').getBoundingClientRect();
+    const closeButton = document.getElementById('detail-close-x');
+    // Where the tapped target is on screen now: it must not be under the card.
+    const live = window.flysdown.store.get(target.key) || target;
+    const point = window.flysdown.mapView.map.project([live.lon, live.lat]);
+    const peekPx = Math.round(block.height);
+    document.getElementById('sheet-toggle').click();
+    await new Promise((r) => setTimeout(r, 300));
+    const expandedPx = Math.round(document.getElementById('detail-block').getBoundingClientRect().height);
+    return {
+      aboveNav: block.bottom <= nav.top + 1,
+      mapShare: Math.round(((block.top - header.bottom) / innerHeight) * 100),
+      hasClose: Boolean(closeButton),
+      peekPx,
+      expandedPx,
+      targetVisible: mapBox.top + point.y < block.top && mapBox.top + point.y > mapBox.top,
+      tooltipHidden: getComputedStyle(document.getElementById('map-tooltip')).display === 'none',
+    };
+  });
+  if (!sheet.skipped) {
+    await phone.locator('#detail-close-x').tap();
+    await phone.waitForTimeout(400);
+    sheet.closes = await phone.evaluate(() => !document.querySelector('.panel-right').classList.contains('has-selection'));
+  }
+
+  const result = { welcome, layout, sheet };
+  console.log(`  ${name}: ${JSON.stringify(result)}`);
+  const tag = name.replace(/\s+/g, '-').toLowerCase();
+  await phone.screenshot({ path: `${outDir}/07-${tag}.png` });
+
+  if (welcome.cardTop < 0) errors.push(`${name}: the welcome card starts above the screen`);
+  if (!welcome.actionsOnScreen) errors.push(`${name}: the welcome buttons are off screen`);
+  if (layout.headerPx > 100) errors.push(`${name}: the header is ${layout.headerPx}px tall`);
+  if (!layout.mapEndsAboveNav) errors.push(`${name}: the map runs under the tab bar`);
+  if (!layout.feedbarHidden) errors.push(`${name}: the feed line is showing on a phone`);
+  if (!layout.zoomHidden) errors.push(`${name}: zoom buttons shown on a touch screen`);
+  if (!layout.creditsCollapsed) errors.push(`${name}: the map credits are expanded over the map`);
+  if (!layout.pinClearOfCredits) errors.push(`${name}: Pin this view overlaps the map credits`);
+  if (layout.overflowX > 1) errors.push(`${name}: the page scrolls sideways by ${layout.overflowX}px`);
+  if (!layout.bannerClosable) errors.push(`${name}: a map banner has no way to close it`);
+  if (layout.bannerStaysDismissed === false) errors.push(`${name}: the dismissed AIS note came back`);
+  if (!sheet.skipped) {
+    if (!sheet.aboveNav) errors.push(`${name}: the target sheet runs under the tab bar`);
+    if (sheet.mapShare < 25) errors.push(`${name}: only ${sheet.mapShare}% of the screen is map with a target selected`);
+    if (!sheet.hasClose || !sheet.closes) errors.push(`${name}: the target sheet cannot be closed from its top`);
+    if (sheet.peekPx > 240) errors.push(`${name}: a tap opens a ${sheet.peekPx}px sheet instead of a short card`);
+    if (sheet.expandedPx <= sheet.peekPx) errors.push(`${name}: More details did not open the full detail`);
+    if (!sheet.targetVisible) errors.push(`${name}: the tapped target is hidden under its own card`);
+    if (!sheet.tooltipHidden) errors.push(`${name}: the hover tooltip shows on a touch screen`);
+  }
+  await context.close();
+}
 
 await browser.close();
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Project Flys Down - live air and sea traffic with geofence projection</title>
 <meta name="description" content="Live ADS-B aircraft and AIS vessel tracking on one map, with dead-reckoning projection and alerting when traffic is heading into restricted airspace.">
 <meta name="color-scheme" content="dark">
@@ -47,7 +47,7 @@
   </div>
 
   <div class="topbar-right">
-    <button class="btn btn-sm" type="button" id="help-btn" aria-haspopup="dialog">Help</button>
+    <button class="btn btn-sm help-btn" type="button" id="help-btn" aria-haspopup="dialog" aria-label="Help"><span class="help-long">Help</span><span class="help-short" aria-hidden="true">?</span></button>
   </div>
 </header>
 
@@ -210,6 +210,7 @@
     <section class="block" id="detail-block">
       <h2 class="block-title">Selected target</h2>
       <div id="detail"><p class="hint">Click an aircraft or a ship on the map to see its details, its route and any warnings.</p></div>
+      <button class="sheet-toggle" id="sheet-toggle" type="button" aria-expanded="false">More details</button>
     </section>
   </aside>
 </main>

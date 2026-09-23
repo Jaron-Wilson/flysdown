@@ -107,6 +107,7 @@ export class UI {
       button.addEventListener('click', () => this.setView(button.dataset.view));
     }
     this.initFeedbar();
+    this.initSheet();
   }
 
   /**
@@ -162,6 +163,28 @@ export class UI {
     }
     if (!keepTab && (name === 'filters' || name === 'areas')) this.setTab(name);
     if (name !== 'map') this.handlers.leftMap?.();
+  }
+
+  /**
+   * Phones show a selected target as a short card first: who it is, how high,
+   * how fast, which way, with the full detail one tap away. The whole detail
+   * opening at once covered half the screen with a table.
+   */
+  initSheet() {
+    const toggle = $('sheet-toggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', () => {
+      this.setSheetExpanded(!document.querySelector('.panel-right')?.classList.contains('sheet-expanded'));
+    });
+  }
+
+  setSheetExpanded(expanded) {
+    document.querySelector('.panel-right')?.classList.toggle('sheet-expanded', expanded);
+    const toggle = $('sheet-toggle');
+    if (!toggle) return;
+    toggle.setAttribute('aria-expanded', String(expanded));
+    toggle.textContent = expanded ? 'Less' : 'More details';
+    if (!expanded) $('detail-block')?.scrollTo?.(0, 0);
   }
 
   /** The alert count, shown on the Alerts heading and the phone tab. */
@@ -501,6 +524,7 @@ export class UI {
       <div class="detail-head">
         <h3>${escapeHtml(target.label)}</h3>
         <span class="detail-kind">${isAircraft ? 'aircraft' : 'vessel'}</span>
+        <button class="detail-close" type="button" id="detail-close-x" aria-label="Close">\u00d7</button>
       </div>
       <p class="detail-sub">${escapeHtml(
         isAircraft
@@ -525,6 +549,7 @@ export class UI {
     $('detail-center')?.addEventListener('click', () => this.handlers.centerTarget?.(target.key));
     $('detail-clear')?.addEventListener('click', () => this.handlers.clearSelection?.());
     $('detail-route')?.addEventListener('click', () => this.handlers.frameRoute?.(target.key));
+    $('detail-close-x')?.addEventListener('click', () => this.handlers.clearSelection?.());
   }
 
   /* ---------- zones ---------- */
@@ -640,6 +665,7 @@ export class UI {
   focusDetail(hasSelection, { scroll = true } = {}) {
     const panel = document.querySelector('.panel-right');
     panel?.classList.toggle('has-selection', Boolean(hasSelection));
+    if (!hasSelection) this.setSheetExpanded(false);
     if (!hasSelection || !scroll) return;
     const block = document.getElementById('detail-block');
     if (!block) return;
@@ -709,8 +735,8 @@ export class UI {
         const word = isPaused ? 'paused' : state === 'down' ? 'down' : state === 'degraded' ? 'stale' : state === 'live' ? 'live' : 'starting';
         const count = Number.isFinite(status.count) && state !== 'idle' ? `<span class="feed-count"> \u00b7 ${int(status.count)}</span>` : '';
         const detail = status.lastError ? `. ${status.lastError}` : '';
-        return `<button class="btn btn-sm feed-toggle" type="button" data-feed="${kind}" aria-pressed="${isPaused}" title="${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed${escapeHtml(detail)}">
-            <span class="dot" style="background:${dot}"></span>${label}: ${word}${count}
+        return `<button class="btn btn-sm feed-toggle" type="button" data-feed="${kind}" aria-pressed="${isPaused}" aria-label="${label}: ${word}. ${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed" title="${isPaused ? 'Resume' : 'Pause'} the ${label.toLowerCase()} feed${escapeHtml(detail)}">
+            <span class="dot" style="background:${dot}"></span><span class="ft-label"><span class="ft-name">${label}</span><span class="ft-state">: ${word}</span>${count}</span>
           </button>`;
       })
       .join('');
@@ -770,14 +796,14 @@ export class UI {
     node.style.top = `${Math.max(8, top)}px`;
   }
 
-  showBanner(message, action) {
+  showBanner(message, action, { onDismiss = null } = {}) {
     const node = this.refs.banner;
     if (!message) {
       node.hidden = true;
       return;
     }
     node.hidden = false;
-    node.innerHTML = `<span>${escapeHtml(message)}</span>`;
+    node.innerHTML = `<span class="banner-text">${escapeHtml(message)}</span>`;
     if (action) {
       const button = document.createElement('button');
       button.className = 'btn btn-sm';
@@ -785,6 +811,15 @@ export class UI {
       button.textContent = action.label;
       button.addEventListener('click', action.onClick);
       node.appendChild(button);
+    }
+    if (onDismiss) {
+      const close = document.createElement('button');
+      close.className = 'banner-close';
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Dismiss');
+      close.textContent = '\u00d7';
+      close.addEventListener('click', onDismiss);
+      node.appendChild(close);
     }
   }
 

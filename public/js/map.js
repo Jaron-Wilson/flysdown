@@ -87,6 +87,10 @@ export class MapView {
       'bottom-right'
     );
     this.map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    this.map.once('load', () => {
+      if (!window.matchMedia('(max-width: 1040px)').matches) return;
+      this.map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+    });
     this.map.addControl(new maplibregl.ScaleControl({ unit: 'nautical' }), 'bottom-left');
 
     this.map.on('load', () => {
@@ -628,6 +632,20 @@ export class MapView {
 
   panTo(lon, lat) {
     this.map.easeTo({ center: [lon, lat], duration: 600 });
+  }
+
+  /**
+   * Make sure a point is visible above something covering the bottom of the
+   * map, such as the target sheet on a phone. Nothing moves if it is already
+   * clear: a map that jumps under your finger on every tap is worse.
+   */
+  revealAbove(lon, lat, coveredPx, margin = 48) {
+    const point = this.map.project([lon, lat]);
+    const { clientWidth: width, clientHeight: height } = this.map.getContainer();
+    const clear = point.y > margin && point.y < height - coveredPx - margin && point.x > margin && point.x < width - margin;
+    if (clear) return false;
+    this.map.easeTo({ center: [lon, lat], padding: { bottom: coveredPx, top: 0, left: 0, right: 0 }, duration: 500 });
+    return true;
   }
 
   /** Fit a set of [lon, lat] points, used to frame a whole flight route. */

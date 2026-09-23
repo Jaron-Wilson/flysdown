@@ -68,6 +68,8 @@ const state = {
   pendingHash: null,
   pendingHashSince: 0,
   missingHash: null,
+  // Banners the reader has closed, for as long as their cause lasts.
+  dismissedBanners: new Set(),
 };
 
 /* ---------- tracking areas ---------- */
@@ -151,7 +153,11 @@ const zones = new ZoneStore();
 const store = new TargetStore();
 
 const mapView = new MapView('map', {
-  onSelect: (key) => selectTarget(key),
+  onSelect: (key) => {
+    ui.setSheetExpanded(false);
+    selectTarget(key);
+    revealSelection();
+  },
   onHover: (props, point) => ui.showTooltip(props, point),
   onViewChange: (viewport) => handleViewChange(viewport),
   onZoneClick: (id) => {
@@ -291,6 +297,19 @@ function updateSelectedTrack() {
 }
 
 /* ---------- selection ---------- */
+
+/** On a phone, keep a tapped target visible above the sheet that opened for it. */
+function revealSelection() {
+  if (!window.matchMedia('(max-width: 1040px)').matches) return;
+  const target = state.selectedKey ? store.get(state.selectedKey) : null;
+  const sheet = document.getElementById('detail-block');
+  const map = document.getElementById('map');
+  if (!target || !sheet || !map) return;
+  requestAnimationFrame(() => {
+    const covered = Math.max(0, map.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top);
+    mapView.revealAbove(target.lon, target.lat, covered);
+  });
+}
 
 /* ---------- one URL per target ---------- */
 
@@ -719,65 +738,108 @@ function sortedZones() {
  * One banner slot, so the map always explains its own state. Priority order:
  * a dead feed first, then a stale one, then missing AIS coverage.
  */
+const AIS_NOTE_KEY = 'flysdown.aisNote.dismissed';
+function aisNoteDismissed() {
+  try { return sessionStorage.getItem(AIS_NOTE_KEY) === '1'; } catch { return false; }
+}
+
 function updateBanner(vesselCount) {
   const air = state.feeds.aircraft || {};
   const center = mapView.map.getCenter();
 
+  // Every banner can be closed. On a phone any of them covers a real part of
+  // the map, and the header's feed toggles still show each feed's state, so
+  // closing one loses nothing. A dismissal lasts while its cause does: when
+  // the feed recovers and later fails again, that is news, and it shows.
+  const active = {
+    'missing-hash': Boolean(state.missingHash),
+    'stale-build': Boolean(state.staleBuild),
+    'feed-down': state.filters.aircraft && air.state === 'down',
+    'feed-stale': state.filters.aircraft && Boolean(air.stale),
+    'tracking-offscreen': Boolean(state.tracking.length) &&
+      !state.tracking.some((area) => mapView.map.getBounds().contains([area.center.lon, area.center.lat])),
+    // Worth saying once per visit: watching aircraft over Washington, a note
+    // about ships says nothing useful.
+    ais: state.filters.vessels && vesselCount === 0 && !inAisCoverage(center.lat, center.lng) && !aisNoteDismissed(),
+  };
+  for (const kind of state.dismissedBanners) {
+    if (!active[kind]) state.dismissedBanners.delete(kind);
+  }
+  const showing = (kind) => active[kind] && !state.dismissedBanners.has(kind);
+  const closeable = (kind, after) => ({
+    onDismiss: () => {
+      state.dismissedBanners.add(kind);
+      after?.();
+      updateBanner(vesselCount);
+    },
+  });
+
   // A URL naming a target that is not here is a direct answer to something the
   // reader did, so it outranks the feed's own state, but not stale code.
-  if (state.missingHash) {
+  if (showing('missing-hash')) {
     ui.showBanner(
       `${state.missingHash} is not in the area being tracked right now. Move the map to where it is flying, or pin that area, and it will be selected.`,
-      { label: 'Dismiss', onClick: () => { state.missingHash = null; updateBanner(vesselCount); } }
+      null,
+      closeable('missing-hash', () => { state.missingHash = null; })
     );
     return;
   }
 
   // Outranks every other banner: if this is old code, nothing else it says
   // about itself can be trusted.
-  if (state.staleBuild) {
+  if (showing('stale-build')) {
     ui.showBanner(
       `This page is running an older build (${BUILD_STAMP}) than the one deployed (${state.staleBuild}), because the browser cached it. Reload with Ctrl+Shift+R, or Cmd+Shift+R on a Mac.`,
-      null
+      null,
+      closeable('stale-build')
     );
     return;
   }
 
-  if (state.filters.aircraft && air.state === 'down') {
+  if (showing('feed-down')) {
     ui.showBanner(
       'ADS-B feed unavailable right now. The community aggregators rate-limit shared cloud addresses, so the edge proxy is being refused. Vessel data is unaffected.',
-      null
+      null,
+      closeable('feed-down')
     );
     return;
   }
 
-  if (state.filters.aircraft && air.stale) {
+  if (showing('feed-stale')) {
     const seconds = Math.round(air.ageMs / 1000);
     ui.showBanner(
       air.via === 'relay'
         ? `Aircraft positions are ${seconds} s old: the relay has not pushed a fresh snapshot. Check that it is still running.`
         : `Aircraft positions are ${seconds} s old: the aggregators are rate-limiting the edge, so this is the last good picture.`,
-      null
+      null,
+      closeable('feed-stale')
     );
     return;
   }
 
-  if (state.tracking.length && !state.tracking.some((area) => mapView.map.getBounds().contains([area.center.lon, area.center.lat]))) {
+  if (showing('tracking-offscreen')) {
     ui.showBanner(
       `Tracking ${state.tracking.length} pinned area${state.tracking.length === 1 ? '' : 's'}, none of which is on screen. Data keeps loading for them.`,
-      { label: 'Go to area', onClick: () => mapView.flyTo([state.tracking[0].center.lon, state.tracking[0].center.lat], 8) }
+      { label: 'Go to area', onClick: () => mapView.flyTo([state.tracking[0].center.lon, state.tracking[0].center.lat], 8) },
+      closeable('tracking-offscreen')
     );
     return;
   }
 
-  if (state.filters.vessels && vesselCount === 0 && !inAisCoverage(center.lat, center.lng)) {
-    ui.showBanner('No AIS coverage in this view. The keyless AIS feed covers the Baltic and Gulf of Finland.', {
-      label: 'Jump to coverage',
-      onClick: () => {
-        $('region-select').value = 'gof';
-        mapView.flyTo(REGIONS.gof.center, REGIONS.gof.zoom);
+  if (showing('ais')) {
+    ui.showBanner(
+      'No AIS coverage in this view. The keyless AIS feed covers the Baltic and Gulf of Finland.',
+      {
+        label: 'Jump to coverage',
+        onClick: () => {
+          $('region-select').value = 'gof';
+          mapView.flyTo(REGIONS.gof.center, REGIONS.gof.zoom);
+        },
       },
-    });
+      closeable('ais', () => {
+        try { sessionStorage.setItem(AIS_NOTE_KEY, '1'); } catch {}
+      })
+    );
     return;
   }
 
