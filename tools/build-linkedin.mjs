@@ -13,7 +13,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const shots = process.argv[2] || '/home/jaron/.claude/jobs/027c943c/tmp/deck';
+const shots = process.argv[2] || 'tmp/deck';
 const output = process.argv[3] || 'docs/flysdown-linkedin.pdf';
 
 /** Inline as data URIs: setContent has no base URL for file paths to resolve against. */

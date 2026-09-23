@@ -13,13 +13,15 @@ Version 1.4, 22 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
 
 ## Abstract
 
-Project Flys Down plots live aircraft and live ships on one map and runs a detection
-engine over them that answers one question: if this target holds its current
-track and speed, does it end up somewhere it should not be, and how long have
-we got. Aircraft positions come from community ADS-B aggregators, ship positions
-from a national AIS service, and restricted airspace from the FAA's own
-published dataset. It runs as static files plus two edge functions on
-Cloudflare's free tier, plus one background poller on an ordinary connection.
+Project Flys Down is a no-fly-zone detector for live air traffic. It reads
+ADS-B, the position reports aircraft broadcast about themselves, and runs a
+detection engine over them that answers one question: if this aircraft holds
+its current track and speed, does it end up somewhere it should not be, and how
+long have we got. Aircraft positions come from community ADS-B aggregators and
+restricted airspace from the FAA's own published dataset; ship positions from a
+national AIS service share the same engine as a secondary domain. It runs as
+static files plus four edge functions on Cloudflare's free tier, plus one
+background poller on an ordinary connection.
 
 This paper documents the data sources and their quirks, the architecture, the
 detection mathematics, the airspace pipeline, the visual encoding and the
@@ -31,7 +33,7 @@ does not work. Section 4 measures that and describes the fix.
 A second finding is about trusting data rather than fetching it. The origin and
 destination shown for a flight come from a volunteer database keyed on the
 callsign, and among aircraft arriving at one busy airport seven routes in ten
-described a different leg entirely. Section 2.4 measures that and derives four
+described a different leg entirely. Section 2.5 measures that and derives four
 checks, from the aircraft's own position, altitude, vertical rate and track,
 that reject a route the aircraft is demonstrably not flying: the system reports
 what it can defend and labels the rest as reported rather than known.
@@ -71,14 +73,76 @@ depend on a third-party script host at runtime.
 
 ## 2. The source data
 
-### 2.1 ADS-B
+### 2.1 ADS-B, and how it works
 
-ADS-B is cooperative surveillance: an aircraft derives its own position, usually
-from GNSS, and broadcasts it unprompted with identity, altitude, velocity and
-status. The 1090 MHz Extended Squitter link and its message formats are
-specified in RTCA DO-260B and ICAO Annex 10 Volume IV **[standard]**. Anyone
-with an antenna and a software defined radio can decode it, which is why a
-volunteer receiver network exists and aggregate live data is free.
+This project exists to detect aircraft heading into airspace they should not
+enter, and everything it knows about aircraft comes from ADS-B, so ADS-B is
+described here in some detail. AIS, the ship equivalent, shares the detection
+engine and is covered more briefly in Section 2.4.
+
+**Cooperative surveillance.** Radar finds an aircraft by bouncing energy off it.
+ADS-B (Automatic Dependent Surveillance, Broadcast) works the other way round:
+the aircraft works out its own position, almost always from GNSS, and
+broadcasts it unprompted, along with its identity, altitude, velocity and
+status. It is *automatic* because nobody has to ask, *dependent* because the
+position depends on the aircraft's own navigation equipment, and a *broadcast*
+because anyone can listen. The 1090 MHz Extended Squitter link used by airliners
+and most of the fleet, and its message formats, are specified in RTCA DO-260B
+and ICAO Annex 10 Volume IV **[standard]**.
+
+**The messages.** Each ADS-B message is a 112-bit Mode S frame, downlink format
+17 from a transponder or 18 from a non-transponder emitter, carrying the 24-bit
+ICAO address that identifies the airframe and a type code that says what the
+payload is **[standard]**. The payloads that matter here are identification
+(the callsign and an emitter category), airborne position (latitude, longitude
+and barometric altitude), airborne velocity (ground speed and track, or
+airspeed and heading, plus vertical rate), aircraft status (the squawk code and
+an emergency or priority state) and operational status (the ADS-B version and
+the integrity and accuracy figures that say how far a position can be trusted)
+**[standard]**. Position and velocity each go out about twice a second, and
+identification every few seconds **[standard]**.
+
+**Compact Position Reporting.** A latitude and longitude will not fit in the
+bits available at full precision, so position is sent with Compact Position
+Reporting, which alternates between two encodings, even and odd. A receiver
+needs one of each, or a recent known position to work from, before it can
+decode a position unambiguously **[standard]**. This is why an aircraft that has
+just come into range can be identified for a moment before it has a position,
+and why a target without `lat` and `lon` is dropped rather than drawn.
+
+**Who has to broadcast.** In the United States, 14 CFR 91.225 has required ADS-B
+Out since 1 January 2020 in Class A, B and C airspace, above 10,000 feet MSL,
+and within 30 NM of the busiest airports, and 14 CFR 91.227 sets the accuracy
+and integrity it must meet **[standard]**. Below 18,000 feet an aircraft may use
+the 978 MHz Universal Access Transceiver instead, which is a US-only link used
+mostly by general aviation **[standard]**; ground stations rebroadcast UAT
+traffic on 1090 MHz as ADS-R, which is how those aircraft still appear in 1090
+data. The practical consequence for this system is that the airspace it cares
+most about, around Washington, is airspace where every aircraft is required to
+be broadcasting.
+
+**What else arrives as ADS-B.** Not everything in the data is an aircraft
+announcing itself. An aircraft with a Mode S transponder but no ADS-B position
+can still be located by multilateration, timing the same reply at several
+receivers; air traffic services can rebroadcast radar tracks of non-ADS-B
+aircraft as TIS-B; and UAT traffic arrives as ADS-R. The decoder records which
+path each target came by in its `type` field **[documented]**, and the
+difference matters for trust: an MLAT position is computed by the network, not
+reported by the aircraft, and is typically less accurate and a little late.
+
+**How it reaches this system.** Anyone with a USB software-defined radio, an
+antenna tuned to 1090 MHz and a decoder can receive ADS-B, which is why a
+volunteer network of receivers exists and aggregate live data is free. Each
+receiver hears only what is above its radio horizon. With the usual
+four-thirds-earth approximation the range in nautical miles is about 1.23
+times the sum of the square roots of the receiver's and the aircraft's heights
+in feet, so a receiver at 1,000 feet MSL hears an airliner at 35,000 feet out
+to about 270 NM, but can only hear an aircraft 100 NM away if it is above about
+2,500 feet, and one 200 NM away above about 17,000 feet. Aggregators merge
+thousands of such receivers; where they overlap, coverage reaches the ground
+near airports, and where they thin out, low traffic disappears first. An
+aircraft vanishing from the data is therefore not evidence that it stopped
+transmitting, which is a caveat any gap detector has to carry.
 
 ![**Figure 1.** The dashboard over Washington. The left rail is tabbed (Overview, Filters, Areas), the map carries the FAA prohibited areas and the statutory DC Special Flight Rules Area, and the right rail holds alerts and the selected target. 104 aircraft were in the covered area when this was captured.](figures/fig1-dashboard.jpg)
 
@@ -105,7 +169,68 @@ FAA Aeronautical Information Manual **[standard]**. The engine treats 7500 and
 7700 as critical and 7600 as serious, and also reads the ADS-B `emergency`
 field.
 
-### 2.2 Aggregators, and their terms
+### 2.2 Every field used, and why
+
+The normalizer reads 23 fields from each aircraft record, definitions per the
+readsb JSON reference **[documented]**, and they come from two different
+places. Most are broadcast by the aircraft itself. Six are added by the
+aggregator from an aircraft database, keyed on the ICAO address, and are
+therefore claims about the airframe rather than reports from it, with the same
+caveat that Section 2.5 measures for route data: a database can be out of date,
+and an aircraft on a privacy program is deliberately unmatched.
+
+**Broadcast by the aircraft**
+
+| Field | What it is | What this system uses it for | Why this one |
+| --- | --- | --- | --- |
+| `hex` | 24-bit ICAO address, six hex digits | The key for every target, its history and its URL when there is no callsign | The only identifier that is stable for the whole flight and present on every message |
+| `flight` | Callsign, eight characters, space-padded | The label, the route lookup, the `#JZA786` address, the FlightAware link | What air traffic control and schedules use; trimmed, because the padding is significant to nothing |
+| `lat`, `lon` | Position in decimal degrees | Map position, zone containment, the start of every projection | Required: without them there is nothing to project, so the target is dropped |
+| `alt_baro` | Barometric altitude in feet, or the string `"ground"` | Zone floor and ceiling checks, projected altitude, the landing rule | Airspace limits and air traffic control work in pressure altitude, so this is the altitude that answers "inside the zone vertically?" |
+| `alt_geom` | GNSS altitude in feet above the WGS84 ellipsoid | Fallback only, when there is no barometric altitude | Measured from a different reference, so it can differ from barometric altitude by hundreds of feet; mixing the two would move zone boundaries |
+| `gs` | Ground speed in knots | Projection distance, time to boundary, arrival estimates, the taxi-speed test for landing | A zone is fixed to the ground, so speed over the ground is what brings an aircraft to it; airspeed differs by the wind |
+| `track` | Direction of travel over the ground, degrees true | Projection direction, the orbit rule's accumulated turn, the route bearing check | Where the aircraft is actually going; heading is where the nose points, which differs by the wind correction angle |
+| `true_heading`, `mag_heading` | Heading, true or magnetic | Fallback when `track` is missing, which is mostly on the ground | Better than nothing for a surface target; never used when a track exists |
+| `baro_rate` | Barometric vertical rate, ft/min | Projected altitude, the rapid-descent rule, the landing-elsewhere check | Decides whether an aircraft will be inside a zone's altitude band when it arrives; falls back to `geom_rate` |
+| `squawk` | Mode A code, four octal digits | The emergency squawk rule: 7500, 7600, 7700 | The codes with defined emergency meanings **[standard]** |
+| `emergency` | ADS-B emergency or priority state | The emergency rule, alongside the squawk | An independent channel: `general`, `lifeguard`, `minfuel`, `nordo`, `unlawful`, `downed` can be set without changing the squawk |
+| `seen_pos` | Seconds since the position last updated | Target age, fading, staleness, the "last position report" row | So nothing claims to be fresher than it is; combined with the age of the fetch itself |
+| `seen` | Seconds since any message | The "last any message" row | Separates an aircraft that has gone quiet from one still talking without a new position |
+
+**Added by the aggregator's aircraft database**
+
+| Field | What it is | What this system uses it for | Why this one |
+| --- | --- | --- | --- |
+| `r` | Registration | The detail panel; the label when there is no callsign | Recognizable to a person; not broadcast, so it can be missing or stale |
+| `t` | ICAO aircraft type designator | The detail panel | Tells a 737 from a Cessna at a glance |
+| `desc` | Long type description | The detail panel | The type designator spelled out |
+| `ownOp` | Registered owner or operator | The detail panel | Often a leasing trust rather than the airline flying it, which the panel does not pretend otherwise |
+| `dbFlags` | Bitmask: 1 military, 2 interesting, 4 privacy ICAO address, 8 limited data display | The military filter and the flags on the detail panel | Read bit by bit; a privacy address means the airframe lookup is intentionally blank |
+| `year` | Year of manufacture | Carried, not shown | |
+
+**Read but not yet used.** `category` (the emitter category, A0 to D7: light,
+large, heavy, rotorcraft, glider, balloon, unmanned and so on), `type` (the
+position source described above), `rssi` (received signal strength) and
+`messages` (the number of messages received) are normalized and carried
+through, but nothing downstream reads them yet. Each has a clear use: category
+to tell a helicopter from an airliner in a zone, type to treat an MLAT position
+as less certain than one the aircraft reported, and signal strength as one of
+the inputs to spoofing detection, where a strong signal claiming a distant
+position is a contradiction.
+
+**Deliberately not read.** `nav_heading` and `nav_altitude_mcp` are what the
+autopilot has been told to fly, not what the aircraft is doing; projecting
+along the selected heading would predict an intention, and this projection is
+honest about being "if nothing changes". The selected altitude is the more
+tempting of the two, because a descending aircraft levels off there rather than
+descending forever, and it is a candidate for a better altitude model later.
+The integrity and accuracy figures `nic`, `rc`, `nac_p`, `sil`, `gva` and `sda`
+are not read yet; they are what would make spoofing detection rigorous rather
+than kinematic, because they state how good the aircraft believes its own
+position to be. Airspeeds, Mach, wind, roll and the `alert` and `spi` status
+bits have no bearing on a ground-referenced geofence projection.
+
+### 2.3 Aggregators, and their terms
 
 Three keyless aggregators were evaluated, and their terms changed the code, so
 they are quoted rather than paraphrased.
@@ -133,7 +258,7 @@ uses v3, with the response shape re-verified before the switch **[measured]**.
 `x-rate-limit-remaining: 399` confirming the documented anonymous allowance)
 **[measured]** but is unreachable from the edge, so it is relay-only.
 
-### 2.3 AIS
+### 2.4 AIS
 
 AIS is the maritime analog: transponders broadcast position, course, speed
 and identity on VHF, with encodings specified in ITU-R Recommendation M.1371
@@ -175,7 +300,7 @@ Position and identity arrive separately (`/locations` keyed by MMSI,
 merges them by MMSI and caches metadata for 30 minutes against 12 seconds for
 positions, because a ship's name changes less often than its position.
 
-### 2.4 Flight routes
+### 2.5 Flight routes
 
 ADS-B broadcasts identity, position, altitude and velocity. It does not
 broadcast where a flight came from or where it is going, because the aircraft
@@ -788,7 +913,7 @@ from the origin airport to the aircraft's current position and on to the
 destination, with the airports marked and labeled. The panel adds the distance
 flown from the origin, the distance remaining and an arrival time at the
 current ground speed, and a button frames the whole flight. When the route
-fails the plausibility checks of Section 2.4 none of that is drawn: the legs
+fails the plausibility checks of Section 2.5 none of that is drawn: the legs
 and the framing button are withheld, and the panel relabels the distances as
 distances to the two airports rather than progress along a flight.
 
@@ -912,7 +1037,7 @@ great-circle path drawn for a route: that its summed length matches the direct
 distance and that it bows poleward of the chord, and that a path across the
 antimeridian stays continuous.
 
-Twelve more cover the route and status work of Section 2.4: the BCS30A case as
+Twelve more cover the route and status work of Section 2.5: the BCS30A case as
 a mismatch with its detour measured, an aircraft on the leg and pointed at the
 destination as consistent, a 25 NM reroute as consistent rather than wrong, a
 target on the leg but flying away from it caught by bearing, an aircraft 8 NM
@@ -965,7 +1090,7 @@ browser that already had the page kept running the previous JavaScript without
 asking. A fix can therefore be deployed, smoke-tested in production and still
 absent for the person who reported the bug, who is the one most likely to have
 the page already open. That is not a hypothetical: it happened twice here, with
-the route check of Section 2.4 reported as missing when it was live and working.
+the route check of Section 2.5 reported as missing when it was live and working.
 
 The obvious remedy does not work. A `_headers` file asking for
 `max-age=0, must-revalidate` on the application's own files was ignored, and
@@ -987,7 +1112,7 @@ against a cold cache, and give the page a way to notice.
 
 Known limits, and the first one is the largest: **the route shown for a flight
 is frequently not the leg being flown.** It comes from a volunteer database
-keyed on the callsign, and Section 2.4 measures seven of ten wrong among
+keyed on the callsign, and Section 2.5 measures seven of ten wrong among
 arrivals at a single busy airport. The checks described there catch the ones
 that contradict the aircraft's own position, altitude and track, and what
 survives them is labeled as reported rather than as known, with a link to a
@@ -1011,6 +1136,7 @@ attention on redistribution.
 | Claim | How it is known |
 | --- | --- |
 | ADS-B message formats and semantics | RTCA DO-260B, ICAO Annex 10 Vol IV **[standard]**; JSON field semantics from the readsb reference **[documented]** |
+| US ADS-B Out mandate since 1 January 2020 (Class A, B, C, above 10,000 ft MSL, near the busiest airports); UAT permitted below 18,000 ft | 14 CFR 91.225 and 91.227 **[standard]** |
 | `alt_baro` can be `"ground"`; 27 of 115 lacked `track` | Direct inspection of live responses **[measured]** |
 | AIS encodings, sentinels, ship types, packed ETA | ITU-R M.1371 **[standard]**; ETA decoder validated live **[measured]** |
 | Digitraffic needs gzip, 406 otherwise; `Digitraffic-User` raises limits; CC BY 4.0 | Digitraffic instructions **[documented]**; 406 reproduced across four `Accept` values **[measured]** |
@@ -1045,8 +1171,8 @@ attention on redistribution.
 ## 11. Development method: directing an AI implementer
 
 This system was built by one person directing an AI coding agent, Claude,
-through Anthropic's Claude Code, over four working days and 27 commits between
-16 and 22 September 2026. That arrangement is worth describing as a method in
+through Anthropic's Claude Code, over five working days and 30 commits between
+16 and 23 September 2026. That arrangement is worth describing as a method in
 its own right, because it shaped both what went right and what went wrong.
 
 The division of labor was deliberate. The first author owned the goals, the
@@ -1098,7 +1224,7 @@ guards added in earlier rounds, which is the point of adding them.
 | White frame around every page of this paper | J.M.W. | Chromium leaves page margins unpainted | CSS page margin boxes, following his `@page` suggestion; every page edge checked by pixel |
 | A blank paper committed | Guard | A header-template workaround covered each page | A dark-pixel count on every page before commit |
 | Status text leaking a proxy error page | J.M.W. | A source name parsed as everything before the first colon | Names must be one token and every summary is clamped; a unit test on the exact text |
-| Routes belonging to a different flight | J.M.W. | A callsign is a flight number, not a leg (Section 2.4) | Four plausibility checks, after measuring seven wrong in ten at DCA |
+| Routes belonging to a different flight | J.M.W. | A callsign is a flight number, not a leg (Section 2.5) | Four plausibility checks, after measuring seven wrong in ten at DCA |
 | A fixed defect still visible | J.M.W. | The platform caches scripts for four hours and ignores shorter settings | A build stamp that lets a stale page say so (Section 9) |
 | Airport codes shown as ICAO | J.M.W. | The data's identifier, not the one people read | IATA first, with the K and C conventions as fallback; unit tested |
 | A line from the origin that no flight flew | J.M.W. | A great circle to the current position claimed an unobserved path | The origin is marked, never drawn to; the smoke test asserts it |
@@ -1150,7 +1276,7 @@ and landing detection. He runs the relay on his own infrastructure.
 He also did the research and the acceptance testing, and they are the reason
 much of this system is correct rather than merely finished. He verified
 reported routes flight by flight against an independent schedule source, which
-is how the route failure of Section 2.4 was found and then measured, and he
+is how the route failure of Section 2.5 was found and then measured, and he
 investigated receiver hardware for a first-party ADS-B feed. Working from the deployed build rather than from a
 description of it, he found fourteen of the sixteen defects in Section 12,
 including the one that shaped the design most: the absence of live aircraft in
@@ -1170,8 +1296,8 @@ author.
 The system is live at `flysdown.jaronwilson.dev`, served from Cloudflare
 Pages. The source, including the tests,
 the tools that regenerate the zone file, the figures and this document, is in
-the repository `Jaron-Wilson/flysdown` (private at the time of writing;
-contact the first author). This paper and its slide version are published at
+the public repository <https://github.com/Jaron-Wilson/flysdown> under the MIT
+license. The bundled MapLibre GL JS keeps its own BSD 3-Clause license. This paper and its slide version are published at
 `flysdown.jaronwilson.dev/docs/flysdown-paper.pdf` and
 `flysdown.jaronwilson.dev/docs/flysdown-linkedin.pdf`, linked from the
 dashboard's footer. Aircraft data is used under adsb.fi's personal,
@@ -1229,8 +1355,15 @@ contributors. Nothing here is for navigation.
 21. IMO Resolution A.823(19), *Performance Standards for Automatic Radar
     Plotting Aids (ARPAs)*, adopted 23 November 1995.
     <https://wwwcdn.imo.org/localresources/en/KnowledgeCentre/IndexofIMOResolutions/AssemblyDocuments/A.823(19).pdf>
+22. 14 CFR 91.225, *Automatic Dependent Surveillance-Broadcast (ADS-B) Out
+    equipment and use*, and 14 CFR 91.227, *ADS-B Out equipment performance
+    requirements*. Text as published by the Legal Information Institute; the
+    official eCFR copy refuses automated retrieval.
+    <https://www.law.cornell.edu/cfr/text/14/91.225>
+    <https://www.law.cornell.edu/cfr/text/14/91.227>
 
-All URLs were retrieved and confirmed reachable on 17 September 2026. Two
+All URLs were retrieved and confirmed reachable between 17 and 23 September
+2026. Two
 sources are cited from their own error responses rather than rendered
 documentation: adsb.fi's home page returns 403 to automated clients, which is
 the behavior described in Section 4, and the historical OpenSky REST

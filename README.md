@@ -15,7 +15,7 @@ table separating what was measured from what is documented or standardized.
 It is authored by Jaron M. Wilson and Claude (Anthropic), with an author
 contributions section stating who did what, three figures captured from the
 live system by `npm run figures`, and a contents list.
-`docs/flysdown-paper.pdf` is the same thing paginated (16 pages with figures),
+`docs/flysdown-paper.pdf` is the same thing paginated (18 pages with figures),
 typeset in the same palette and type as jaronwilson.dev and jaronwilson.org.
 Both PDFs are published by the site itself at `/docs/flysdown-paper.pdf` and
 `/docs/flysdown-linkedin.pdf`, and linked from the footer. `public/docs` holds
@@ -268,6 +268,15 @@ serves `public/` untouched, where both stamps read `dev`.
 
 If you are looking at the live site and something you expect is missing, reload
 with Ctrl+Shift+R (Cmd+Shift+R) and check the banner.
+
+## License
+
+The code is MIT licensed; see `LICENSE`. The bundled MapLibre GL JS in
+`public/vendor/` is BSD 3-Clause, with its license text alongside it. The data
+is not the project's to license: aircraft positions are adsb.fi (personal,
+non-commercial, cited with a link) and adsb.lol (ODbL 1.0), vessel data is
+Fintraffic Digitraffic (CC BY 4.0), airspace geometry is the FAA's (public
+domain), and route data is adsbdb (MIT).
 
 ## Custom domain
 
