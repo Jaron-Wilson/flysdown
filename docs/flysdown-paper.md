@@ -3,7 +3,7 @@
 **A white paper: how the system works, why it is built this way, how it was built, and where every fact in it came from**
 
 <p class="authors"><span class="name">Jaron M. Wilson</span><sup>1</sup> and <span class="name">Claude</span><sup>2</sup></p>
-<p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude Fable 5.1, working under the direction of the first author; see Author contributions.</p>
+<p class="affil"><sup>1</sup> Jaron Dynamics LLC and Liberty University, Lynchburg, Virginia. jaron@jaronwilson.dev<br><sup>2</sup> Anthropic. Claude, through Claude Code, working under the direction of the first author; see Development method.</p>
 <p class="keywords"><strong>Keywords:</strong> ADS-B, AIS, geofencing, dead reckoning, closest point of approach, serverless edge computing, live cartography.</p>
 
 Version 1.4, 22 September 2026. Live at `flysdown.jaronwilson.dev`. Source:
@@ -1172,7 +1172,11 @@ attention on redistribution.
 
 This system was built by one person directing an AI coding agent, Claude,
 through Anthropic's Claude Code, over five working days and 30 commits between
-16 and 23 September 2026. That arrangement is worth describing as a method in
+16 and 23 September 2026. More than one Claude model did the work over that
+period: Claude Opus 5 did most of it, with Claude Opus 5.5 and Claude Fable 5.1
+for parts and Claude Haiku 4.5 for small lookups. Claude Code's own accounting
+for the project was 4 hours 18 minutes of model time across a day and a half of
+elapsed time, and $263 of usage. That arrangement is worth describing as a method in
 its own right, because it shaped both what went right and what went wrong.
 
 The division of labor was deliberate. The first author owned the goals, the
