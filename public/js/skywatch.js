@@ -201,9 +201,12 @@ export class SkyWatchFeed {
 
   start() {
     this.stopped = false;
-    this.doc?.addEventListener?.('visibilitychange', () => {
-      if (this.doc.visibilityState === 'visible') this.poll();
-    });
+    if (!this.listening) {
+      this.listening = true;
+      this.doc?.addEventListener?.('visibilitychange', () => {
+        if (!this.stopped && this.doc.visibilityState === 'visible') this.poll();
+      });
+    }
     this.poll();
   }
 
@@ -233,6 +236,8 @@ export class SkyWatchFeed {
       this.error = String(err.message || err);
       this.failures += 1;
     }
+    // Switched off while the request was in flight: draw nothing.
+    if (this.stopped) return;
     this.onUpdate?.(this.view());
     const wait = Math.min(MAX_BACKOFF_MS, POLL_MS * 2 ** Math.min(this.failures, 4));
     this.timer = setTimeout(() => this.poll(), wait);

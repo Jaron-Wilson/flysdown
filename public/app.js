@@ -428,6 +428,41 @@ const skywatch = new SkyWatchFeed({
   },
 });
 
+/**
+ * Off by default: it is a second detector with its own caveats, so a visitor
+ * opts in from Filters, Advanced. While off it does not poll /api/skywatch or
+ * draw anything.
+ */
+const SKYWATCH_KEY = 'flysdown.skywatch.enabled.v1';
+
+function skywatchPreferred() {
+  try {
+    return localStorage.getItem(SKYWATCH_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function setSkyWatchEnabled(enabled, { remember = true } = {}) {
+  state.skywatchEnabled = enabled;
+  ui.setSkyWatchVisible(enabled);
+  if (enabled) {
+    skywatch.start();
+  } else {
+    skywatch.stop();
+    state.skywatch = null;
+    mapView.setSkyWatch([], []);
+  }
+  if (!remember) return;
+  try {
+    localStorage.setItem(SKYWATCH_KEY, enabled ? '1' : '0');
+  } catch {
+    // Storage denied: the toggle still works for this visit.
+  }
+}
+
+$('f-skywatch').addEventListener('change', (event) => setSkyWatchEnabled(event.target.checked));
+
 ui.on('selectSkyWatch', (key, lon, lat) => {
   // The aircraft may have moved on or out of the loaded area since SkyWatch
   // saw it, so fall back to where it was reported.
@@ -1125,9 +1160,9 @@ function checkBuildStamp() {
   applyQueries();
   feeds.aircraft.start();
   feeds.vessels.start();
-  skywatch.start();
+  setSkyWatchEnabled(skywatchPreferred(), { remember: false });
   ui.setStatus('Waiting for the first feed update');
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, skywatch, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };
+window.flysdown = { state, store, zones, feeds, skywatch, setSkyWatchEnabled, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };

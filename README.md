@@ -256,8 +256,11 @@ snapshot. `POST /api/relay` stores a snapshot. Both require
 
 ## SkyWatch detections (experimental)
 
-The right panel has a second, separate block under Alerts: **SkyWatch
-detections**. SkyWatch is the LU AI Club's No-Fly-Zone Detector
+The right panel can show a second, separate block under Alerts: **SkyWatch
+detections**. It is off by default; a visitor turns it on under Filters,
+Advanced, which also explains how it is set up, and the choice is remembered
+in that browser. While off, the page never requests `/api/skywatch` and draws
+no SkyWatch layer, legend or region. SkyWatch is the LU AI Club's No-Fly-Zone Detector
 (`github.com/LU-AI-Club/ai-club-skywatch`, `air/detectors/no_fly_zone`). It
 answers a different question from this site's alerts, and the two are never
 merged:

@@ -169,6 +169,19 @@ test('the poller treats an HTML fallback as unavailable and backs off', async ()
   assert.equal(feed.failures, 1);
 });
 
+test('switching SkyWatch off mid-request draws nothing', async () => {
+  const views = [];
+  let release;
+  const pending = new Promise((resolve) => { release = resolve; });
+  const res = { ok: true, status: 200, headers: new Headers({ 'content-type': 'application/json' }), json: async () => ({ ok: true, receivedAt: Date.now(), report: DETECTIONS }) };
+  const feed = new SkyWatchFeed({ onUpdate: (v) => views.push(v), fetchImpl: () => pending.then(() => res), doc: null });
+  const inflight = feed.poll();
+  feed.stop();
+  release();
+  await inflight;
+  assert.deepEqual(views, []);
+});
+
 test('the poller renders a good report', async () => {
   const views = [];
   const body = { ok: true, receivedAt: Date.now(), ageMs: 0, stale: false, report: QUIET };

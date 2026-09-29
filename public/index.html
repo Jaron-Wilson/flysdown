@@ -41,7 +41,7 @@
         <option value="nyc">New York</option>
         <option value="lon">London</option>
         <option value="socal">Southern California</option>
-        <option value="klyh">Lynchburg, VA (SkyWatch area)</option>
+        <option value="klyh" id="region-klyh" hidden disabled>Lynchburg, VA (SkyWatch area)</option>
       </select>
     </label>
     <div class="feed-toggles" id="feed-toggles" role="group" aria-label="Pause feeds"></div>
@@ -121,6 +121,27 @@
       <section class="block">
         <h2 class="block-title">Data</h2>
         <button class="btn btn-sm" type="button" id="toggle-table">Open the data table</button>
+      </section>
+
+      <section class="block" id="advanced-block">
+        <h2 class="block-title">Advanced</h2>
+        <div class="controls">
+          <label class="check"><input type="checkbox" id="f-skywatch"> <span>SkyWatch detector <span class="tag-experimental">Experimental</span></span></label>
+        </div>
+        <p class="hint">Adds a second, separate detector under the Alerts: the LU AI Club's SkyWatch No-Fly-Zone Detector, checking where aircraft around Lynchburg, VA actually were against FAA prohibited areas. Off by default, and remembered in this browser.</p>
+        <details class="setup-guide">
+          <summary>How SkyWatch is set up</summary>
+          <p>Nothing to install to view it. SkyWatch runs on a server next to this site's feed relay. Every 30 seconds it reads the same aircraft feed the map uses for 150 NM around KLYH, runs its checks, and posts a report here. Turning it on only shows the latest report.</p>
+          <p>If the panel says no report has been published, or that the last one is stale, the SkyWatch runner is not running. That is reported as such, never as "nothing found".</p>
+          <p>To run it against your own copy of this site:</p>
+          <ol>
+            <li>Deploy Flys Down from <a href="https://github.com/Jaron-Wilson/flysdown" target="_blank" rel="noopener">github.com/Jaron-Wilson/flysdown</a>, then apply <code>schema.sql</code> to its D1 database and set a <code>SKYWATCH_TOKEN</code> secret.</li>
+            <li>Get SkyWatch from <a href="https://github.com/LU-AI-Club/ai-club-skywatch" target="_blank" rel="noopener">github.com/LU-AI-Club/ai-club-skywatch</a>. The live runner (<code>air/detectors/no_fly_zone/live</code>) is not in the club repository yet; until it is, ask for it at <a href="mailto:jaron@jaronwilson.dev">jaron@jaronwilson.dev</a>.</li>
+            <li>Install it: <code>pip install -e ".[dev,nfz]"</code></li>
+            <li>Run it: <code>SKYWATCH_TOKEN=&hellip; python -m air.detectors.no_fly_zone.live --publish https://your-site</code></li>
+          </ol>
+          <p>The area it watches is the <code>scope</code> section of SkyWatch's config. Full details are in the Flys Down README, under "SkyWatch detections".</p>
+        </details>
       </section>
     </div>
 
@@ -208,7 +229,7 @@
       <ul class="alert-list" id="alert-list" role="list"></ul>
     </section>
 
-    <section class="block skywatch" id="skywatch-block" aria-labelledby="skywatch-title">
+    <section class="block skywatch" id="skywatch-block" aria-labelledby="skywatch-title" hidden>
       <div class="block-head">
         <h2 class="block-title" id="skywatch-title">SkyWatch detections <span class="tag-experimental">Experimental</span></h2>
         <span class="block-note" id="skywatch-summary"></span>

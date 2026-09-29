@@ -353,6 +353,20 @@ export class UI {
 
   /* ---------- SkyWatch (a separate detector, never merged into alerts) ---------- */
 
+  /** SkyWatch is opt-in (Filters, Advanced): the panel, legend and region go together. */
+  setSkyWatchVisible(visible) {
+    $('skywatch-block').hidden = !visible;
+    const legend = $('legend-skywatch');
+    if (legend) legend.hidden = !visible;
+    const option = $('region-klyh');
+    if (option) {
+      option.hidden = !visible;
+      option.disabled = !visible;
+    }
+    const toggle = $('f-skywatch');
+    if (toggle) toggle.checked = visible;
+  }
+
   renderSkyWatch(view) {
     const { skywatchSummary, skywatchStatus, skywatchList } = this.refs;
     if (!skywatchStatus) return;
@@ -683,7 +697,7 @@ export class UI {
       <div class="legend-group"><h3>Vessels</h3>${vesselRows}</div>
       <div class="legend-group"><h3>Alert severity</h3>${severityRows}</div>
       <div class="legend-group"><h3>Zone kind (outline style also differs)</h3>${zoneRows}</div>
-      <div class="legend-group"><h3>SkyWatch detector (separate from alerts)</h3>
+      <div class="legend-group" id="legend-skywatch" hidden><h3>SkyWatch detector (separate from alerts)</h3>
         <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:3px"></span>in an active zone</div>
         <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:2px"></span>in a zone, activation unknown</div>
         <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:1px"></span>near a boundary</div>
