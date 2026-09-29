@@ -451,6 +451,26 @@ if (!hashCheck.skipped) {
   }
 }
 
+step('the SkyWatch panel says what it knows, apart from the alerts');
+const skywatchCheck = await page.evaluate(async () => {
+  const response = await fetch('/api/skywatch');
+  const type = response.headers.get('content-type') || '';
+  const view = window.flysdown.state.skywatch;
+  return {
+    endpointIsJson: type.includes('application/json'),
+    state: view?.state || null,
+    status: document.getElementById('skywatch-status')?.innerText || '',
+    experimentalTag: Boolean(document.querySelector('#skywatch-block .tag-experimental')),
+    // SkyWatch items must never land in the site's own alert list.
+    leakedIntoAlerts: document.querySelectorAll('#alert-list .skywatch-item').length,
+  };
+});
+console.log(`  ${JSON.stringify(skywatchCheck)}`);
+if (!skywatchCheck.endpointIsJson) errors.push('/api/skywatch did not answer JSON');
+if (!skywatchCheck.state || skywatchCheck.state === 'loading') errors.push(`SkyWatch panel never left loading: ${JSON.stringify(skywatchCheck)}`);
+if (!skywatchCheck.experimentalTag) errors.push('SkyWatch panel lost its Experimental label');
+if (skywatchCheck.leakedIntoAlerts) errors.push('SkyWatch detections appeared in the Alerts list');
+
 step('the papers page at /docs/');
 const docsPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });
 const docsResponse = await docsPage.goto(new URL('docs/', url).href, { waitUntil: 'load' });

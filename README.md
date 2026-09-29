@@ -254,6 +254,89 @@ poll in twenty. Raise `--interval` if that ever gets close.
 snapshot. `POST /api/relay` stores a snapshot. Both require
 `Authorization: Bearer $RELAY_TOKEN` and are for the poller only.
 
+## SkyWatch detections (experimental)
+
+The right panel has a second, separate block under Alerts: **SkyWatch
+detections**. SkyWatch is the LU AI Club's No-Fly-Zone Detector
+(`github.com/LU-AI-Club/ai-club-skywatch`, `air/detectors/no_fly_zone`). It
+answers a different question from this site's alerts, and the two are never
+merged:
+
+| | Alerts (this site) | SkyWatch |
+|---|---|---|
+| Question | Is a target inside, or projected to enter, a zone? | Was an aircraft inside a zone's volume, and was the zone active? |
+| Runs | In the browser, on whatever the map is showing | Server-side, on its own area: KLYH, 150 NM |
+| Output | Alerts with a time to boundary | Detections with a score, severity, activation basis and limitations |
+
+```
+SkyWatch runner (python, next to the relay)
+   GET /api/aircraft?lat=37.3267&lon=-79.2004&dist=150   every 30 s, read-only
+   GET /data/zones.json                                   hourly
+   run the real SkyWatch stages -> report
+   POST /api/skywatch   (Bearer $SKYWATCH_TOKEN)  ->  D1 skywatch_reports (one row)
+browser
+   GET /api/skywatch    every 30 s while visible, edge-cached 10 s
+```
+
+The browser never sees a token. The page shows one of six states, from
+`public/js/skywatch.js`: loading, unavailable (nothing published, or the
+endpoint failed), stale (the latest report is over two minutes old, so its
+detections are hidden), not evaluated (SkyWatch's feed was stale or down,
+which is not the same as finding nothing), quiet (a fresh feed was checked and
+nothing was inside a zone, with the reasons), or detections. Detections come
+in three classes, each with its own glyph, border and map ring weight:
+*inside an active zone* (strictly inside the polygon and altitude band of an
+FAA prohibited area whose published times of use are CONTINUOUS), *activation
+unknown* (inside the volume, but nothing says whether the zone was live;
+severity is capped), and *near a boundary* (within position uncertainty only).
+
+What it cannot claim: the geometry is this site's simplified copy of the FAA
+boundary, no NOTAM, TFR or waiver is checked, and the feed has no
+per-aircraft timestamp, so observation times are estimated as `fetchedAt`
+minus `seenPos`. Every detection says so. Not for navigation.
+
+### Running it locally
+
+```bash
+# 1. The site, with a local D1 and a local-only token
+printf 'SKYWATCH_TOKEN=local-dev-token\n' > .dev.vars      # gitignored
+npx wrangler d1 execute flysdown-relay --local --file=schema.sql
+npm run dev                                                # http://127.0.0.1:8795
+
+# 2. SkyWatch, in its own repo (branch jaron-wilson/flysdown-live)
+pip install -e ".[dev,nfz]"
+SKYWATCH_TOKEN=local-dev-token python -m air.detectors.no_fly_zone.live \
+    --publish http://127.0.0.1:8795            # add --once for a single cycle
+```
+
+The runner reads the public production feed (read-only) and publishes to the
+local site. `tests/skywatch.test.mjs` covers the endpoint and every panel
+state from real SkyWatch output saved in `tests/fixtures/`; SkyWatch's own
+`tests/test_live.py` covers the feed mapping and activation handling.
+
+### Deploying it
+
+Nothing here is live until these are done, in order:
+
+```bash
+npx wrangler d1 execute flysdown-relay --remote --file=schema.sql   # adds skywatch_reports
+TOKEN=$(openssl rand -hex 24)
+printf '%s' "$TOKEN" | npx wrangler pages secret put SKYWATCH_TOKEN --project-name flysdown
+npm run deploy
+# then, where the relay runs, keep the runner alive:
+cd ~/skywatch && SKYWATCH_TOKEN=$TOKEN forever start --uid skywatch -a -l skywatch.log \
+    -c python -m air.detectors.no_fly_zone.live --publish https://flysdown.jaronwilson.dev
+```
+
+Deploying the site before the runner is safe: the panel says no report has
+been published.
+
+**Write budget.** Keeping KLYH requested keeps it on the relay's list around
+the clock: one more relay region is about 10,800 snapshot writes a day, plus
+about 2,900 report writes at 30 s and 720 demand writes. With the usual
+regions that stays well under 100,000; raise `feed.poll_interval_s` in
+SkyWatch's `config/live_flysdown.yaml` if it ever gets close.
+
 ## Deploys and the asset cache
 
 Pages serves this project's own modules with `cache-control: max-age=14400,

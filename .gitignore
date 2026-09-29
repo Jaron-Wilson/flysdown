@@ -6,3 +6,4 @@ node_modules/
 .env.*
 tmp/
 .deploy/
+.dev.vars

@@ -25,3 +25,11 @@ CREATE TABLE IF NOT EXISTS snapshots (
 );
 
 CREATE INDEX IF NOT EXISTS snapshots_updated_at ON snapshots (updated_at);
+
+-- Latest report from the SkyWatch No-Fly-Zone Detector (see README, "SkyWatch").
+-- One row, overwritten each time the SkyWatch runner publishes.
+CREATE TABLE IF NOT EXISTS skywatch_reports (
+  id          TEXT PRIMARY KEY,
+  received_at INTEGER NOT NULL,
+  payload     TEXT NOT NULL
+);
