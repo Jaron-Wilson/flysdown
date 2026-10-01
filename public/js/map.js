@@ -5,7 +5,7 @@
  * highlight, so the render path stays a pure function of what it is handed.
  */
 
-import { INK, altitudeBand, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, SEVERITY, zoneStyle, SKYWATCH } from './palette.js';
+import { INK, altitudeBand, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, SEVERITY, zoneStyle } from './palette.js';
 import { airportCode } from './route.js';
 import { circleRing } from './geo.js';
 import { targetAgeSec } from './feeds.js';
@@ -97,7 +97,6 @@ export class MapView {
       this.installIcons();
       this.installLayers();
       this.ready = true;
-      if (this.skywatch) this.setSkyWatch(this.skywatch.rings, this.skywatch.scope);
       this.onViewChange?.(this.viewport());
     });
 
@@ -122,7 +121,7 @@ export class MapView {
   }
 
   installLayers() {
-    for (const id of ['zones', 'zone-labels', 'coverage', 'tracking', 'tracking-labels', 'skywatch-scope', 'approaches', 'route-legs', 'route-airports', 'selected-track', 'trails', 'projections', 'entry-points', 'alert-rings', 'skywatch', 'vessels', 'aircraft', 'selection']) {
+    for (const id of ['zones', 'zone-labels', 'coverage', 'tracking', 'tracking-labels', 'approaches', 'route-legs', 'route-airports', 'selected-track', 'trails', 'projections', 'entry-points', 'alert-rings', 'vessels', 'aircraft', 'selection']) {
       this.addSource(id);
     }
 
@@ -301,44 +300,6 @@ export class MapView {
       },
     });
 
-    // SkyWatch: its own layers and its own color, never the alert rings.
-    this.map.addLayer({
-      id: 'skywatch-scope-line',
-      type: 'line',
-      source: 'skywatch-scope',
-      paint: { 'line-color': SKYWATCH.color, 'line-width': 1, 'line-opacity': 0.55, 'line-dasharray': [4, 3] },
-    });
-
-    this.map.addLayer({
-      id: 'skywatch-rings',
-      type: 'circle',
-      source: 'skywatch',
-      paint: {
-        'circle-radius': 17,
-        'circle-color': 'rgba(0,0,0,0)',
-        'circle-stroke-color': SKYWATCH.color,
-        'circle-stroke-width': ['match', ['get', 'classification'],
-          'confirmed_active', SKYWATCH.width.confirmed_active,
-          'activation_uncertain', SKYWATCH.width.activation_uncertain,
-          SKYWATCH.width.buffered_only],
-      },
-    });
-
-    this.map.addLayer({
-      id: 'skywatch-labels',
-      type: 'symbol',
-      source: 'skywatch',
-      layout: {
-        'text-field': ['get', 'label'],
-        'text-font': ['Noto Sans Regular'],
-        'text-size': 10,
-        'text-offset': [0, -2.3],
-        'text-anchor': 'bottom',
-        'text-allow-overlap': true,
-      },
-      paint: { 'text-color': SKYWATCH.color, 'text-halo-color': INK.page, 'text-halo-width': 1.4 },
-    });
-
     this.map.addLayer({
       id: 'selection-ring',
       type: 'circle',
@@ -483,14 +444,6 @@ export class MapView {
     const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(center.lat)) * Math.cos(toRad(corner.lat)) * Math.sin(dLon / 2) ** 2;
     const radiusNm = 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
     return { center, radiusNm, zoom: this.map.getZoom() };
-  }
-
-  /** SkyWatch rings and area outline; held until the map is ready. */
-  setSkyWatch(rings, scope) {
-    this.skywatch = { rings, scope };
-    if (!this.ready) return;
-    this.setData('skywatch', rings);
-    this.setData('skywatch-scope', scope);
   }
 
   setData(id, features) {

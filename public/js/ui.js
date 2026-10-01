@@ -5,8 +5,7 @@
  * altitude ramp is repeated in the legend, so nothing depends on hue alone.
  */
 
-import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE, SKYWATCH } from './palette.js';
-import { CLASSES as SKYWATCH_CLASSES, clockText, ageText } from './skywatch.js';
+import { SEVERITY, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, zoneStyle, ZONE_KIND_STYLE } from './palette.js';
 import { routeFit, airportCode } from './route.js';
 import { targetAgeSec } from './feeds.js';
 import { distanceNm } from './geo.js';
@@ -89,9 +88,6 @@ export class UI {
       feedbar: $('feedbar'),
       feedbarToggle: $('feedbar-toggle'),
       feedbarDot: $('feedbar-dot'),
-      skywatchSummary: $('skywatch-summary'),
-      skywatchStatus: $('skywatch-status'),
-      skywatchList: $('skywatch-list'),
     };
     this.handlers = {};
     this.renderLegend();
@@ -348,81 +344,6 @@ export class UI {
 
     for (const button of this.refs.alertList.querySelectorAll('button[data-key]')) {
       button.addEventListener('click', () => this.handlers.selectTarget?.(button.dataset.key));
-    }
-  }
-
-  /* ---------- SkyWatch (a separate detector, never merged into alerts) ---------- */
-
-  /** SkyWatch is opt-in (Filters, Advanced): the panel, legend and region go together. */
-  setSkyWatchVisible(visible) {
-    $('skywatch-block').hidden = !visible;
-    const legend = $('legend-skywatch');
-    if (legend) legend.hidden = !visible;
-    const option = $('region-klyh');
-    if (option) {
-      option.hidden = !visible;
-      option.disabled = !visible;
-    }
-    const toggle = $('f-skywatch');
-    if (toggle) toggle.checked = visible;
-  }
-
-  renderSkyWatch(view) {
-    const { skywatchSummary, skywatchStatus, skywatchList } = this.refs;
-    if (!skywatchStatus) return;
-    skywatchStatus.closest('.skywatch')?.setAttribute('data-state', view.state);
-
-    const tone = { detections: 'is-attention', quiet: 'is-ok', stale: 'is-warn', not_evaluated: 'is-warn', unavailable: 'is-warn' }[view.state] || '';
-    const word = {
-      detections: 'Current',
-      quiet: 'Current',
-      stale: 'Stale',
-      not_evaluated: 'Not evaluated',
-      unavailable: 'Unavailable',
-      loading: 'Loading',
-    }[view.state];
-    skywatchSummary.textContent = view.state === 'detections' ? `${view.detections.length} reported` : word;
-    skywatchStatus.className = `skywatch-status ${tone}`;
-    skywatchStatus.innerHTML = `
-      <div class="skywatch-state"><span class="skywatch-word">${escapeHtml(word)}</span> ${escapeHtml(view.headline)}</div>
-      ${view.detail ? `<div class="skywatch-detail">${escapeHtml(view.detail)}</div>` : ''}`;
-
-    if (view.state !== 'detections') {
-      skywatchList.innerHTML = '';
-      return;
-    }
-
-    skywatchList.innerHTML = view.detections
-      .slice(0, 40)
-      .map((d) => {
-        const cls = SKYWATCH_CLASSES[d.classification];
-        const alt = typeof d.altitudeFt === 'number' ? `${int(d.altitudeFt)} ft ${d.altitudeSource === 'BAROMETRIC' ? '(barometric)' : '(geometric)'}` : 'altitude unknown';
-        const depth = typeof d.penetrationNm === 'number' ? ` \u00b7 ${d.penetrationNm.toFixed(2)} NM inside` : '';
-        return `
-        <li>
-          <div class="alert skywatch-item is-${escapeHtml(d.classification)}">
-            <span class="alert-glyph skywatch-glyph" style="border-color:${SKYWATCH.color}" aria-hidden="true">${cls.glyph}</span>
-            <span>
-              <span class="alert-sev">SkyWatch \u00b7 ${escapeHtml(cls.label)} \u00b7 ${escapeHtml(d.severity)} \u00b7 score ${Number(d.score).toFixed(2)}</span>
-              <button class="skywatch-title" type="button" data-key="aircraft:${escapeHtml(d.aircraftId)}" data-lon="${Number(d.lon)}" data-lat="${Number(d.lat)}">${escapeHtml(d.callsign || d.aircraftId)} in ${escapeHtml(d.zoneName)}</button>
-              <div class="alert-detail">${escapeHtml(alt)}${depth}. Activation: ${escapeHtml(d.activationBasis)}.</div>
-              <div class="alert-eta">Observed about ${escapeHtml(clockText(d.observedAt))} (estimated from the feed; position ${escapeHtml(ageText(d.positionAgeS * 1000))} old when checked)</div>
-              <details class="skywatch-why">
-                <summary>Why, and what it could not check</summary>
-                <p class="skywatch-blurb">${escapeHtml(cls.blurb)}</p>
-                <ul>${(d.explanation || []).map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>
-                <h4>Limitations</h4>
-                <ul>${(d.limitations || []).map((f) => `<li>${escapeHtml(f)}</li>`).join('')}</ul>
-                <p class="skywatch-prov">Source ${escapeHtml(d.sourceRowId)} \u00b7 ${escapeHtml(d.baseline)}</p>
-              </details>
-            </span>
-          </div>
-        </li>`;
-      })
-      .join('');
-
-    for (const button of skywatchList.querySelectorAll('button[data-key]')) {
-      button.addEventListener('click', () => this.handlers.selectSkyWatch?.(button.dataset.key, Number(button.dataset.lon), Number(button.dataset.lat)));
     }
   }
 
@@ -697,12 +618,6 @@ export class UI {
       <div class="legend-group"><h3>Vessels</h3>${vesselRows}</div>
       <div class="legend-group"><h3>Alert severity</h3>${severityRows}</div>
       <div class="legend-group"><h3>Zone kind (outline style also differs)</h3>${zoneRows}</div>
-      <div class="legend-group" id="legend-skywatch" hidden><h3>SkyWatch detector (separate from alerts)</h3>
-        <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:3px"></span>in an active zone</div>
-        <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:2px"></span>in a zone, activation unknown</div>
-        <div class="legend-row"><span class="legend-ring" style="border-color:${SKYWATCH.color};border-width:1px"></span>near a boundary</div>
-        <div class="legend-row"><span class="legend-dash" style="border-top-color:${SKYWATCH.color};border-top-style:dashed"></span>SkyWatch area (KLYH, 150 NM)</div>
-      </div>
       <div class="legend-group"><h3>Contact age</h3>
         <div class="legend-row"><span class="legend-swatch" style="background:${VESSEL_STATIC};opacity:1"></span>reported in the last 45 s</div>
         <div class="legend-row"><span class="legend-swatch" style="background:${VESSEL_STATIC};opacity:0.35"></span>faded: position is going stale</div>

@@ -88,16 +88,4 @@ export const ZONE_KIND_STYLE = {
   custom: { color: '#199e70', dash: [1, 2], label: 'Custom watch', width: 1.75 },
 };
 
-/**
- * SkyWatch detection rings. Magenta sits apart from the altitude blues, the
- * vessel orange, the status palette and the SFRA violet, and it is never the
- * only encoding: every ring carries a text label naming its class, and the
- * class is also carried by stroke weight (confirmed heavy, uncertain medium,
- * boundary thin).
- */
-export const SKYWATCH = {
-  color: '#d64fd0',
-  width: { confirmed_active: 3.5, activation_uncertain: 2, buffered_only: 1.25 },
-};
-
 export const zoneStyle = (kind) => ZONE_KIND_STYLE[kind] || ZONE_KIND_STYLE.custom;

@@ -28,7 +28,6 @@ import { routeFit } from './js/route.js';
 import { MapView } from './js/map.js';
 import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
-import { SkyWatchFeed, toFeatures as skywatchFeatures, scopeFeature as skywatchScope } from './js/skywatch.js';
 
 const REGIONS = {
   dc: { center: [-77.0369, 38.9072], zoom: 8.2, label: 'Washington DC' },
@@ -36,7 +35,6 @@ const REGIONS = {
   nyc: { center: [-73.94, 40.72], zoom: 8.2, label: 'New York' },
   lon: { center: [-0.12, 51.5], zoom: 8.0, label: 'London' },
   socal: { center: [-117.92, 33.81], zoom: 8.6, label: 'Southern California' },
-  klyh: { center: [-79.2004, 37.3267], zoom: 6.4, label: 'Lynchburg, VA (SkyWatch area)' },
 };
 
 /** Where the keyless AIS provider actually has coverage. */
@@ -415,66 +413,6 @@ ui.on('selectTarget', (key) => {
 });
 
 ui.on('clearSelection', () => selectTarget(null));
-
-/**
- * SkyWatch: a separate detector's report, shown in its own panel and layer.
- * It never feeds state.evaluation or the Alerts list.
- */
-const skywatch = new SkyWatchFeed({
-  onUpdate: (view) => {
-    state.skywatch = view;
-    ui.renderSkyWatch(view);
-    mapView.setSkyWatch(skywatchFeatures(view), skywatchScope(view));
-  },
-});
-
-/**
- * Off by default: it is a second detector with its own caveats, so a visitor
- * opts in from Filters, Advanced. While off it does not poll /api/skywatch or
- * draw anything.
- */
-const SKYWATCH_KEY = 'flysdown.skywatch.enabled.v1';
-
-function skywatchPreferred() {
-  try {
-    return localStorage.getItem(SKYWATCH_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function setSkyWatchEnabled(enabled, { remember = true } = {}) {
-  state.skywatchEnabled = enabled;
-  ui.setSkyWatchVisible(enabled);
-  if (enabled) {
-    skywatch.start();
-  } else {
-    skywatch.stop();
-    state.skywatch = null;
-    mapView.setSkyWatch([], []);
-  }
-  if (!remember) return;
-  try {
-    localStorage.setItem(SKYWATCH_KEY, enabled ? '1' : '0');
-  } catch {
-    // Storage denied: the toggle still works for this visit.
-  }
-}
-
-$('f-skywatch').addEventListener('change', (event) => setSkyWatchEnabled(event.target.checked));
-
-ui.on('selectSkyWatch', (key, lon, lat) => {
-  // The aircraft may have moved on or out of the loaded area since SkyWatch
-  // saw it, so fall back to where it was reported.
-  if (store.get(key)) {
-    ui.setSheetExpanded(false);
-    selectTarget(key);
-    revealSelection();
-  } else if (Number.isFinite(lon) && Number.isFinite(lat)) {
-    mapView.flyTo([lon, lat], 10);
-    ui.setStatus('That aircraft is not in the current feed; showing where SkyWatch reported it.');
-  }
-});
 
 ui.on('centerTarget', (key) => {
   const target = store.get(key);
@@ -1160,9 +1098,8 @@ function checkBuildStamp() {
   applyQueries();
   feeds.aircraft.start();
   feeds.vessels.start();
-  setSkyWatchEnabled(skywatchPreferred(), { remember: false });
   ui.setStatus('Waiting for the first feed update');
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, skywatch, setSkyWatchEnabled, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };
+window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };

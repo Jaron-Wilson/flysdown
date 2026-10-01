@@ -451,51 +451,24 @@ if (!hashCheck.skipped) {
   }
 }
 
-step('SkyWatch is off until chosen under Advanced, then says what it knows');
-const skywatchDefault = await page.evaluate(() => ({
-  panelHidden: document.getElementById('skywatch-block').hidden,
-  legendHidden: document.getElementById('legend-skywatch')?.hidden ?? null,
-  regionHidden: document.getElementById('region-klyh').hidden,
-  toggleOff: !document.getElementById('f-skywatch').checked,
-  polled: performance.getEntriesByType('resource').some((e) => e.name.includes('/api/skywatch')),
-  hasSetupGuide: Boolean(document.querySelector('#advanced-block .setup-guide')),
-}));
-console.log(`  default ${JSON.stringify(skywatchDefault)}`);
-if (!skywatchDefault.panelHidden || !skywatchDefault.legendHidden || !skywatchDefault.regionHidden || !skywatchDefault.toggleOff) {
-  errors.push(`SkyWatch shows before anyone turned it on: ${JSON.stringify(skywatchDefault)}`);
-}
-if (skywatchDefault.polled) errors.push('SkyWatch polled /api/skywatch while turned off');
-if (!skywatchDefault.hasSetupGuide) errors.push('the Advanced section lost its SkyWatch setup guide');
-await page.evaluate(() => {
-  document.querySelector('.tabs .tab[data-tab="filters"]').click();
-  document.getElementById('f-skywatch').click();
-});
-await page.waitForFunction(() => window.flysdown.state.skywatch && window.flysdown.state.skywatch.state !== 'loading', null, { timeout: 20000 }).catch(() => {});
+step('SkyWatch is run-it-yourself: a guide under Advanced, and the API says so');
 const skywatchCheck = await page.evaluate(async () => {
   const response = await fetch('/api/skywatch');
   const type = response.headers.get('content-type') || '';
-  const view = window.flysdown.state.skywatch;
+  const body = type.includes('application/json') ? await response.json() : null;
+  const guide = document.querySelector('#advanced-block #skywatch-guide');
   return {
-    endpointIsJson: type.includes('application/json'),
-    state: view?.state || null,
-    status: document.getElementById('skywatch-status')?.innerText || '',
-    experimentalTag: Boolean(document.querySelector('#skywatch-block .tag-experimental')),
-    panelShown: !document.getElementById('skywatch-block').hidden,
-    // SkyWatch items must never land in the site's own alert list.
-    leakedIntoAlerts: document.querySelectorAll('#alert-list .skywatch-item').length,
+    apiIsJson: Boolean(body),
+    apiStatus: body?.status || null,
+    guide: Boolean(guide),
+    guideHasClone: /git clone -b jaron-wilson\/flysdown-live/.test(guide?.textContent || ''),
+    noHostedPanel: !document.getElementById('skywatch-block'),
   };
 });
 console.log(`  ${JSON.stringify(skywatchCheck)}`);
-if (!skywatchCheck.endpointIsJson) errors.push('/api/skywatch did not answer JSON');
-if (!skywatchCheck.state || skywatchCheck.state === 'loading') errors.push(`SkyWatch panel never left loading: ${JSON.stringify(skywatchCheck)}`);
-if (!skywatchCheck.experimentalTag) errors.push('SkyWatch panel lost its Experimental label');
-if (skywatchCheck.leakedIntoAlerts) errors.push('SkyWatch detections appeared in the Alerts list');
-if (!skywatchCheck.panelShown) errors.push('turning SkyWatch on did not show its panel');
-// Leave the page as a first-time visitor would find it for the steps after this.
-await page.evaluate(() => {
-  document.getElementById('f-skywatch').click();
-  document.querySelector('.tabs .tab[data-tab="overview"]').click();
-});
+if (!skywatchCheck.apiIsJson || skywatchCheck.apiStatus !== 'self_run') errors.push(`/api/skywatch should explain self-run: ${JSON.stringify(skywatchCheck)}`);
+if (!skywatchCheck.guide || !skywatchCheck.guideHasClone) errors.push('the Advanced section lost the SkyWatch run-it-yourself guide');
+if (!skywatchCheck.noHostedPanel) errors.push('a hosted SkyWatch panel is still on the page');
 
 step('the papers page at /docs/');
 const docsPage = await browser.newPage({ viewport: { width: 1280, height: 900 } });

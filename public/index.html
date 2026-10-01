@@ -41,7 +41,6 @@
         <option value="nyc">New York</option>
         <option value="lon">London</option>
         <option value="socal">Southern California</option>
-        <option value="klyh" id="region-klyh" hidden disabled>Lynchburg, VA (SkyWatch area)</option>
       </select>
     </label>
     <div class="feed-toggles" id="feed-toggles" role="group" aria-label="Pause feeds"></div>
@@ -125,28 +124,19 @@
 
       <section class="block" id="advanced-block">
         <h2 class="block-title">Advanced</h2>
-        <div class="controls">
-          <label class="check"><input type="checkbox" id="f-skywatch"> <span>SkyWatch detector <span class="tag-experimental">Experimental</span></span></label>
-        </div>
-        <p class="hint">Adds a second, separate detector under the Alerts: the LU AI Club's SkyWatch No-Fly-Zone Detector, checking where aircraft around Lynchburg, VA actually were against FAA prohibited areas. Off by default, and remembered in this browser.</p>
-        <details class="setup-guide">
-          <summary>How SkyWatch is set up</summary>
-          <p>Nothing to install to view it. SkyWatch runs on a server next to this site's feed relay. Every 30 seconds it reads the same aircraft feed the map uses for 150 NM around KLYH, runs its checks, and posts a report here. Turning it on only shows the latest report.</p>
-          <p>If the panel says no report has been published, or that the last one is stale, the SkyWatch runner is not running. That is reported as such, never as "nothing found".</p>
-          <p>Anyone can read the raw results, scoring included, from a terminal:</p>
+        <details class="setup-guide" id="skywatch-guide">
+          <summary>Run the SkyWatch detector yourself <span class="tag-experimental">Experimental</span></summary>
+          <p>SkyWatch is the LU AI Club's No-Fly-Zone Detector, a separate detector from this site's alerts. It checks where aircraft within 150 NM of Lynchburg, VA (KLYH) actually were against FAA prohibited areas, and prints a scored report with the arithmetic behind every score.</p>
+          <p>It runs on your own computer: it fetches aircraft straight from adsb.lol over your connection and uses this site's zone file. Nothing is hosted for it here. You need Python 3.11 or newer and git.</p>
           <ol>
-            <li>Readable: <code>curl "https://flysdown.jaronwilson.dev/api/skywatch?format=text"</code></li>
-            <li>Keep watching: <code>watch -n 30 curl -s "https://flysdown.jaronwilson.dev/api/skywatch?format=text"</code></li>
-            <li>Raw JSON: <code>curl https://flysdown.jaronwilson.dev/api/skywatch</code></li>
+            <li><code>git clone -b jaron-wilson/flysdown-live https://github.com/LU-AI-Club/ai-club-skywatch.git</code></li>
+            <li><code>cd ai-club-skywatch &amp;&amp; python3 -m venv .venv &amp;&amp; . .venv/bin/activate</code></li>
+            <li><code>pip install -e ".[nfz]"</code></li>
+            <li>One report: <code>python -m air.detectors.no_fly_zone.live --once</code></li>
+            <li>Keep watching: <code>python -m air.detectors.no_fly_zone.live</code></li>
+            <li>Everything as JSON: <code>python -m air.detectors.no_fly_zone.live --once --print json</code></li>
           </ol>
-          <p>To run it against your own copy of this site:</p>
-          <ol>
-            <li>Deploy Flys Down from <a href="https://github.com/Jaron-Wilson/flysdown" target="_blank" rel="noopener">github.com/Jaron-Wilson/flysdown</a>, then apply <code>schema.sql</code> to its D1 database and set a <code>SKYWATCH_TOKEN</code> secret.</li>
-            <li>Get SkyWatch from <a href="https://github.com/LU-AI-Club/ai-club-skywatch" target="_blank" rel="noopener">github.com/LU-AI-Club/ai-club-skywatch</a>. The live runner (<code>air/detectors/no_fly_zone/live</code>) is not in the club repository yet; until it is, ask for it at <a href="mailto:jaron@jaronwilson.dev">jaron@jaronwilson.dev</a>.</li>
-            <li>Install it: <code>pip install -e ".[dev,nfz]"</code></li>
-            <li>Run it: <code>SKYWATCH_TOKEN=&hellip; python -m air.detectors.no_fly_zone.live --publish https://your-site</code></li>
-          </ol>
-          <p>The area it watches is the <code>scope</code> section of SkyWatch's config. Full details are in the Flys Down README, under "SkyWatch detections".</p>
+          <p>Most of the time the answer is "No aircraft inside a zone volume", with the reason each aircraft was cleared. That is a real result. If the aircraft data is too old or unavailable, it says NOT EVALUATED instead. Experimental, and not for navigation.</p>
         </details>
       </section>
     </div>
@@ -233,16 +223,6 @@
         <span class="block-note" id="alert-summary"></span>
       </div>
       <ul class="alert-list" id="alert-list" role="list"></ul>
-    </section>
-
-    <section class="block skywatch" id="skywatch-block" aria-labelledby="skywatch-title" hidden>
-      <div class="block-head">
-        <h2 class="block-title" id="skywatch-title">SkyWatch detections <span class="tag-experimental">Experimental</span></h2>
-        <span class="block-note" id="skywatch-summary"></span>
-      </div>
-      <p class="skywatch-about">A separate detector, the LU AI Club's SkyWatch No-Fly-Zone Detector, run on this site's feed around Lynchburg (KLYH, 150 NM). It reports where aircraft were, not where they are heading, so it is kept apart from the Alerts above. Not for navigation.</p>
-      <div class="skywatch-status" id="skywatch-status" role="status"></div>
-      <ul class="alert-list skywatch-list" id="skywatch-list" role="list"></ul>
     </section>
 
     <section class="block" id="detail-block">
