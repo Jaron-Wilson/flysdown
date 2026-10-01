@@ -10,7 +10,7 @@
  * answers with that explanation, as JSON or (?format=text) for a terminal.
  */
 
-export const REPO = 'https://github.com/LU-AI-Club/ai-club-skywatch.git';
+export const REPO = 'https://github.com/Jaron-Wilson/ai-club-skywatch.git';
 export const BRANCH = 'jaron-wilson/flysdown-live';
 
 export const STEPS = [

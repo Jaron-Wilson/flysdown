@@ -257,7 +257,7 @@ snapshot. `POST /api/relay` stores a snapshot. Both require
 ## SkyWatch detector (run it yourself)
 
 SkyWatch is the LU AI Club's No-Fly-Zone Detector
-(`github.com/LU-AI-Club/ai-club-skywatch`, `air/detectors/no_fly_zone`), a
+(`github.com/LU-AI-Club/ai-club-skywatch`, `air/detectors/no_fly_zone`; the run-it-yourself runner is on the `jaron-wilson/flysdown-live` branch of the fork `github.com/Jaron-Wilson/ai-club-skywatch`, with a pull request open to the club repo), a
 separate detector from this site's alerts: it checks where aircraft within
 150 NM of KLYH actually were against FAA prohibited areas and prints a scored
 report. Nothing hosts it for this site. It runs on the user's own computer,
@@ -265,7 +265,7 @@ fetching aircraft straight from adsb.lol and the zones from this site's static
 `/data/zones.json`. The site only explains how, under Filters, Advanced:
 
 ```bash
-git clone -b jaron-wilson/flysdown-live https://github.com/LU-AI-Club/ai-club-skywatch.git
+git clone -b jaron-wilson/flysdown-live https://github.com/Jaron-Wilson/ai-club-skywatch.git
 cd ai-club-skywatch && python3 -m venv .venv && . .venv/bin/activate
 pip install -e ".[nfz]"
 python -m air.detectors.no_fly_zone.live --once                 # one scored report

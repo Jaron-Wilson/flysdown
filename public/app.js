@@ -28,6 +28,7 @@ import { routeFit } from './js/route.js';
 import { MapView } from './js/map.js';
 import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
+import { initPanelResize } from './js/resize.js';
 
 const REGIONS = {
   dc: { center: [-77.0369, 38.9072], zoom: 8.2, label: 'Washington DC' },
@@ -163,6 +164,15 @@ const mapView = new MapView('map', {
   onZoneClick: (id) => {
     const zone = zones.get(id);
     if (zone) ui.setStatus(`${zone.name}: ${zone.note || 'no note'}`);
+  },
+});
+
+// Side panels are drag-resizable; the map has to be told its box changed.
+let resizeFrame = 0;
+initPanelResize({
+  onResize: () => {
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => mapView.map?.resize());
   },
 });
 

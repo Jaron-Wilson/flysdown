@@ -129,7 +129,7 @@
           <p>SkyWatch is the LU AI Club's No-Fly-Zone Detector, a separate detector from this site's alerts. It checks where aircraft within 150 NM of Lynchburg, VA (KLYH) actually were against FAA prohibited areas, and prints a scored report with the arithmetic behind every score.</p>
           <p>It runs on your own computer: it fetches aircraft straight from adsb.lol over your connection and uses this site's zone file. Nothing is hosted for it here. You need Python 3.11 or newer and git.</p>
           <ol>
-            <li><code>git clone -b jaron-wilson/flysdown-live https://github.com/LU-AI-Club/ai-club-skywatch.git</code></li>
+            <li><code>git clone -b jaron-wilson/flysdown-live https://github.com/Jaron-Wilson/ai-club-skywatch.git</code></li>
             <li><code>cd ai-club-skywatch &amp;&amp; python3 -m venv .venv &amp;&amp; . .venv/bin/activate</code></li>
             <li><code>pip install -e ".[nfz]"</code></li>
             <li>One report: <code>python -m air.detectors.no_fly_zone.live --once</code></li>

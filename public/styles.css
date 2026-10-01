@@ -254,7 +254,41 @@ input[type="range"] { accent-color: var(--accent); width: 100%; }
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  position: relative;
 }
+
+/* Drag handles on each panel's inner edge (js/resize.js). */
+.panel-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  z-index: 6;
+  cursor: col-resize;
+  touch-action: none;
+}
+.panel-resizer-left { left: calc(var(--panel-w-left) - 5px); }
+.panel-resizer-right { right: calc(var(--panel-w-right) - 5px); }
+.panel-resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 1px;
+  background: transparent;
+  transition: background 120ms;
+}
+.panel-resizer:hover::after,
+.panel-resizer:focus-visible::after,
+body.is-resizing .panel-resizer::after { background: var(--ink-muted); width: 2px; left: 3.5px; }
+.panel-resizer:focus-visible { outline: none; }
+body.is-resizing { cursor: col-resize; user-select: none; }
+body.is-resizing #map { pointer-events: none; }
+
+/* Long words and commands wrap inside the panels instead of running off. */
+.panel { overflow-wrap: break-word; }
+.panel code { overflow-wrap: anywhere; }
 
 .panel {
   background: var(--surface);
@@ -832,6 +866,7 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .map-banner .banner-close { margin-left: auto; }
 
   .layout { grid-template-columns: 1fr; position: relative; }
+  .panel-resizer { display: none; }
 
   /* Everything stacks in the same cell; data-view on body decides which one
      is on top. The map stays mounted and sized the whole time so MapLibre
