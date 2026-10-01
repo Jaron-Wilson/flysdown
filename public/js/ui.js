@@ -65,6 +65,9 @@ const escapeHtml = (value) =>
 /** Remembers whether the feed health line is folded away. */
 const FEEDBAR_KEY = 'flysdown.feedbar.folded.v1';
 
+/** How many zones the Areas list shows, nearest first. */
+const ZONE_LIST_LIMIT = 40;
+
 export class UI {
   constructor() {
     this.refs = {
@@ -558,7 +561,11 @@ export class UI {
     const userCount = zones.filter((z) => z.userDrawn).length;
     this.refs.zoneCount.textContent = `${zones.length} loaded${userCount ? `, ${userCount} drawn` : ''}`;
 
-    this.refs.zoneList.innerHTML = zones
+    // Nearest first, so the list is capped: with live TFRs there are over a
+    // hundred zones, and this list is rebuilt on every update.
+    const shown = zones.slice(0, ZONE_LIST_LIMIT);
+    const more = zones.length - shown.length;
+    this.refs.zoneList.innerHTML = shown
       .map((zone) => {
         const style = zoneStyle(zone.kind);
         const hit = zoneAlertCounts.get(zone.id);
@@ -572,7 +579,7 @@ export class UI {
           <input type="checkbox" class="zone-toggle" data-id="${escapeHtml(zone.id)}" ${zone.enabled ? 'checked' : ''} aria-label="Enable ${escapeHtml(zone.name)}">
           <span class="zone-name">
             <button type="button" data-zoom="${escapeHtml(zone.id)}">${escapeHtml(zone.name)}</button>
-            <div class="zone-meta">${escapeHtml(style.label)} · ${escapeHtml(size)} · to ${escapeHtml(ceiling)}${zone.approx ? ' · approximate' : ''}</div>
+            <div class="zone-meta">${escapeHtml(style.label)} · ${escapeHtml(size)} · to ${escapeHtml(ceiling)}${zone.approx ? ' · approximate' : ''}${zone.advisoryReason ? ` · ${escapeHtml(zone.advisoryReason)}` : ''}</div>
           </span>
           <span class="zone-actions">
             ${hit ? `<span class="alert-glyph" style="background:${SEVERITY[hit.worst].color}" title="${hit.count} alerting">${hit.count}</span>` : ''}
@@ -580,7 +587,7 @@ export class UI {
           </span>
         </li>`;
       })
-      .join('');
+      .join('') + (more > 0 ? `<li class="zone-item zone-more">${int(more)} more, further from this view</li>` : '');
 
     for (const input of this.refs.zoneList.querySelectorAll('.zone-toggle')) {
       input.addEventListener('change', () => this.handlers.toggleZone?.(input.dataset.id, input.checked));

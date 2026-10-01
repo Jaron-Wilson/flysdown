@@ -59,6 +59,10 @@ export function prepareZone(feature) {
     approx: Boolean(p.approx),
     note: p.note || '',
     source: p.source || '',
+    // Why a zone that would normally alert is advisory right now, e.g. a TFR
+    // that is not in effect yet. Shown in the zone list.
+    advisoryReason: p.advisoryReason || '',
+    live: Boolean(p.live),
     userDrawn: Boolean(p.userDrawn),
     enabled: p.enabled !== false,
     ring,
@@ -103,6 +107,8 @@ export function zoneToFeature(zone) {
 export class ZoneStore {
   constructor() {
     this.seeded = [];
+    // Zones from a live feed (FAA TFRs), replaced wholesale on each update.
+    this.live = [];
     this.user = [];
     this.meta = {};
     this.listeners = new Set();
@@ -118,7 +124,28 @@ export class ZoneStore {
   }
 
   all() {
-    return [...this.seeded, ...this.user];
+    // The FAA's live list includes the standing TFRs (Disney) that zones.json
+    // seeds for when no live list is available, so one gives way to the other.
+    const seeded = this.liveReplacesSeededTfrs ? this.seeded.filter((z) => z.kind !== 'tfr') : this.seeded;
+    return [...seeded, ...this.live, ...this.user];
+  }
+
+  /**
+   * Replace the live zones. A zone the operator switched off stays off when
+   * the feed refreshes, as long as it keeps its id. `authoritative` says the
+   * list is the FAA's own, with limits, so the seeded TFRs step aside; a
+   * mirror without limits does not displace them.
+   */
+  setLive(features, { authoritative = false } = {}) {
+    this.liveReplacesSeededTfrs = authoritative && features.length > 0;
+    const disabled = new Set(this.live.filter((z) => !z.enabled).map((z) => z.id));
+    this.live = features.map((f) => {
+      const zone = prepareZone(f);
+      if (disabled.has(zone.id)) zone.enabled = false;
+      return zone;
+    });
+    this.emit();
+    return this.live;
   }
 
   active(kindFilter) {
@@ -173,7 +200,7 @@ export class ZoneStore {
   }
 
   updateZone(id, patch) {
-    const list = this.user.some((z) => z.id === id) ? this.user : this.seeded;
+    const list = [this.user, this.live, this.seeded].find((l) => l.some((z) => z.id === id)) || this.seeded;
     const index = list.findIndex((z) => z.id === id);
     if (index === -1) return null;
     list[index] = { ...list[index], ...patch };

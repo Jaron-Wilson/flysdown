@@ -1,0 +1,653 @@
+﻿<XNOTAM-Update xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="0.1" origin="" created="2026-09-29T08:56:28">
+  <Group>
+    <Add>
+      <Not>
+        <NotUid>
+          <txtNameAcctFac>FDC</txtNameAcctFac>
+          <dateIndexYear>2026</dateIndexYear>
+          <noSeqNo>6074</noSeqNo>
+          <dateIssued>2026-09-29T13:46:31</dateIssued>
+          <txtLocalName>26-44812-CSA-0126 REV1</txtLocalName>
+          <codeGUID>08d0ee6d-bc5c-47fa-a45d-657dec79c484</codeGUID>
+          <noUSNSWorkNo>TFR24b0694abaa6</noUSNSWorkNo>
+        </NotUid>
+        <codeDailyOper>false</codeDailyOper>
+        <dateEffective>2026-10-02T23:00:00</dateEffective>
+        <dateExpire>2026-10-03T04:00:00</dateExpire>
+        <codeTimeZone>UTC</codeTimeZone>
+        <codeExpirationTimeZone>UTC</codeExpirationTimeZone>
+        <txtDescrPurpose>the NU v Penn State football game Ryan Field under Sec 44812 c(1)</txtDescrPurpose>
+        <AffLocGroup>
+          <txtNameCity>Evanston</txtNameCity>
+          <txtNameUSState>ILLINOIS</txtNameUSState>
+        </AffLocGroup>
+        <codeFacility>ZAU</codeFacility>
+        <TfrNot>
+          <codeType>44812</codeType>
+          <TFRAreaGroup>
+            <aseTFRArea>
+              <AseUid>
+                <codeType>RAS</codeType>
+                <codeId>25284</codeId>
+              </AseUid>
+              <txtName>Area A</txtName>
+              <codeDistVerUpper>HEI</codeDistVerUpper>
+              <valDistVerUpper>400</valDistVerUpper>
+              <uomDistVerUpper>FT</uomDistVerUpper>
+              <codeDistVerLower>HEI</codeDistVerLower>
+              <valDistVerLower>0</valDistVerLower>
+              <uomDistVerLower>FT</uomDistVerLower>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <codeExclVerUpper>INCLUDE</codeExclVerUpper>
+              <codeExclVerLower>INCLUDE</codeExclVerLower>
+              <isScheduledTfrArea>FALSE</isScheduledTfrArea>
+              <ScheduleGroup>
+                <isTimeSeparate>FALSE</isTimeSeparate>
+                <dateEffective>2026-10-02T23:00:00</dateEffective>
+                <dateExpire>2026-10-03T04:00:00</dateExpire>
+              </ScheduleGroup>
+            </aseTFRArea>
+            <Aac>
+              <AacUid>
+                <AseUidChi>
+                  <codeType>RAS</codeType>
+                  <codeId>25284</codeId>
+                </AseUidChi>
+                <AseUidPar>
+                  <codeType>PART</codeType>
+                  <codeId>25285</codeId>
+                </AseUidPar>
+              </AacUid>
+              <codeType>BOM</codeType>
+              <codeOpr>BASE</codeOpr>
+            </Aac>
+            <abdMergedArea>
+              <AbdUid>
+                <AseUid>
+                  <codeType>RAS</codeType>
+                  <codeId>25284</codeId>
+                </AseUid>
+              </AbdUid>
+              <txtRmk>25284</txtRmk>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11446469N</geoLat>
+                <geoLong>087.6925W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11370418N</geoLat>
+                <geoLong>087.68083431W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11144581N</geoLat>
+                <geoLong>087.66952388W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.10775836N</geoLat>
+                <geoLong>087.65891311W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.10275409N</geoLat>
+                <geoLong>087.64932492W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.09658536N</geoLat>
+                <geoLong>087.64105093W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.08943989N</geoLat>
+                <geoLong>087.63434253W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.08153508N</geoLat>
+                <geoLong>087.62940328W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.07311135N</geoLat>
+                <geoLong>087.62638272W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.06442481N</geoLat>
+                <geoLong>087.6253719W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.05573943N</geoLat>
+                <geoLong>087.62640074W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.04731908N</geoLat>
+                <geoLong>087.62943715W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.03941944N</geoLat>
+                <geoLong>087.63438816W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.0322803N</geoLat>
+                <geoLong>087.64110282W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.02611831N</geoLat>
+                <geoLong>087.64937681W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.02112038N</geoLat>
+                <geoLong>087.65895874W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.01743809N</geoLat>
+                <geoLong>087.66955775W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.01518309N</geoLat>
+                <geoLong>087.68085233W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.01442376N</geoLat>
+                <geoLong>087.6925W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.01518309N</geoLat>
+                <geoLong>087.70414767W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.01743809N</geoLat>
+                <geoLong>087.71544225W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.02112038N</geoLat>
+                <geoLong>087.72604126W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.02611831N</geoLat>
+                <geoLong>087.73562319W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.0322803N</geoLat>
+                <geoLong>087.74389718W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.03941944N</geoLat>
+                <geoLong>087.75061184W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.04731908N</geoLat>
+                <geoLong>087.75556285W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.05573943N</geoLat>
+                <geoLong>087.75859926W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.06442481N</geoLat>
+                <geoLong>087.7596281W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.07311135N</geoLat>
+                <geoLong>087.75861728W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.08153508N</geoLat>
+                <geoLong>087.75559672W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.08943989N</geoLat>
+                <geoLong>087.75065747W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.09658536N</geoLat>
+                <geoLong>087.74394907W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.10275409N</geoLat>
+                <geoLong>087.73567508W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.10775836N</geoLat>
+                <geoLong>087.72608689W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11144581N</geoLat>
+                <geoLong>087.71547612W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11370418N</geoLat>
+                <geoLong>087.70416569W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>42.11446469N</geoLat>
+                <geoLong>087.6925W</geoLong>
+              </Avx>
+            </abdMergedArea>
+            <aseShapes>
+              <AseUid>
+                <codeType>PART</codeType>
+                <codeId>25285</codeId>
+              </AseUid>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <Abd>
+                <AbdUid>
+                  <AseUid>
+                    <codeType>PART</codeType>
+                    <codeId>25285</codeId>
+                  </AseUid>
+                </AbdUid>
+                <txtRmk>25285</txtRmk>
+                <Avx>
+                  <codeType>CIR</codeType>
+                  <geoLat>42.06444444N</geoLat>
+                  <geoLong>087.6925W</geoLong>
+                  <codeDatum>WGE</codeDatum>
+                  <valRadiusArc>3.0</valRadiusArc>
+                  <uomRadiusArc>NM</uomRadiusArc>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>OBK14</codeId>
+                        <geoLat>42.06444444N</geoLat>
+                        <geoLong>087.6925W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>OBK</codeId>
+                        <geoLat>42.22137653N</geoLat>
+                        <geoLong>087.95167039W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>131.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <DmeUid>
+                        <codeId>OBK</codeId>
+                        <geoLat>42.22137653N</geoLat>
+                        <geoLong>087.95167039W</geoLong>
+                      </DmeUid>
+                      <valDist>14.9</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>NORTHBROOK</txtRmk>
+                  </Frd>
+                </Avx>
+              </Abd>
+            </aseShapes>
+            <InstructionsGroup>
+              <txtInstr>UAS ops for operational, safety, security, or compliance oversight purposes must ctc LE POC for auth and coordination to operate within TFR.</txtInstr>
+            </InstructionsGroup>
+            <codeIncFRD>TRUE</codeIncFRD>
+            <codeShpPrt>COMPOSITE</codeShpPrt>
+            <codeLclTime>TRUE</codeLclTime>
+            <codeAuthATC>FALSE</codeAuthATC>
+          </TFRAreaGroup>
+          <TemplateType>BigThreatLanguage</TemplateType>
+          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>
+        </TfrNot>
+        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>
+        <txtNamePOCOrg>Northwestern University Police Dept</txtNamePOCOrg>
+        <txtNamePOC>Chief Eric Chin</txtNamePOC>
+        <txtAddrPOCPhone>847-491-3456</txtAddrPOCPhone>
+        <txtDescrUSNS>!FDC 6/6074 ZAU IL..AIRSPACE EVANSTON, IL..TEMPORARY FLIGHT RESTRICTIONS. THIS NOTAM REPLACES NOTAM 6/5940 TO UPDATE THE DATE. PURSUANT TO 49 U.S.C. SECTION 44812 AS AMENDED BY SECTION 935 OF THE FAA REAUTHORIZATION ACT OF 2024 FOR PROTECTION OF LARGE PUBLIC GATHERINGS. UAS FLT OPS ARE PROHIBITED WI AN AREA DEFINED AS 3NM RADIUS OF 420352N0874133W (OBK131014.9) SFC-400FT AGL DUE TO THE PENN STATE FOOTBALL GAME RYAN FIELD UNDER SEC 44812 C(1). UAS OPS FOR OPERATIONAL, SAFETY, SECURITY, OR COMPLIANCE OVERSIGHT PURPOSES MUST CTC LE POC FOR AUTH AND COORDINATION TO OPERATE WITHIN TFR. THE NORTHWESTERN UNIVERSITY POLICE DEPT, CHIEF ERIC CHIN, TEL 847-491-3456, IS THE POINT OF CONTACT. 2610022300-2610030400</txtDescrUSNS>
+        <txtDescrTraditional>!FDC 6/6074 ZAU IL..AIRSPACE EVANSTON, IL..TEMPORARY FLIGHT RESTRICTION. THIS NOTAM REPLACES NOTAM 6/5940 TO UPDATE THE DATE. PURSUANT TO 49 U.S.C. SECTION 44812 AS AMENDED BY SECTION 935 OF THE FAA REAUTHORIZATION ACT OF 2024 FOR PROTECTION OF LARGE PUBLIC GATHERINGS. UAS FLT OPS ARE PROHIBITED WI AN AREA DEFINED AS 3NM RADIUS OF 420352N0874133W (OBK131014.9) SFC-400FT AGL EFFECTIVE 2610022300 UTC UNTIL 2610030400 UTC. DUE TO THE NU V PENN STATE FOOTBALL GAME RYAN FIELD UNDER SEC 44812 C(1) UAS OPS FOR OPERATIONAL, SAFETY, SECURITY, OR COMPLIANCE OVERSIGHT PURPOSES MUST CTC LE POC FOR AUTH AND COORDINATION TO OPERATE WITHIN TFR. THE NORTHWESTERN UNIVERSITY POLICE DEPT, CHIEF ERIC CHIN, TEL 847-491-3456, IS THE POINT OF CONTACT. 2610022300-2610030400</txtDescrTraditional>
+        <txtDescrModern>&lt;html&gt;
+  &lt;span style="Arial" valign="Top"&gt;
+    &lt;Body&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3" align="left" valign="bottom" width="250"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;NOTAM Number     :&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="bottom" align="left" width="320"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;FDC 6/6074&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Issue Date     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;September 29, 2026 at 1346 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Location     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Evanston, Illinois near NORTHBROOK VOR/DME (OBK)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Beginning Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 02, 2026 at 2300 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Ending Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 03, 2026 at 0400 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Reason for NOTAM     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;The NU v Penn State football game Ryan Field under Sec 44812 c(1)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Type     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;UAS Public Gathering&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Replaced NOTAM(s)     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;6/5940: To update the date&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="right" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;
+                &lt;a href="#areas" class="internal"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href="#restrictions" class="internal"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href="#other" class="internal"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;a name="areas"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" size="3" face="Arial"&gt;Affected Area(s)&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" width="200"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Airspace Definition:&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Center:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; On the NORTHBROOK VOR/DME (OBK) 131 degree radial at 14.9 nautical miles. (Latitude: 42&amp;#xBA;03'52"N, Longitude: 87&amp;#xBA;41'33"W)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Radius:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; 3 nautical miles&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Altitude:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; From the surface  up to and including 400 feet AGL &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Effective Date(s):&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;From October 02, 2026 at 2300 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;To October 03, 2026 at 0400 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;b&gt;ENDSECTION1&lt;/b&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="restrictions"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Operating Restrictions and Requirements&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2" /&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;DL&gt;
+                &lt;DT&gt;UAS ops for operational, safety, security, or compliance oversight purposes must ctc LE POC for auth and coordination to operate within TFR.&lt;/DT&gt;&lt;br/&gt;&lt;/DL&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="other"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Other Information:&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;ARTCC:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;ZAU - Chicago Center&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Point of Contact:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Chief Eric Chin&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt; &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Northwestern University Police Dept&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt; &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Telephone 847-491-3456&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Authority:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Section 44812 of Title 49 of the United States Code &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD Width="40" /&gt;
+          &lt;TD Width="152" /&gt;
+          &lt;TD Width="318" /&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+    &lt;/Body&gt;
+  &lt;/span&gt;
+&lt;/html&gt;</txtDescrModern>
+        <codeFreeformText>false</codeFreeformText>
+        <NotUidMod>
+          <dateIndexYear>6</dateIndexYear>
+          <noSeqNo>5940</noSeqNo>
+        </NotUidMod>
+        <txtDescrMod>To update the date</txtDescrMod>
+      </Not>
+    </Add>
+  </Group>
+</XNOTAM-Update>

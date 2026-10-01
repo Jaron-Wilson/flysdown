@@ -676,6 +676,32 @@ await page.unroute(`${RX_ORIGIN}/**`);
 const rxForgot = await page.evaluate(() => localStorage.getItem('flysdown.receiver.v1'));
 if (rxForgot !== null) errors.push('forgetting the receiver left it saved');
 
+step('live TFRs: from the FAA through /api/tfrs, alerting only when they close airspace');
+const tfrCheck = await page.evaluate(async () => {
+  const res = await fetch('api/tfrs');
+  const body = await res.json();
+  const { zones, state } = window.flysdown;
+  const live = zones.all().filter((z) => z.live);
+  return {
+    api: res.status,
+    ok: body.ok,
+    count: body.count,
+    complete: body.complete,
+    // A TFR without loaded limits, for drones, or that only sets conditions must not alert.
+    wrongAlerting: (body.tfrs || []).filter((t) => (!t.detailLoaded || t.dronesOnly || t.restricts === false) && live.some((z) => z.id.startsWith(`tfr-${t.notam.replace('/', '-')}-`) && !z.advisory)).map((t) => t.notam),
+    source: state.tfrStatus?.source,
+    line: /TFRs: /.test(document.getElementById('status-text').textContent),
+    zones: live.length,
+  };
+});
+console.log(`  ${JSON.stringify(tfrCheck)}`);
+// The FAA refusing this vantage point is a real state of the world; the page
+// must then fall back to the mirror rather than show nothing.
+if (!tfrCheck.ok && tfrCheck.source !== 'tar1090 mirror') errors.push(`no TFR source answered: ${JSON.stringify(tfrCheck)}`);
+if (tfrCheck.ok && !tfrCheck.zones) errors.push('the TFR list arrived but no zones were made from it');
+if (tfrCheck.wrongAlerting.length) errors.push(`TFRs that should be advisory are alerting: ${tfrCheck.wrongAlerting.join(', ')}`);
+if (!tfrCheck.line) errors.push('the feed line does not report TFRs');
+
 step('drawing a circular zone');
 await page.click('.tab[data-tab="areas"]');
 await page.click('#draw-circle');

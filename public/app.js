@@ -31,6 +31,7 @@ import { UI, fmt } from './js/ui.js';
 import { initPanelResize } from './js/resize.js';
 import { ReceiverFeed, mergeAircraft, loadReceiverSettings, saveReceiverSettings } from './js/receiver.js';
 import { LAYER_DEFS, loadLayerChoice, saveLayerChoice } from './js/layers.js';
+import { TfrFeed } from './js/tfrs.js';
 
 const REGIONS = {
   dc: { center: [-77.0369, 38.9072], zoom: 8.2, label: 'Washington DC' },
@@ -247,6 +248,15 @@ const feeds = {
     },
   }),
 };
+
+// Live FAA TFRs become zones: alerting while in effect, advisory otherwise.
+const tfrFeed = new TfrFeed({
+  onZones: (features, { authoritative }) => zones.setLive(features, { authoritative }),
+  onStatus: (status) => {
+    state.tfrStatus = status;
+    updateStatusLine();
+  },
+});
 
 const receiverFeed = new ReceiverFeed({
   pageProtocol: location.protocol,
@@ -588,6 +598,15 @@ function describeFeed(label, status) {
   return `${label}: ${parts.join(', ')}`;
 }
 
+/** "TFRs: 85 from FAA, 12 in effect" - a few words, like the other feeds. */
+function describeTfrs(status) {
+  if (!status || status.state === 'idle') return 'TFRs: loading';
+  if (status.state === 'down') return `TFRs: unavailable, ${status.lastError || 'no source answered'}`;
+  const parts = [`${status.count} from ${status.source}`, `${status.alerting} in effect`];
+  if (status.lastError) parts.push(status.lastError);
+  return `TFRs: ${parts.join(', ')}`;
+}
+
 function updateStatusLine() {
   // Folding the health line away must not be able to hide a dead feed, so the
   // worst state travels with the text and lights a dot on the fold button.
@@ -599,6 +618,7 @@ function updateStatusLine() {
       describeFeed('ADS-B', state.feeds.aircraft),
       ...(mine ? [describeFeed('Your receiver', { ...mine, source: `${mine.count || 0} aircraft` })] : []),
       describeFeed('AIS', state.feeds.vessels),
+      describeTfrs(state.tfrStatus),
       `horizon ${Math.round(state.horizonSec / 60)} min`,
     ].join('  |  '),
     { issue }
@@ -1214,6 +1234,7 @@ function checkBuildStamp() {
   applyQueries();
   feeds.aircraft.start();
   feeds.vessels.start();
+  tfrFeed.start();
   ui.setStatus('Waiting for the first feed update');
   const savedReceiver = loadReceiverSettings();
   if (savedReceiver.url) setReceiver(savedReceiver);
@@ -1221,4 +1242,4 @@ function checkBuildStamp() {
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, receiverFeed, setReceiver, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };
+window.flysdown = { state, store, zones, feeds, receiverFeed, tfrFeed, setReceiver, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };

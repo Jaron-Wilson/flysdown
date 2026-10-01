@@ -162,6 +162,31 @@ node tools/fetch-zones.mjs     # rewrites public/data/zones.json
 node tools/fetch-airspace.mjs  # rewrites public/data/sua.json and artcc.json
 ```
 
+**Live TFRs** come from `/api/tfrs` (`functions/api/tfrs.js`), which joins two
+FAA sources the browser cannot read itself (no CORS): polygons from the TFR
+WFS and each NOTAM's floor, ceiling and UTC window from its detail XML
+(`public/js/tfr.js`). A Pages Function may make 50 subrequests and there are
+about 85 NOTAMs, so details are filled in over a few refreshes (WFS plus at
+most 35 per call) and kept in one edge-cache entry, `tfrs-v2`; bump the key
+when the stored shape changes. If the FAA does not answer, the page draws
+tar1090's mirror of the polygons without alerting. A TFR alerts only while in
+effect, with its own limits, when it closes airspace to manned aircraft:
+
+- "ARE PROHIBITED", or a citation of 91.137/91.138, 91.143 or 91.145, which
+  close airspace by rule. Measured on the live list, 83 of 84 qualify. The
+  exception was FDC 4/9383, the DC SFRA security instructions (speed limits
+  and training), which put 17 critical alerts on routine traffic until it was
+  made advisory: "conditions, not a prohibition".
+- Drone-only TFRs ("UAS FLT OPS ARE PROHIBITED", UAS public gatherings) are
+  advisory. So are TFRs not in effect yet, and ones whose limits have not
+  loaded.
+- A NOTAM with several areas gives each polygon its overall envelope (lowest
+  floor, highest ceiling), labeled approximate. The FAA writes "unlimited" as
+  FL910.
+- Exceptions inside a TFR (approved IFR traffic, aircraft squawking and
+  talking to ATC) are not modeled, so an approved aircraft inside an active
+  TFR does alert.
+
 Only zones alert. The layers under Filters, Map layers (`public/js/layers.js`)
 are context: most restricted areas and MOAs are active at set hours or by
 NOTAM, which no keyless source states in a machine-readable way, and alerting

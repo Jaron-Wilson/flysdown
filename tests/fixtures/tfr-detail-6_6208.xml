@@ -1,0 +1,1431 @@
+﻿<XNOTAM-Update xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="0.1" origin="" created="2026-10-01T07:44:37">
+  <Group>
+    <Add>
+      <Not>
+        <NotUid>
+          <txtNameAcctFac>FDC</txtNameAcctFac>
+          <dateIndexYear>2026</dateIndexYear>
+          <noSeqNo>6208</noSeqNo>
+          <dateIssued>2026-09-29T21:00:38</dateIssued>
+          <txtLocalName>261003 FCS SpaceX X4009 </txtLocalName>
+          <codeGUID>36e2474f-ca8e-4fd1-a967-882da5319d83</codeGUID>
+          <noUSNSWorkNo>TFR24b074047372</noUSNSWorkNo>
+        </NotUid>
+        <codeDailyOper>false</codeDailyOper>
+        <dateEffective>2026-10-03T14:05:00</dateEffective>
+        <dateExpire>2026-10-03T15:05:00</dateExpire>
+        <codeTimeZone>EDT</codeTimeZone>
+        <codeExpirationTimeZone>EDT</codeExpirationTimeZone>
+        <AffLocGroup>
+          <txtNameCity>Cape Canaveral</txtNameCity>
+          <txtNameUSState>FLORIDA</txtNameUSState>
+        </AffLocGroup>
+        <codeFacility>ZJX</codeFacility>
+        <TfrNot>
+          <codeType>91.143</codeType>
+          <TFRAreaGroup>
+            <aseTFRArea>
+              <AseUid>
+                <codeType>RAS</codeType>
+                <codeId>25621</codeId>
+              </AseUid>
+              <txtName>Area A</txtName>
+              <codeDistVerUpper>ALT</codeDistVerUpper>
+              <valDistVerUpper>180</valDistVerUpper>
+              <uomDistVerUpper>FL</uomDistVerUpper>
+              <codeDistVerLower>HEI</codeDistVerLower>
+              <valDistVerLower>0</valDistVerLower>
+              <uomDistVerLower>FT</uomDistVerLower>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <codeExclVerUpper>INCLUDE</codeExclVerUpper>
+              <codeExclVerLower>INCLUDE</codeExclVerLower>
+              <isScheduledTfrArea>FALSE</isScheduledTfrArea>
+              <ScheduleGroup>
+                <isTimeSeparate>FALSE</isTimeSeparate>
+                <dateEffective>2026-10-03T14:05:00</dateEffective>
+                <dateExpire>2026-10-03T15:05:00</dateExpire>
+              </ScheduleGroup>
+            </aseTFRArea>
+            <Aac>
+              <AacUid>
+                <AseUidChi>
+                  <codeType>RAS</codeType>
+                  <codeId>25621</codeId>
+                </AseUidChi>
+                <AseUidPar>
+                  <codeType>PART</codeType>
+                  <codeId>25622</codeId>
+                </AseUidPar>
+              </AacUid>
+              <codeType>BOM</codeType>
+              <codeOpr>BASE</codeOpr>
+            </Aac>
+            <abdMergedArea>
+              <AbdUid>
+                <AseUid>
+                  <codeType>RAS</codeType>
+                  <codeId>25621</codeId>
+                </AseUid>
+              </AbdUid>
+              <txtRmk>25621</txtRmk>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.85444444N</geoLat>
+                <geoLong>080.70527778W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.125N</geoLat>
+                <geoLong>080.5W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.09911944N</geoLat>
+                <geoLong>080.4550957W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.08513178N</geoLat>
+                <geoLong>080.40792392W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.06757058N</geoLat>
+                <geoLong>080.36233436W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.04657125N</geoLat>
+                <geoLong>080.31867766W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>29.0222956N</geoLat>
+                <geoLong>080.277289W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.99493057N</geoLat>
+                <geoLong>080.23848542W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.96468674N</geoLat>
+                <geoLong>080.20256339W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.93179665N</geoLat>
+                <geoLong>080.16979646W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.89651293N</geoLat>
+                <geoLong>080.14043326W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.85910636N</geoLat>
+                <geoLong>080.11469555W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.81986369N</geoLat>
+                <geoLong>080.09277665W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.77908544N</geoLat>
+                <geoLong>080.07484001W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.73708351N</geoLat>
+                <geoLong>080.06101811W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.69417879N</geoLat>
+                <geoLong>080.05141156W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.65069868N</geoLat>
+                <geoLong>080.04608845W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.60697456N</geoLat>
+                <geoLong>080.04508404W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.56333926N</geoLat>
+                <geoLong>080.04840061W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.52012455N</geoLat>
+                <geoLong>080.05600764W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.47765859N</geoLat>
+                <geoLong>080.06784217W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.43626347N</geoLat>
+                <geoLong>080.08380945W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.3962528N</geoLat>
+                <geoLong>080.10378379W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.35792938N</geoLat>
+                <geoLong>080.12760965W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.3215829N</geoLat>
+                <geoLong>080.15510291W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.28748785N</geoLat>
+                <geoLong>080.18605238W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.25590147N</geoLat>
+                <geoLong>080.22022142W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.22706186N</geoLat>
+                <geoLong>080.25734983W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.225N</geoLat>
+                <geoLong>080.26666667W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.41694444N</geoLat>
+                <geoLong>080.50805556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.41694444N</geoLat>
+                <geoLong>080.63305556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.41694444N</geoLat>
+                <geoLong>080.69555556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.5225N</geoLat>
+                <geoLong>080.73027778W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.63361111N</geoLat>
+                <geoLong>080.78361111W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.81944444N</geoLat>
+                <geoLong>080.84555556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.85444444N</geoLat>
+                <geoLong>080.78722222W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>28.85444444N</geoLat>
+                <geoLong>080.70527778W</geoLong>
+              </Avx>
+            </abdMergedArea>
+            <aseShapes>
+              <AseUid>
+                <codeType>PART</codeType>
+                <codeId>25622</codeId>
+              </AseUid>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <Abd>
+                <AbdUid>
+                  <AseUid>
+                    <codeType>PART</codeType>
+                    <codeId>25622</codeId>
+                  </AseUid>
+                </AbdUid>
+                <txtRmk>25622</txtRmk>
+                <valPredefinedAirspace>false</valPredefinedAirspace>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.85444444N</geoLat>
+                  <geoLong>080.70527778W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.125N</geoLat>
+                  <geoLong>080.5W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.09911944N</geoLat>
+                  <geoLong>080.4550957W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.08513178N</geoLat>
+                  <geoLong>080.40792392W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.06757058N</geoLat>
+                  <geoLong>080.36233436W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.04657125N</geoLat>
+                  <geoLong>080.31867766W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>29.0222956N</geoLat>
+                  <geoLong>080.277289W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.99493057N</geoLat>
+                  <geoLong>080.23848542W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.96468674N</geoLat>
+                  <geoLong>080.20256339W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.93179665N</geoLat>
+                  <geoLong>080.16979646W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.89651293N</geoLat>
+                  <geoLong>080.14043326W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.85910636N</geoLat>
+                  <geoLong>080.11469555W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.81986369N</geoLat>
+                  <geoLong>080.09277665W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.77908544N</geoLat>
+                  <geoLong>080.07484001W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.73708351N</geoLat>
+                  <geoLong>080.06101811W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.69417879N</geoLat>
+                  <geoLong>080.05141156W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.65069868N</geoLat>
+                  <geoLong>080.04608845W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.60697456N</geoLat>
+                  <geoLong>080.04508404W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.56333926N</geoLat>
+                  <geoLong>080.04840061W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.52012455N</geoLat>
+                  <geoLong>080.05600764W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.47765859N</geoLat>
+                  <geoLong>080.06784217W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.43626347N</geoLat>
+                  <geoLong>080.08380945W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.3962528N</geoLat>
+                  <geoLong>080.10378379W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.35792938N</geoLat>
+                  <geoLong>080.12760965W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.3215829N</geoLat>
+                  <geoLong>080.15510291W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.28748785N</geoLat>
+                  <geoLong>080.18605238W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.25590147N</geoLat>
+                  <geoLong>080.22022142W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.22706186N</geoLat>
+                  <geoLong>080.25734983W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.225N</geoLat>
+                  <geoLong>080.26666667W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.41694444N</geoLat>
+                  <geoLong>080.50805556W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.41694444N</geoLat>
+                  <geoLong>080.63305556W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.41694444N</geoLat>
+                  <geoLong>080.69555556W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.5225N</geoLat>
+                  <geoLong>080.73027778W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.63361111N</geoLat>
+                  <geoLong>080.78361111W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.81944444N</geoLat>
+                  <geoLong>080.84555556W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.85444444N</geoLat>
+                  <geoLong>080.78722222W</geoLong>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>28.85444444N</geoLat>
+                  <geoLong>080.70527778W</geoLong>
+                </Avx>
+              </Abd>
+            </aseShapes>
+            <InstructionsGroup>
+              <txtInstr>EXCLUDING AIRSPACE OVER INTERNATIONAL WATERS.THIS AREA ENCOMPASSES R2932, R2933 AND PORTIONS OF R2934 AND W497A. ADDITIONAL WARNING AND RESTRICTED AREAS WILL BE ACT. PILOTS MUST CONSULT ALL NOTAMS REGARDING THESE OPS AND MAY CTC ZMA FOR CURRENT AIRSPACE STATUS.</txtInstr>
+            </InstructionsGroup>
+            <codeIncFRD>TRUE</codeIncFRD>
+            <codeShpPrt>COMPOSITE</codeShpPrt>
+            <codeLclTime>TRUE</codeLclTime>
+            <codeAuthATC>FALSE</codeAuthATC>
+          </TFRAreaGroup>
+          <TemplateType>BigThreatLanguage</TemplateType>
+          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>
+        </TfrNot>
+        <txtNameCoordFacility>Miami</txtNameCoordFacility>
+        <codeCoordFacility>ZMA</codeCoordFacility>
+        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>
+        <txtAddrCoordPhone>305-716-1588</txtAddrCoordPhone>
+        <txtDescrUSNS>!FDC 6/6208 ZJX FL..AIRSPACE CAPE CANAVERAL, FL..TEMPORARY FLIGHT RESTRICTIONS. PURSUANT TO 14 CFR SECTION 91.143, SPACE OPS AREA, ACFT OPS ARE PROHIBITED WI AN AREA DEFINED AS 285116N0804219W TO 290730N0803000W TO 290557N0802718W TO 290506N0802429W TO 290403N0802144W TO 290248N0801907W TO 290120N0801638W TO 285942N0801419W TO 285753N0801209W TO 285554N0801011W TO 285347N0800826W TO 285133N0800653W TO 284912N0800534W TO 284645N0800429W TO 284414N0800340W TO 284139N0800305W TO 283903N0800246W TO 283625N0800242W TO 283348N0800254W TO 283112N0800322W TO 282840N0800404W TO 282611N0800502W TO 282347N0800614W TO 282129N0800739W TO 281918N0800918W TO 281715N0801110W TO 281521N0801313W TO 281337N0801526W TO 281330N0801600W TO 282501N0803029W TO 282501N0803759W TO 282501N0804144W TO 283121N0804349W TO 283801N0804701W TO 284910N0805044W TO 285116N0804714W TO  POINT OF ORIGIN SFC-FL180 EFFECTIVE 2610031405 UTC (1005 LOCAL 10/03/26) UNTIL 2610031505 UTC (1105 LOCAL 10/03/26). EXCLUDING AIRSPACE OVER INTERNATIONAL WATERS.THIS AREA ENCOMPASSES R2932, R2933 AND PORTIONS OF R2934 AND W497A. ADDITIONAL WARNING AND RESTRICTED AREAS WILL BE ACT. PILOTS MUST CONSULT ALL NOTAMS REGARDING THESE OPS AND MAY CTC ZMA FOR CURRENT AIRSPACE STATUS. MIAMI /ZMA/ ARTCC, TEL 305-716-1588, IS THE FAA CDN FAC. 2610031405-2610031505</txtDescrUSNS>
+        <txtDescrTraditional>!FDC 6/6208 ZJX FL..AIRSPACE CAPE CANAVERAL, FL..TEMPORARY FLIGHT RESTRICTION. PURSUANT TO 14 CFR SECTION 91.143, SPACE OPS AREA, ACFT OPS ARE PROHIBITED WI AN AREA DEFINED AS 285116N0804219W TO 290730N0803000W TO 290557N0802718W TO 290506N0802429W TO 290403N0802144W TO 290248N0801907W TO 290120N0801638W TO 285942N0801419W TO 285753N0801209W TO 285554N0801011W TO 285347N0800826W TO 285133N0800653W TO 284912N0800534W TO 284645N0800429W TO 284414N0800340W TO 284139N0800305W TO 283903N0800246W TO 283625N0800242W TO 283348N0800254W TO 283112N0800322W TO 282840N0800404W TO 282611N0800502W TO 282347N0800614W TO 282129N0800739W TO 281918N0800918W TO 281715N0801110W TO 281521N0801313W TO 281337N0801526W TO 281330N0801600W TO 282501N0803029W TO 282501N0803759W TO 282501N0804144W TO 283121N0804349W TO 283801N0804701W TO 284910N0805044W TO 285116N0804714W TO THE POINT OF ORIGIN SFC-FL180 EFFECTIVE 2610031405 UTC (1005 LOCAL 10/03/26) UNTIL 2610031505 UTC (1105 LOCAL 10/03/26). EXCLUDING AIRSPACE OVER INTERNATIONAL WATERS.THIS AREA ENCOMPASSES R2932, R2933 AND PORTIONS OF R2934 AND W497A. ADDITIONAL WARNING AND RESTRICTED AREAS WILL BE ACT. PILOTS MUST CONSULT ALL NOTAMS REGARDING THESE OPS AND MAY CTC ZMA FOR CURRENT AIRSPACE STATUS. THE MIAMI /ZMA/ ARTCC, TEL 305-716-1588, IS THE CDN FAC. 2610031405-2610031505</txtDescrTraditional>
+        <txtDescrModern>&lt;html&gt;
+  &lt;span style="Arial" valign="Top"&gt;
+    &lt;Body&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3" align="left" valign="bottom" width="250"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;NOTAM Number     :&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="bottom" align="left" width="320"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;FDC 6/6208&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Issue Date     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;September 29, 2026 at 2100 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Location     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Cape Canaveral, Florida&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Beginning Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 03, 2026 at 1405 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Ending Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 03, 2026 at 1505 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Reason for NOTAM     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Space Operations Area&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Type     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Space Operations&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Replaced NOTAM(s)     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;N/A&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Pilots May Contact     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Miami (ZMA) ARTCC, 305-716-1588&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="right" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;
+                &lt;a href="#areas" class="internal"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href="#restrictions" class="internal"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href="#other" class="internal"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;a name="areas"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" size="3" face="Arial"&gt;Affected Area(s)&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" width="200"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Airspace Definition:&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;td colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Region bounded by:&lt;/font&gt;
+          &lt;/td&gt;
+        &lt;/TR&gt;
+        &lt;tr&gt;
+          &lt;td&gt;   &lt;/td&gt;
+          &lt;td&gt;   &lt;/td&gt;
+          &lt;td colspan="2"&gt;
+            &lt;table valign="top" border="0"&gt;
+              &lt;tr&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;td colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt; &lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;Latitude:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;Longitude:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="3" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;FRD:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;From: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;51'16"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;42'19"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;07'30"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;30'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;05'57"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;27'18"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;05'06"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;24'29"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;04'03"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;21'44"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;02'48"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;19'07"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;29&amp;#xBA;01'20"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;16'38"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;59'42"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;14'19"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;57'53"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;12'09"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;55'54"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;10'11"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;53'47"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;08'26"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;51'33"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;06'53"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;49'12"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;05'34"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;46'45"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;04'29"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;44'14"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;03'40"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;41'39"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;03'05"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;39'03"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;02'46"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;36'25"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;02'42"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;33'48"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;02'54"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;31'12"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;03'22"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;28'40"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;04'04"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;26'11"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;05'02"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;23'47"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;06'14"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;21'29"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;07'39"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;19'18"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;09'18"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;17'15"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;11'10"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;15'21"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;13'13"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;13'37"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;15'26"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;13'30"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;16'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;25'01"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;30'29"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;25'01"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;37'59"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;25'01"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;41'44"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;31'21"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;43'49"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;38'01"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;47'01"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;49'10"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;50'44"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;51'16"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;47'14"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;28&amp;#xBA;51'16"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;80&amp;#xBA;42'19"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2" /&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Altitude: From the surface  up to and including 18000 feet MSL &lt;/font&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Effective Date(s):&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;From October 03, 2026 at 1405 UTC (October 03, 2026 at 1005 EDT)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;To October 03, 2026 at 1505 UTC (October 03, 2026 at 1105 EDT)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;b&gt;ENDSECTION1&lt;/b&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="restrictions"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Operating Restrictions and Requirements&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;DL&gt;
+                &lt;DT&gt;EXCLUDING AIRSPACE OVER INTERNATIONAL WATERS.THIS AREA ENCOMPASSES R2932, R2933 AND PORTIONS OF R2934 AND W497A. ADDITIONAL WARNING AND RESTRICTED AREAS WILL BE ACT. PILOTS MUST CONSULT ALL NOTAMS REGARDING THESE OPS AND MAY CTC ZMA FOR CURRENT AIRSPACE STATUS.&lt;/DT&gt;&lt;br/&gt;&lt;/DL&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="other"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Other Information:&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;ARTCC:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;ZJX - Jacksonville Center&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Authority:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Title 14 CFR section 91.143&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD Width="40" /&gt;
+          &lt;TD Width="152" /&gt;
+          &lt;TD Width="318" /&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+    &lt;/Body&gt;
+  &lt;/span&gt;
+&lt;/html&gt;</txtDescrModern>
+        <codeFreeformText>false</codeFreeformText>
+      </Not>
+    </Add>
+  </Group>
+</XNOTAM-Update>

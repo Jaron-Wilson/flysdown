@@ -1,0 +1,638 @@
+﻿<XNOTAM-Update xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="0.1" origin="" created="2026-10-01T08:59:37">
+  <Group>
+    <Add>
+      <Not>
+        <NotUid>
+          <txtNameAcctFac>FDC</txtNameAcctFac>
+          <dateIndexYear>2026</dateIndexYear>
+          <noSeqNo>6580</noSeqNo>
+          <dateIssued>2026-10-01T13:53:58</dateIssued>
+          <txtLocalName> 261002-03 Thurmont, MD VIP</txtLocalName>
+          <codeGUID>78ff742b-612c-42ad-bd89-f0c77d76dd59</codeGUID>
+          <noUSNSWorkNo>TFR24b0b50a1370</noUSNSWorkNo>
+        </NotUid>
+        <codeDailyOper>false</codeDailyOper>
+        <dateEffective>2026-10-02T16:45:00</dateEffective>
+        <dateExpire>2026-10-03T14:30:00</dateExpire>
+        <codeTimeZone>EDT</codeTimeZone>
+        <codeExpirationTimeZone>EDT</codeExpirationTimeZone>
+        <AffLocGroup>
+          <txtNameCity>THURMONT</txtNameCity>
+          <txtNameUSState>MARYLAND</txtNameUSState>
+        </AffLocGroup>
+        <codeFacility>ZDC</codeFacility>
+        <TfrNot>
+          <codeType>91.141</codeType>
+          <TFRAreaGroup>
+            <aseTFRArea>
+              <AseUid>
+                <codeType>RAS</codeType>
+                <codeId>25647</codeId>
+              </AseUid>
+              <txtName>Area A</txtName>
+              <codeDistVerUpper>HEI</codeDistVerUpper>
+              <valDistVerUpper>4999</valDistVerUpper>
+              <uomDistVerUpper>FT</uomDistVerUpper>
+              <codeDistVerLower>HEI</codeDistVerLower>
+              <valDistVerLower>0</valDistVerLower>
+              <uomDistVerLower>FT</uomDistVerLower>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <codeExclVerUpper>INCLUDE</codeExclVerUpper>
+              <codeExclVerLower>INCLUDE</codeExclVerLower>
+              <isScheduledTfrArea>FALSE</isScheduledTfrArea>
+              <ScheduleGroup>
+                <isTimeSeparate>FALSE</isTimeSeparate>
+                <dateEffective>2026-10-02T16:45:00</dateEffective>
+                <dateExpire>2026-10-03T14:30:00</dateExpire>
+              </ScheduleGroup>
+            </aseTFRArea>
+            <Aac>
+              <AacUid>
+                <AseUidChi>
+                  <codeType>RAS</codeType>
+                  <codeId>25647</codeId>
+                </AseUidChi>
+                <AseUidPar>
+                  <codeType>PART</codeType>
+                  <codeId>25648</codeId>
+                </AseUidPar>
+              </AacUid>
+              <codeType>BOM</codeType>
+              <codeOpr>BASE</codeOpr>
+            </Aac>
+            <abdMergedArea>
+              <AbdUid>
+                <AseUid>
+                  <codeType>RAS</codeType>
+                  <codeId>25647</codeId>
+                </AseUid>
+              </AbdUid>
+              <txtRmk>25647</txtRmk>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.73062411N</geoLat>
+                <geoLong>077.46555556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.72935554N</geoLat>
+                <geoLong>077.44679922W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.72558852N</geoLat>
+                <geoLong>077.42861479W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.7194379N</geoLat>
+                <geoLong>077.41155656W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.71109115N</geoLat>
+                <geoLong>077.39614415W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.70080262N</geoLat>
+                <geoLong>077.38284654W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.68888571N</geoLat>
+                <geoLong>077.37206776W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.67570321N</geoLat>
+                <geoLong>077.36413463W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.66165629N</geoLat>
+                <geoLong>077.35928688W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.64717212N</geoLat>
+                <geoLong>077.35767003W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.63269094N</geoLat>
+                <geoLong>077.35933121W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.6186526N</geoLat>
+                <geoLong>077.36421795W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.60548328N</geoLat>
+                <geoLong>077.37218002W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.59358252N</geoLat>
+                <geoLong>077.38297418W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.58331118N</geoLat>
+                <geoLong>077.3962718W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.57498059N</geoLat>
+                <geoLong>077.41166882W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.56884313N</geoLat>
+                <geoLong>077.42869811W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.56508471N</geoLat>
+                <geoLong>077.44684355W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.56381913N</geoLat>
+                <geoLong>077.46555556W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.56508471N</geoLat>
+                <geoLong>077.48426757W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.56884313N</geoLat>
+                <geoLong>077.50241301W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.57498059N</geoLat>
+                <geoLong>077.5194423W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.58331118N</geoLat>
+                <geoLong>077.53483932W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.59358252N</geoLat>
+                <geoLong>077.54813694W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.60548328N</geoLat>
+                <geoLong>077.5589311W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.6186526N</geoLat>
+                <geoLong>077.56689317W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.63269094N</geoLat>
+                <geoLong>077.57177991W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.64717212N</geoLat>
+                <geoLong>077.57344109W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.66165629N</geoLat>
+                <geoLong>077.57182424W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.67570321N</geoLat>
+                <geoLong>077.56697649W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.68888571N</geoLat>
+                <geoLong>077.55904336W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.70080262N</geoLat>
+                <geoLong>077.54826458W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.71109115N</geoLat>
+                <geoLong>077.53496697W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.7194379N</geoLat>
+                <geoLong>077.51955456W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.72558852N</geoLat>
+                <geoLong>077.50249633W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.72935554N</geoLat>
+                <geoLong>077.4843119W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>39.73062411N</geoLat>
+                <geoLong>077.46555556W</geoLong>
+              </Avx>
+            </abdMergedArea>
+            <aseShapes>
+              <AseUid>
+                <codeType>PART</codeType>
+                <codeId>25648</codeId>
+              </AseUid>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <Abd>
+                <AbdUid>
+                  <AseUid>
+                    <codeType>PART</codeType>
+                    <codeId>25648</codeId>
+                  </AseUid>
+                </AbdUid>
+                <txtRmk>25648</txtRmk>
+                <Avx>
+                  <codeType>CIR</codeType>
+                  <geoLat>39.64722222N</geoLat>
+                  <geoLong>077.46555556W</geoLong>
+                  <codeDatum>WGE</codeDatum>
+                  <valRadiusArc>5.0</valRadiusArc>
+                  <uomRadiusArc>NM</uomRadiusArc>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>FDK14</codeId>
+                        <geoLat>39.64722222N</geoLat>
+                        <geoLong>077.46555556W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>FDK</codeId>
+                        <geoLat>39.41223608N</geoLat>
+                        <geoLong>077.37511608W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>351.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <DmeUid>
+                        <codeId>FDK</codeId>
+                        <geoLat>39.41223608N</geoLat>
+                        <geoLong>077.37511608W</geoLong>
+                      </DmeUid>
+                      <valDist>14.7</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>FREDERICK</txtRmk>
+                  </Frd>
+                </Avx>
+              </Abd>
+            </aseShapes>
+            <InstructionsGroup>
+              <txtInstr>EXC THE FLT OPS LISTED BLW: </txtInstr>
+              <txtInstr>1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. </txtInstr>
+              <txtInstr>2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. </txtInstr>
+              <txtInstr>3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. </txtInstr>
+              <txtInstr>4. ACFT MAY NOT LOITER.</txtInstr>
+              <txtInstr>5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, THE DEPARTMENT OF DEFENSE(DOD), THE DEPARTMENT OF HOMELAND SECURITY(DHS) OR THE DEPARTMENT OF JUSTICE(DOJ) MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. </txtInstr>
+              <txtInstr>6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 202-267-8276.</txtInstr>
+              <txtInstr>7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.</txtInstr>
+            </InstructionsGroup>
+            <codeIncFRD>TRUE</codeIncFRD>
+            <codeShpPrt>COMPOSITE</codeShpPrt>
+            <codeLclTime>TRUE</codeLclTime>
+            <codeAuthATC>FALSE</codeAuthATC>
+          </TFRAreaGroup>
+          <TemplateType>VPOTUS_Language</TemplateType>
+          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>
+        </TfrNot>
+        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>
+        <txtDescrUSNS>!FDC 6/6580 ZDC MD..AIRSPACE THURMONT, MARYLAND..TEMPORARY FLIGHT RESTRICTIONS. OCTOBER 2-3, 2026 LOCAL. PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. ANY OF THE FOLLOWING ADDITIONAL ACTIONS MAY ALSO BE TAKEN AGAINST A PILOT WHO DOES NOT COMPLY WITH THE RQMNTS OR ANY SPECIAL INSTRUCTIONS OR PROC ANNOUNCED IN THIS NOTAM: A) THE FAA MAY TAKE ADMINISTRATIVE ACTION, INCLUDING IMPOSING CIVIL PENALTIES AND THE SUSPENSION OR REVOCATION OF AIRMEN CERTIFICATES; OR B) THE UNITED STATES GOVERNMENT MAY PURSUE CRIMINAL CHARGES, INCLUDING CHARGES UNDER 49 USC SECTION 46307; OR C) THE UNITED STATES GOVERNMENT MAY USE DEADLY FORCE AGAINST THE AIRBORNE ACFT, IF IT IS DETERMINED THAT THE ACFT POSES AN IMMINENT SECURITY THREAT. PURSUANT TO 14 CFR 91.141, ALL ACFT FLT OPS INCLUDING REMOTE CONTROLLED ACFT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 5NM RADIUS OF 393850N0772756W (FDK351014.7) SFC-4999FT AGL EFFECTIVE 2610021645 UTC (1245 LOCAL 10/02/26) UNTIL 2610031430 UTC (1030 LOCAL 10/03/26). EXC THE FLT OPS LISTED BLW: 1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. 2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. 3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. 4. ACFT MAY NOT LOITER. 5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, THE DEPARTMENT OF DEFENSE(DOD), THE DEPARTMENT OF HOMELAND SECURITY(DHS) OR THE DEPARTMENT OF JUSTICE(DOJ) MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. 6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 202-267-8276. 7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2610021645-2610031430</txtDescrUSNS>
+        <txtDescrTraditional>!FDC 6/6580 ZDC MD..AIRSPACE THURMONT, MARYLAND..TEMPORARY FLIGHT RESTRICTIONS. OCTOBER 2-3, 2026 LOCAL. PURSUANT TO 49 USC 40103(B)(3), THE FEDERAL AVIATION ADMINISTRATION (FAA) CLASSIFIES THE AIRSPACE DEFINED IN THIS NOTAM AS 'NTL DEFENSE AIRSPACE'. PILOTS WHO DO NOT ADHERE TO THE FOLLOWING PROC MAY BE INTERCEPTED, DETAINED AND INTERVIEWED BY LAW ENFORCEMENT/SECURITY PERSONNEL. ANY OF THE FOLLOWING ADDITIONAL ACTIONS MAY ALSO BE TAKEN AGAINST A PILOT WHO DOES NOT COMPLY WITH THE RQMNTS OR ANY SPECIAL INSTRUCTIONS OR PROC ANNOUNCED IN THIS NOTAM:
+A) THE FAA MAY TAKE ADMINISTRATIVE ACTION, INCLUDING IMPOSING CIVIL PENALTIES AND THE SUSPENSION OR REVOCATION OF AIRMEN CERTIFICATES; OR 
+B) THE UNITED STATES GOVERNMENT MAY PURSUE CRIMINAL CHARGES, INCLUDING CHARGES UNDER 49 USC SECTION 46307; OR 
+C) THE UNITED STATES GOVERNMENT MAY USE DEADLY FORCE AGAINST THE AIRBORNE ACFT, IF IT IS DETERMINED THAT THE ACFT POSES AN IMMINENT SECURITY THREAT. 
+PURSUANT TO 14 CFR 91.141, ALL ACFT FLT OPS INCLUDING REMOTE CONTROLLED ACFT OPS ARE PROHIBITED: WI AN AREA DEFINED AS 5NM RADIUS OF 393850N0772756W (FDK351014.7) SFC-4999FT AGL EFFECTIVE 2610021645 UTC (1245 LOCAL 10/02/26) UNTIL 2610031430 UTC (1030 LOCAL 10/03/26). EXC THE FLT OPS LISTED BLW: 1. ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. 2. LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. 3. TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. 4. ACFT MAY NOT LOITER. 5. UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, THE DEPARTMENT OF DEFENSE(DOD), THE DEPARTMENT OF HOMELAND SECURITY(DHS) OR THE DEPARTMENT OF JUSTICE(DOJ) MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. 6. THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 202-267-8276. 7. THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM. 2610021645-2610031430</txtDescrTraditional>
+        <txtDescrModern>&lt;html&gt;
+  &lt;span style="Arial" valign="Top"&gt;
+    &lt;Body&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3" align="left" valign="bottom" width="250"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;NOTAM Number     :&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="bottom" align="left" width="320"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;FDC 6/6580&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Issue Date     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;October 01, 2026 at 1353 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Location     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;THURMONT, Maryland near FREDERICK VOR/DME (FDK)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Beginning Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 02, 2026 at 1645 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Ending Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 03, 2026 at 1430 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Reason for NOTAM     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Temporary flight restrictions for VIP Movement&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Type     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;VIP&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Replaced NOTAM(s)     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;N/A&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="right" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;
+                &lt;a href="#areas" class="internal"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href="#restrictions" class="internal"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href="#other" class="internal"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;a name="areas"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" size="3" face="Arial"&gt;Affected Area(s)&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" width="200"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Airspace Definition:&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Center:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; On the FREDERICK VOR/DME (FDK) 351 degree radial at 14.7 nautical miles. (Latitude: 39&amp;#xBA;38'50"N, Longitude: 77&amp;#xBA;27'56"W)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Radius:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; 5 nautical miles&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Altitude:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt; From the surface  up to and including 4999 feet AGL &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Effective Date(s):&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;From October 02, 2026 at 1645 UTC (October 02, 2026 at 1245 EDT)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;To October 03, 2026 at 1430 UTC (October 03, 2026 at 1030 EDT)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;b&gt;ENDSECTION1&lt;/b&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="restrictions"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Operating Restrictions and Requirements&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;DL&gt;
+                &lt;DT&gt;EXC THE FLT OPS LISTED BLW: &lt;/DT&gt;&lt;br/&gt;&lt;DD&gt;
+                  &lt;OL&gt;
+                    &lt;LI&gt; ACFT MUST BE SQUAWKING AN ATC DISCRETE BEACON CODE AT ALL TIMES WHILE IN THE TFR AND MUST REMAIN IN TWO-WAY RADIO COM WITH ATC. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; LAW ENFORCEMENT, FIREFIGHTING, AND MEDEVAC/AIR AMBULANCE FLIGHTS ON ACT MISSIONS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; TRANSIENT OPS ARE AUTH FOR SAFETY OF FLT OR TO MEET OPERATIONAL DEMANDS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; ACFT MAY NOT LOITER.&lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; UAS OPR WHO DO NOT COMPLY WITH APPLICABLE AIRSPACE RESTRICTIONS ARE WARNED THAT PURSUANT TO 10 U.S.C.SECTION 130I AND 6 U.S.C.SECTION 124N, THE DEPARTMENT OF DEFENSE(DOD), THE DEPARTMENT OF HOMELAND SECURITY(DHS) OR THE DEPARTMENT OF JUSTICE(DOJ) MAY TAKE SECURITY ACTION THAT RESULTS IN THE INTERFERENCE, DISRUPTION, SEIZURE, DAMAGING, OR DESTRUCTION OF UNMANNED ACFT DEEMED TO POSE A CREDIBLE SAFETY OR SECURITY THREAT TO PROTECTED PERSONNEL, FAC, OR ASSETS. &lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; THE SYSTEM OPERATIONS SUPPORT CENTER (SOSC), IS THE CDN FAC FOR UAS OPS, SUBMIT SGI WAIVER REQUEST VIA HTTPS://WAIVERS.FAA.GOV, FIRST RESPONDERS EMGERGENCY OPS CTC THE SOSC AT 202-267-8276.&lt;/LI&gt;&lt;br/&gt;&lt;LI&gt; THE FAA RECOMMENDS THAT ALL ACFT OPR CK NOTAMS FREQUENTLY FOR POSSIBLE CHANGES TO THIS TFR PRIOR TO OPS. OPR MAY REVIEW THE TFR DETAILS AT HTTPS://TFR.FAA.GOV/ OR HTTPS://WWW.1800WXBRIEF.COM.&lt;/LI&gt;&lt;br/&gt;&lt;/OL&gt;
+                &lt;/DD&gt;&lt;/DL&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="other"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Other Information:&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;ARTCC:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;ZDC - Washington Center&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Authority:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Title 14 CFR section 91.141&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD Width="40" /&gt;
+          &lt;TD Width="152" /&gt;
+          &lt;TD Width="318" /&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+    &lt;/Body&gt;
+  &lt;/span&gt;
+&lt;/html&gt;</txtDescrModern>
+        <codeFreeformText>false</codeFreeformText>
+      </Not>
+    </Add>
+  </Group>
+</XNOTAM-Update>

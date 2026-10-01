@@ -1,0 +1,807 @@
+﻿<XNOTAM-Update xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="0.1" origin="" created="2026-09-28T19:09:15">
+  <Group>
+    <Add>
+      <Not>
+        <NotUid>
+          <txtNameAcctFac>FDC</txtNameAcctFac>
+          <dateIndexYear>2026</dateIndexYear>
+          <noSeqNo>6039</noSeqNo>
+          <dateIssued>2026-09-29T00:07:27</dateIssued>
+          <txtLocalName>6/6039</txtLocalName>
+          <codeGUID>e980165a-cb80-4951-9e53-57e9db438a97</codeGUID>
+        </NotUid>
+        <codeDailyOper>false</codeDailyOper>
+        <dateEffective>2026-09-29T00:15:00</dateEffective>
+        <dateExpire>2026-10-10T03:00:00</dateExpire>
+        <codeTimeZone>UTC</codeTimeZone>
+        <codeExpirationTimeZone>UTC</codeExpirationTimeZone>
+        <txtDescrPurpose>TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS</txtDescrPurpose>
+        <AffLocGroup>
+          <txtNameCity>8NM SE BIG SUR</txtNameCity>
+          <txtNameUSState>CALIFORNIA</txtNameUSState>
+        </AffLocGroup>
+        <codeFacility>ZOA</codeFacility>
+        <TfrNot>
+          <codeType>91.137(a)(2)</codeType>
+          <TFRAreaGroup>
+            <aseTFRArea>
+              <AseUid>
+                <codeType>RAS</codeType>
+                <codeId>25258</codeId>
+              </AseUid>
+              <txtName>Hazard Area1</txtName>
+              <codeDistVerUpper>ALT</codeDistVerUpper>
+              <valDistVerUpper>8500</valDistVerUpper>
+              <uomDistVerUpper>FT</uomDistVerUpper>
+              <codeDistVerLower>ALT</codeDistVerLower>
+              <valDistVerLower>0</valDistVerLower>
+              <uomDistVerLower>FT</uomDistVerLower>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <codeExclVerUpper>INCLUDE</codeExclVerUpper>
+              <codeExclVerLower>INCLUDE</codeExclVerLower>
+              <isScheduledTfrArea>FALSE</isScheduledTfrArea>
+              <ScheduleGroup>
+                <isTimeSeparate>FALSE</isTimeSeparate>
+                <dateEffective>2026-09-29T00:15:00</dateEffective>
+                <dateExpire>2026-10-10T03:00:00</dateExpire>
+              </ScheduleGroup>
+            </aseTFRArea>
+            <Aac>
+              <AacUid>
+                <AseUidChi>
+                  <codeType>RAS</codeType>
+                  <codeId>25258</codeId>
+                </AseUidChi>
+                <AseUidPar>
+                  <codeType>PART</codeType>
+                  <codeId>25259</codeId>
+                </AseUidPar>
+              </AacUid>
+              <codeType>BOM</codeType>
+              <codeOpr>BASE</codeOpr>
+            </Aac>
+            <abdMergedArea>
+              <AbdUid>
+                <AseUid>
+                  <codeType>RAS</codeType>
+                  <codeId>25258</codeId>
+                </AseUid>
+              </AbdUid>
+              <txtRmk>25258</txtRmk>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.38333333N</geoLat>
+                <geoLong>121.8W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.4N</geoLat>
+                <geoLong>121.66666667W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.39166667N</geoLat>
+                <geoLong>121.60833333W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.35N</geoLat>
+                <geoLong>121.56666667W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.11666667N</geoLat>
+                <geoLong>121.53333333W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.13333333N</geoLat>
+                <geoLong>121.65W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.26666667N</geoLat>
+                <geoLong>121.825W</geoLong>
+              </Avx>
+              <Avx>
+                <codeDatum>WGE</codeDatum>
+                <codeType>GRC</codeType>
+                <geoLat>36.38333333N</geoLat>
+                <geoLong>121.8W</geoLong>
+              </Avx>
+            </abdMergedArea>
+            <aseShapes>
+              <AseUid>
+                <codeType>PART</codeType>
+                <codeId>25259</codeId>
+              </AseUid>
+              <Att>
+                <codeWorkHr>NOTAM</codeWorkHr>
+              </Att>
+              <Abd>
+                <AbdUid>
+                  <AseUid>
+                    <codeType>PART</codeType>
+                    <codeId>25259</codeId>
+                  </AseUid>
+                </AbdUid>
+                <txtRmk>25259</txtRmk>
+                <valPredefinedAirspace>false</valPredefinedAirspace>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.38333333N</geoLat>
+                  <geoLong>121.8W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR14</codeId>
+                        <geoLat>36.38333333N</geoLat>
+                        <geoLong>121.8W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.38333333N</geoLat>
+                        <geoLong>121.8W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>312.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.38333333N</geoLat>
+                        <geoLong>121.8W</geoLong>
+                      </TcnUid>
+                      <valDist>14.3</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.4N</geoLat>
+                  <geoLong>121.66666667W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR13</codeId>
+                        <geoLat>36.4N</geoLat>
+                        <geoLong>121.66666667W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.4N</geoLat>
+                        <geoLong>121.66666667W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>339.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.4N</geoLat>
+                        <geoLong>121.66666667W</geoLong>
+                      </TcnUid>
+                      <valDist>13.2</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.39166667N</geoLat>
+                  <geoLong>121.60833333W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR12</codeId>
+                        <geoLat>36.39166667N</geoLat>
+                        <geoLong>121.60833333W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.39166667N</geoLat>
+                        <geoLong>121.60833333W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>351.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.39166667N</geoLat>
+                        <geoLong>121.60833333W</geoLong>
+                      </TcnUid>
+                      <valDist>12.7</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.35N</geoLat>
+                  <geoLong>121.56666667W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR10</codeId>
+                        <geoLat>36.35N</geoLat>
+                        <geoLong>121.56666667W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.35N</geoLat>
+                        <geoLong>121.56666667W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>004.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.35N</geoLat>
+                        <geoLong>121.56666667W</geoLong>
+                      </TcnUid>
+                      <valDist>10.8</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.11666667N</geoLat>
+                  <geoLong>121.53333333W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR06</codeId>
+                        <geoLat>36.11666667N</geoLat>
+                        <geoLong>121.53333333W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.11666667N</geoLat>
+                        <geoLong>121.53333333W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>110.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.11666667N</geoLat>
+                        <geoLong>121.53333333W</geoLong>
+                      </TcnUid>
+                      <valDist>6.5</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.13333333N</geoLat>
+                  <geoLong>121.65W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR02</codeId>
+                        <geoLat>36.13333333N</geoLat>
+                        <geoLong>121.65W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.13333333N</geoLat>
+                        <geoLong>121.65W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>172.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.13333333N</geoLat>
+                        <geoLong>121.65W</geoLong>
+                      </TcnUid>
+                      <valDist>2.9</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+                <Avx>
+                  <codeDatum>WGE</codeDatum>
+                  <codeType>GRC</codeType>
+                  <geoLat>36.26666667N</geoLat>
+                  <geoLong>121.825W</geoLong>
+                  <Frd>
+                    <FrdUid>
+                      <DpnUid>
+                        <codeId>BSR10</codeId>
+                        <geoLat>36.26666667N</geoLat>
+                        <geoLong>121.825W</geoLong>
+                      </DpnUid>
+                    </FrdUid>
+                    <Ain>
+                      <VorUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.26666667N</geoLat>
+                        <geoLong>121.825W</geoLong>
+                      </VorUid>
+                      <valAngleBrg>284.0</valAngleBrg>
+                    </Ain>
+                    <Din>
+                      <TcnUid>
+                        <codeId>BSR</codeId>
+                        <geoLat>36.26666667N</geoLat>
+                        <geoLong>121.825W</geoLong>
+                      </TcnUid>
+                      <valDist>10.2</valDist>
+                      <uomDist>NM</uomDist>
+                    </Din>
+                    <txtRmk>BIG SUR</txtRmk>
+                  </Frd>
+                </Avx>
+              </Abd>
+            </aseShapes>
+            <InstructionsGroup />
+            <codeIncFRD>TRUE</codeIncFRD>
+            <codeShpPrt>COMPOSITE</codeShpPrt>
+            <codeLclTime>TRUE</codeLclTime>
+            <codeAuthATC>FALSE</codeAuthATC>
+          </TFRAreaGroup>
+          <TemplateType>BigThreatLanguage</TemplateType>
+          <codeCtrlFacilityType>ARTCC</codeCtrlFacilityType>
+        </TfrNot>
+        <txtNameCoordFacility>OAKLAND</txtNameCoordFacility>
+        <codeCoordFacility>ZOA</codeCoordFacility>
+        <codeCoordFacilityType>ARTCC</codeCoordFacilityType>
+        <txtAddrCoordPhone>510-745-3331</txtAddrCoordPhone>
+        <txtNamePOC>WI AN AREA DEFINED AS</txtNamePOC>
+        <txtAddrPOCPhone>805-938-5727</txtAddrPOCPhone>
+        <valFreqPOC>127.025</valFreqPOC>
+        <txtDescrUSNS>!FDC 6/6039 ZOA CA..AIRSPACE 8NM SE BIG SUR, CA..TEMPORARY FLIGHT RESTRICTIONS. PURSUANT TO 14 CFR SECTION 91.137(A)(2) TEMPORARY FLIGHT RESTRICTIONS ARE IN EFFECT TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS. WI AN AREA DEFINED AS 362300N1214800W (BSR312014.3) TO 362400N1214000W (BSR339013.2) TO 362330N1213630W (BSR351012.7) TO 362100N1213400W (BSR004010.8) TO 360700N1213200W (BSR110006.5) TO 360800N1213900W (BSR172002.9) TO 361600N1214930W (BSR284010.2) TO POINT OF ORIGIN SFC-8500FT LOS PADRES COMMUNICATION CENTER TEL 805-938-5727 OR FREQ 127.025 TIMBER FIRE IS IN CHARGE OF THE OPERATION. OAKLAND/ZOA/ARTCC TEL 510-745-3331 IS THE FAA CDN FAC. 2609290015-2610100300EST</txtDescrUSNS>
+        <txtDescrTraditional>!FDC 6/6039 ZOA CA..AIRSPACE 8NM SE BIG SUR, CA..TEMPORARY FLIGHT RESTRICTION. PURSUANT TO 14 CFR SECTION 91.137(A)(2), TEMPORARY FLIGHT RESTRICTIONS ARE IN EFFECT WI AN AREA DEFINED AS 362300N1214800W (BSR312014.3) TO 362400N1214000W (BSR339013.2) TO 362330N1213630W (BSR351012.7) TO 362100N1213400W (BSR004010.8) TO 360700N1213200W (BSR110006.5) TO 360800N1213900W (BSR172002.9) TO 361600N1214930W (BSR284010.2) TO THE POINT OF ORIGIN SFC-8500FT MSL EFFECTIVE 2609290015 UTC UNTIL 2610100300 UTC. TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS WI AN AREA DEFINED AS, TEL 805-938-5727, /FREQ 127.025 IS IN CHARGE OF ON SCENE EMERGENCY RESPONSE ACTIVITIES. THE OAKLAND /ZOA/ ARTCC, TEL 510-745-3331, IS THE CDN FAC. 2609290015-2610100300</txtDescrTraditional>
+        <txtDescrModern>&lt;html&gt;
+  &lt;span style="Arial" valign="Top"&gt;
+    &lt;Body&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3" align="left" valign="bottom" width="250"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;NOTAM Number     :&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="bottom" align="left" width="320"&gt;
+            &lt;b&gt;
+              &lt;font color="#FFFFFF" size="3" face="Arial"&gt;FDC 6/6039&lt;/font&gt;
+            &lt;/b&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Issue Date     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;September 29, 2026 at 0007 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Location     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;8NM SE BIG SUR, California&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Beginning Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;September 29, 2026 at 0015 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Ending Date and Time     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;October 10, 2026 at 0300 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Reason for NOTAM     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;TO PROVIDE A SAFE ENVIRONMENT FOR FIRE FIGHTING ACFT OPS&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Type     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Hazards&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Replaced NOTAM(s)     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;N/A&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="left" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;Pilots May Contact     :&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;OAKLAND (ZOA) ARTCC, 510-745-3331&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" align="right" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Jump To: &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;
+                &lt;a href="#areas" class="internal"&gt; Affected Areas &lt;/a&gt;&lt;br/&gt;&lt;a href="#restrictions" class="internal"&gt; Operating Restrictions and Requirements &lt;/a&gt;&lt;br/&gt;&lt;a href="#other" class="internal"&gt; Other Information &lt;/a&gt;&lt;br/&gt;&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;a name="areas"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" size="3" face="Arial"&gt;Affected Area(s)&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3" width="200"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Airspace Definition:&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;td colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Region bounded by:&lt;/font&gt;
+          &lt;/td&gt;
+        &lt;/TR&gt;
+        &lt;tr&gt;
+          &lt;td&gt;   &lt;/td&gt;
+          &lt;td&gt;   &lt;/td&gt;
+          &lt;td colspan="2"&gt;
+            &lt;table valign="top" border="0"&gt;
+              &lt;tr&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;td colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt; &lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;Latitude:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;Longitude:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+                &lt;td colspan="3" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;
+                    &lt;u&gt;FRD:&lt;/u&gt;
+                  &lt;/font&gt;
+                &lt;/td&gt;
+              &lt;/tr&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;From: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;23'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;48'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR312014.3&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;24'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;40'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR339013.2&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;23'30"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;36'30"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR351012.7&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;21'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;34'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR004010.8&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;07'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;32'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR110006.5&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;08'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;39'00"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR172002.9&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+              &lt;TR&gt;
+                &lt;td width="20" /&gt;
+                &lt;td width="140" /&gt;
+                &lt;TD colspan="1" width="300"&gt;
+                  &lt;font face="Arial" size="2"&gt;To: &lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;36&amp;#xBA;16'00"N&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;121&amp;#xBA;49'30"W&lt;/font&gt;
+                &lt;/TD&gt;
+                &lt;TD colspan="1" width="200"&gt;
+                  &lt;font face="Arial" size="2"&gt;BSR284010.2&lt;/font&gt;
+                &lt;/TD&gt;
+              &lt;/TR&gt;
+            &lt;/table&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td&gt; &lt;/td&gt;
+          &lt;td colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;Altitude: From the surface  up to and including 8500 feet MSL &lt;/font&gt;
+          &lt;/td&gt;
+        &lt;/tr&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="5"&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;b&gt;Effective Date(s):&lt;/b&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;From September 29, 2026 at 0015 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD&gt; &lt;/TD&gt;
+          &lt;TD colspan="5" valign="top"&gt;
+            &lt;font face="Arial" size="2"&gt;To October 10, 2026 at 0300 UTC&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;b&gt;ENDSECTION1&lt;/b&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="restrictions"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Operating Restrictions and Requirements&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;font face="Arial" size="2"&gt;No pilots may operate an aircraft in the areas covered by this NOTAM (except as described).&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="20"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;
+              &lt;DL&gt;
+                &lt;DT /&gt;&lt;br/&gt;&lt;/DL&gt;
+            &lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2" height="10"&gt;  &lt;/TD&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+      &lt;Table cellpadding="1" cellspacing="0"&gt;
+        &lt;TR bgcolor="#1E90FF"&gt;
+          &lt;TD colspan="3"&gt;
+            &lt;a name="other"&gt;
+              &lt;b&gt;
+                &lt;font color="#FFFFFF" face="Arial" size="3"&gt;Other Information:&lt;/font&gt;
+              &lt;/b&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+          &lt;TD colspan="1" align="right"&gt;
+            &lt;a href="#"&gt;
+              &lt;font color="#FFFFFF" face="Arial"&gt;
+                &lt;b&gt;Top&lt;/b&gt;
+              &lt;/font&gt;
+            &lt;/a&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;ARTCC:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;ZOA - Oakland Center&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Point of Contact:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;WI AN AREA DEFINED AS&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt; &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Telephone 805-938-5727&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt; &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Frequency 127.025&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD colspan="2"&gt;
+            &lt;font face="Arial" size="2"&gt;Authority:&lt;/font&gt;
+          &lt;/TD&gt;
+          &lt;TD&gt;
+            &lt;font face="Arial" size="2"&gt;Title 14 CFR section 91.137(a)(2)&lt;/font&gt;
+          &lt;/TD&gt;
+        &lt;/TR&gt;
+        &lt;TR&gt;
+          &lt;TD Width="40" /&gt;
+          &lt;TD Width="152" /&gt;
+          &lt;TD Width="318" /&gt;
+        &lt;/TR&gt;
+      &lt;/Table&gt;
+    &lt;/Body&gt;
+  &lt;/span&gt;
+&lt;/html&gt;</txtDescrModern>
+        <codeFreeformText>false</codeFreeformText>
+      </Not>
+    </Add>
+  </Group>
+</XNOTAM-Update>
