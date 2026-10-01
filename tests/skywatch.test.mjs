@@ -12,7 +12,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { validateReport, envelope, onRequestGet, onRequestPost, STALE_AFTER_MS } from '../functions/api/skywatch.js';
+import { validateReport, envelope, onRequestGet, onRequestPost, onRequestOptions, renderText, STALE_AFTER_MS } from '../functions/api/skywatch.js';
+
+const getReq = (query = '') => new Request(`https://flysdown.test/api/skywatch${query}`);
 import { viewModel, toFeatures, scopeFeature, SkyWatchFeed } from '../public/js/skywatch.js';
 
 const load = (name) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8'));
@@ -85,7 +87,7 @@ test('POST needs the token, GET is public and round-trips the report', async () 
 
   const ok = await onRequestPost({ request: post(DETECTIONS, 'sekrit-token'), env: e });
   assert.equal(ok.status, 200);
-  const got = await (await onRequestGet({ env: e })).json();
+  const got = await (await onRequestGet({ request: getReq(), env: e })).json();
   assert.equal(got.ok, true);
   assert.equal(got.stale, false);
   assert.equal(got.report.detections.length, 3);
@@ -97,7 +99,7 @@ test('with no token configured, nobody can publish', async () => {
 });
 
 test('GET with nothing stored says unavailable, not quiet', async () => {
-  const got = await (await onRequestGet({ env: { RELAY_DB: fakeDb() } })).json();
+  const got = await (await onRequestGet({ request: getReq(), env: { RELAY_DB: fakeDb() } })).json();
   assert.equal(got.ok, false);
   assert.equal(viewModel(got, { now: NOW }).state, 'unavailable');
 });
@@ -191,4 +193,66 @@ test('the poller renders a good report', async () => {
   feed.stop();
   assert.equal(views[0].state, 'quiet');
   assert.equal(feed.failures, 0);
+});
+
+/* ---------- public calls: curl, watch, other pages ---------- */
+
+test('anyone can GET it, as JSON or as text, with CORS open', async () => {
+  const RELAY_DB = fakeDb();
+  RELAY_DB.rows.set('latest', { received_at: Date.now() - 4000, payload: JSON.stringify(DETECTIONS) });
+  const e = { RELAY_DB };
+
+  const asJson = await onRequestGet({ request: getReq(), env: e });
+  assert.equal(asJson.headers.get('access-control-allow-origin'), '*');
+  assert.match(asJson.headers.get('content-type'), /application\/json/);
+  const body = await asJson.json();
+  assert.equal(body.report.detections[0].scoring.base, 0.9);
+
+  const asText = await onRequestGet({ request: getReq('?format=text'), env: e });
+  assert.match(asText.headers.get('content-type'), /text\/plain/);
+  const text = await asText.text();
+  assert.match(text, /EXPERIMENTAL - not for navigation/);
+  assert.match(text, /CURRENT/);
+  assert.match(text, /score = base 0\.900 \(zone type PROHIBITED\) \+ depth 0\.002/);
+  assert.match(text, /activation unknown LOW/);
+
+  const preflight = await onRequestOptions();
+  assert.equal(preflight.status, 204);
+  assert.match(preflight.headers.get('access-control-allow-methods'), /GET/);
+});
+
+test('the text view keeps the same honesty rules as the page', () => {
+  const now = Date.now();
+  const stale = renderText({ ok: true, receivedAt: now - STALE_AFTER_MS - 1000, report: DETECTIONS }, now);
+  assert.match(stale, /STALE/);
+  assert.doesNotMatch(stale, /score = /);
+  const notEvaluated = renderText({ ok: true, receivedAt: now, report: STALE_FEED }, now);
+  assert.match(notEvaluated, /NOT EVALUATED/);
+  assert.match(notEvaluated, /not the same as finding nothing/);
+  const quiet = renderText({ ok: true, receivedAt: now, report: QUIET }, now);
+  assert.match(quiet, /No aircraft inside a zone volume/);
+  assert.match(renderText({ ok: false, reason: 'nothing yet' }), /UNAVAILABLE/);
+});
+
+test('a crowd of callers costs one database read per cache window', async () => {
+  let reads = 0;
+  const store = new Map();
+  globalThis.caches = {
+    default: {
+      match: async (req) => (store.has(req.url) ? new Response(store.get(req.url)) : undefined),
+      put: async (req, res) => { store.set(req.url, await res.text()); },
+    },
+  };
+  try {
+    const RELAY_DB = {
+      prepare: () => ({ bind: () => ({ first: async () => { reads += 1; return { received_at: Date.now(), payload: JSON.stringify(QUIET) }; } }) }),
+    };
+    for (let i = 0; i < 25; i++) {
+      const res = await onRequestGet({ request: getReq(i % 2 ? '?format=text' : ''), env: { RELAY_DB } });
+      assert.equal(res.status, 200);
+    }
+    assert.equal(reads, 1);
+  } finally {
+    delete globalThis.caches;
+  }
 });

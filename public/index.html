@@ -133,6 +133,12 @@
           <summary>How SkyWatch is set up</summary>
           <p>Nothing to install to view it. SkyWatch runs on a server next to this site's feed relay. Every 30 seconds it reads the same aircraft feed the map uses for 150 NM around KLYH, runs its checks, and posts a report here. Turning it on only shows the latest report.</p>
           <p>If the panel says no report has been published, or that the last one is stale, the SkyWatch runner is not running. That is reported as such, never as "nothing found".</p>
+          <p>Anyone can read the raw results, scoring included, from a terminal:</p>
+          <ol>
+            <li>Readable: <code>curl "https://flysdown.jaronwilson.dev/api/skywatch?format=text"</code></li>
+            <li>Keep watching: <code>watch -n 30 curl -s "https://flysdown.jaronwilson.dev/api/skywatch?format=text"</code></li>
+            <li>Raw JSON: <code>curl https://flysdown.jaronwilson.dev/api/skywatch</code></li>
+          </ol>
           <p>To run it against your own copy of this site:</p>
           <ol>
             <li>Deploy Flys Down from <a href="https://github.com/Jaron-Wilson/flysdown" target="_blank" rel="noopener">github.com/Jaron-Wilson/flysdown</a>, then apply <code>schema.sql</code> to its D1 database and set a <code>SKYWATCH_TOKEN</code> secret.</li>

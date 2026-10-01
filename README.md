@@ -298,6 +298,31 @@ boundary, no NOTAM, TFR or waiver is checked, and the feed has no
 per-aircraft timestamp, so observation times are estimated as `fetchedAt`
 minus `seenPos`. Every detection says so. Not for navigation.
 
+### Calling it yourself
+
+`GET /api/skywatch` is public, needs no key, and has open CORS, so it can be
+curled or fetched from any page:
+
+```bash
+curl "https://flysdown.jaronwilson.dev/api/skywatch?format=text"                    # readable
+watch -n 30 curl -s "https://flysdown.jaronwilson.dev/api/skywatch?format=text"     # live
+curl -s https://flysdown.jaronwilson.dev/api/skywatch | jq '.report.detections[] | {zoneName, classification, severity, score, scoring}'
+```
+
+The JSON is `{ ok, receivedAt, ageMs, stale, report }`. Each detection in
+`report.detections` carries a `scoring` object with the whole calculation:
+`base` (by zone type), `depthNm`, `depthBumpPerNm`, `depthBumpCap` and
+`depthBump`, every `contextSignals` entry with its weight, `contextPenalty`,
+`unclamped`, the final `score`, and any `severityCaps`. SkyWatch checks that
+the parts add up to the score before it publishes. A quiet run has no
+detections but still lists `report.evaluation.exits`, the reason each aircraft
+was cleared. The text view follows the page's rules: a report over two
+minutes old prints STALE and no results, and a run that could not evaluate
+says so instead of reading as clear.
+
+The stored report is cached at the edge for 10 s, so polling faster than that
+returns the same answer; the runner publishes every 30 s.
+
 ### Running it locally
 
 ```bash
