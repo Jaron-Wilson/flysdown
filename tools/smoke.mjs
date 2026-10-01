@@ -603,6 +603,79 @@ if (!routeCheck.showsIataCodes || routeCheck.showsIcaoCodes) {
 }
 await page.evaluate(() => window.flysdown.ui.renderDetail(null, {}));
 
+step('a visitor\'s own receiver joins the map, and the detectors run on it');
+// A stand-in receiver, answered by the browser itself, so this works against
+// production too: tar1090's shape, CORS on, one aircraft inside P-56A.
+const RX_ORIGIN = 'https://receiver.smoke.test';
+const errorsBeforeReceiver = errors.length;
+let rxRefuse = false;
+await page.route(`${RX_ORIGIN}/**`, (route) => {
+  // A fulfilled route skips the browser's CORS check, so a refusal is
+  // simulated by failing the request, which is what fetch sees either way.
+  if (rxRefuse) return route.abort('failed');
+  const headers = { 'content-type': 'application/json', 'access-control-allow-origin': '*' };
+  if (route.request().url().endsWith('/data/receiver.json')) {
+    return route.fulfill({ status: 200, headers, body: JSON.stringify({ lat: 38.9, lon: -77.04, refresh: 1000 }) });
+  }
+  if (!route.request().url().endsWith('/data/aircraft.json')) return route.fulfill({ status: 404, headers, body: '{}' });
+  return route.fulfill({
+    status: 200,
+    headers,
+    body: JSON.stringify({
+      now: Date.now() / 1000,
+      aircraft: [{ hex: 'f5f501', flight: 'RXSMOKE ', alt_baro: 1500, gs: 90, track: 90, lat: 38.8975, lon: -77.036, seen_pos: 0.2, seen: 0.1 }],
+    }),
+  });
+});
+await page.evaluate(() => window.flysdown.mapView.map.jumpTo({ center: [-77.036, 38.8975], zoom: 10 }));
+await page.click('.tab[data-tab="filters"]');
+await page.click('#receiver-guide summary');
+await page.fill('#rx-url', `${RX_ORIGIN}/`);
+await page.click('#rx-connect');
+await page.waitForFunction(() => window.flysdown.store.get('aircraft:f5f501'), null, { timeout: 15000 }).catch(() => {});
+await page.waitForTimeout(800);
+const rxCheck = await page.evaluate(() => {
+  const { store, state } = window.flysdown;
+  const own = store.get('aircraft:f5f501');
+  return {
+    state: state.feeds.receiver.state,
+    source: own?.source || null,
+    alert: state.evaluation.alerts.find((a) => a.targetId === 'f5f501')?.rule || null,
+    toggle: /Mine/.test(document.getElementById('feed-toggles').textContent),
+    panel: document.getElementById('rx-status').textContent,
+    saved: localStorage.getItem('flysdown.receiver.v1'),
+  };
+});
+console.log(`  ${JSON.stringify(rxCheck)}`);
+if (rxCheck.state !== 'live' || rxCheck.source !== 'your receiver') errors.push(`the receiver did not connect: ${JSON.stringify(rxCheck)}`);
+if (rxCheck.alert !== 'zone-inside') errors.push(`the zone detector did not run on the receiver's aircraft: ${JSON.stringify(rxCheck)}`);
+if (!rxCheck.toggle) errors.push('a connected receiver got no header toggle');
+await page.screenshot({ path: `${outDir}/05b-receiver.png` });
+
+// Refused (no CORS, or not reachable): the panel has to say what to check.
+rxRefuse = true;
+await page.fill('#rx-url', `${RX_ORIGIN}/other/`);
+await page.click('#rx-connect');
+await page.waitForFunction(() => /cross-origin/.test(document.getElementById('rx-status').textContent), null, { timeout: 15000 }).catch(() => {});
+const rxRefused = await page.evaluate(() => ({
+  panel: document.getElementById('rx-status').textContent,
+  oldGone: !window.flysdown.store.get('aircraft:f5f501'),
+}));
+console.log(`  refused: ${JSON.stringify(rxRefused)}`);
+if (!/cross-origin/.test(rxRefused.panel)) errors.push(`a refused receiver was not explained: ${rxRefused.panel}`);
+if (!rxRefused.oldGone) errors.push('the previous receiver\'s aircraft stayed after switching');
+// The refusal is the point of that check, not a page failure. Chromium logs
+// it as "Failed to load resource" without the URL, so drop exactly those
+// raised during this step (and any request failure naming the stand-in).
+for (let i = errors.length - 1; i >= errorsBeforeReceiver; i--) {
+  if (errors[i].includes(RX_ORIGIN) || /^console: Failed to load resource/.test(errors[i])) errors.splice(i, 1);
+}
+
+await page.click('#rx-forget');
+await page.unroute(`${RX_ORIGIN}/**`);
+const rxForgot = await page.evaluate(() => localStorage.getItem('flysdown.receiver.v1'));
+if (rxForgot !== null) errors.push('forgetting the receiver left it saved');
+
 step('drawing a circular zone');
 await page.click('.tab[data-tab="areas"]');
 await page.click('#draw-circle');

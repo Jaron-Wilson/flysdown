@@ -278,6 +278,39 @@ with `?format=text`, carries no detections and accepts no reports. The
 `skywatch_reports` table in `schema.sql` is left over from when reports were
 hosted and is no longer written.
 
+## Your own receiver
+
+Everyone sees the shared feed (adsb.lol / adsb.fi through the relay). A
+visitor who runs their own receiver can add it under Filters, Advanced, "Use
+your own receiver", and its aircraft join the same store, so every detector on
+the page runs on them: zone incursions, projected entries, landings, orbits.
+The header gets a "Mine" toggle and the feed line a "Your receiver" entry.
+"Only my receiver" stops polling the shared feed instead of just hiding it.
+
+The visitor's browser fetches the receiver itself (`public/js/receiver.js`).
+Nothing passes through this site or is stored outside that browser's
+localStorage (`flysdown.receiver.v1`), which is why a receiver on a home
+network or a tailnet works without being put on the internet.
+
+- **Formats:** tar1090/readsb `aircraft.json`, the aggregator `{ ac }` shape
+  and the original dump1090's `data.json` array. A bare address gets
+  `data/aircraft.json` appended. Positions older than 30 s are skipped.
+- **Merging:** per aircraft, the fresher position wins, and the other record
+  fills in what it lacks (a bare receiver often has no registration or type).
+  Each item keeps its own fetch time in `TargetStore.ingest`, so merging the
+  network's last answer into a 2 s receiver poll never makes it look newer.
+  The readsb normalizer lives in `public/js/readsb.js` and `shared/adsb.js`
+  re-exports it, so the edge, the relay and the browser share one copy.
+- **What browsers require:** this page is https, so a plain `http://` receiver
+  is blocked as mixed content, except `localhost`. tar1090 already sends
+  `Access-Control-Allow-Origin: *` on `aircraft.json` (but not on
+  `receiver.json`, so the receiver's own position is usually unreadable and
+  each heard aircraft counts as its own covered spot). For a Pi on a tailnet,
+  `sudo tailscale serve --bg 8080` gives a tailnet-only https address.
+  Failures are classified (mixed content, unreachable or CORS, timeout, HTTP
+  status, not aircraft data) with a short reason in the header and the full
+  advice in the panel.
+
 ## Deploys and the asset cache
 
 Pages serves this project's own modules with `cache-control: max-age=14400,

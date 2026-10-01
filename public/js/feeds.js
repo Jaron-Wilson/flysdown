@@ -306,6 +306,10 @@ export class TargetStore {
     for (const raw of incoming) {
       const key = `${kind}:${raw.id}`;
       seen.add(key);
+      // Items merged from two feeds polled at different rates carry their own
+      // fetch time, so re-ingesting the network's last answer alongside a
+      // fresh receiver poll does not make it look newer than it is.
+      const at = Number.isFinite(raw.fetchedAt) ? raw.fetchedAt : fetchedAt;
       const previous = this.targets.get(key);
       const history = previous ? previous.history : [];
       const last = history[history.length - 1];
@@ -313,7 +317,7 @@ export class TargetStore {
       const movedNm = last ? distanceNm(last.lat, last.lon, raw.lat, raw.lon) : Infinity;
       if (!last || movedNm > 0.02) {
         const sample = {
-          t: fetchedAt,
+          t: at,
           lat: raw.lat,
           lon: raw.lon,
           alt: raw.alt ?? null,
@@ -332,10 +336,10 @@ export class TargetStore {
         const maxPoints = isProtected ? PROTECTED_MAX_POINTS : MAX_HISTORY_POINTS;
         const windowMs = isProtected ? PROTECTED_WINDOW_MS : HISTORY_WINDOW_MS;
         while (history.length > maxPoints) history.shift();
-        while (history.length > 2 && fetchedAt - history[0].t > windowMs) history.shift();
+        while (history.length > 2 && at - history[0].t > windowMs) history.shift();
       }
 
-      this.targets.set(key, { ...raw, kind, key, history, updatedAt: fetchedAt });
+      this.targets.set(key, { ...raw, kind, key, history, updatedAt: at });
     }
 
     // Prune, but only within the kind we just refreshed: an aircraft poll says
@@ -371,6 +375,22 @@ export class TargetStore {
         this.targets.delete(key);
         removed += 1;
       }
+    }
+    return removed;
+  }
+
+  /**
+   * Drop every target matching a predicate, now. For when a whole source is
+   * switched off: waiting out the grace period would leave its targets on
+   * the map, and in the alerts, for most of a minute after the visitor said
+   * to stop showing them.
+   */
+  removeWhere(predicate) {
+    let removed = 0;
+    for (const [key, target] of this.targets) {
+      if (key === this.protectedKey || !predicate(target)) continue;
+      this.targets.delete(key);
+      removed += 1;
     }
     return removed;
   }

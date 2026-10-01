@@ -721,10 +721,10 @@ export class UI {
 
   /** One pause control per feed, so planes and ships stop independently. */
   renderFeedToggles(paused, feeds) {
-    this.refs.feedToggles.innerHTML = [
-      ['aircraft', 'Planes'],
-      ['vessels', 'Ships'],
-    ]
+    // A visitor's own receiver gets a toggle once one is connected.
+    const kinds = [['aircraft', 'Planes'], ['vessels', 'Ships']];
+    if (feeds.receiver && feeds.receiver.state !== 'off') kinds.splice(1, 0, ['receiver', 'Mine']);
+    this.refs.feedToggles.innerHTML = kinds
       .map(([kind, label]) => {
         const isPaused = Boolean(paused[kind]);
         const status = feeds[kind] || {};
@@ -744,6 +744,47 @@ export class UI {
     for (const button of this.refs.feedToggles.querySelectorAll('[data-feed]')) {
       button.addEventListener('click', () => this.handlers.toggleFeed?.(button.dataset.feed));
     }
+  }
+
+  /**
+   * Advanced > Your own receiver. The form is bound on first render, and the
+   * address box is left alone while the visitor is typing in it.
+   */
+  renderReceiver(settings, status = {}) {
+    const input = $('rx-url');
+    const only = $('rx-only');
+    const note = $('rx-status');
+    const forget = $('rx-forget');
+    if (!input || !only || !note) return;
+
+    if (!this.receiverBound) {
+      this.receiverBound = true;
+      const connect = () => this.handlers.receiverConnect?.({ url: input.value.trim(), only: only.checked });
+      $('rx-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        connect();
+      });
+      forget?.addEventListener('click', () => this.handlers.receiverForget?.());
+      only.addEventListener('change', () => {
+        if (input.value.trim()) this.handlers.receiverOnly?.(only.checked);
+      });
+    }
+
+    if (document.activeElement !== input) input.value = settings.url || '';
+    only.checked = Boolean(settings.only);
+    if (forget) forget.hidden = !settings.url;
+
+    const state = status.state || 'off';
+    const word = {
+      off: 'Not connected.',
+      idle: 'Connecting\u2026',
+      live: `Connected: ${int(status.count || 0)} aircraft with a position right now.`,
+      paused: 'Paused.',
+      degraded: `Having trouble. ${status.help || status.lastError || ''}`,
+      down: `Not working. ${status.help || status.lastError || ''}`,
+    }[state] || '';
+    note.textContent = word.trim();
+    note.classList.toggle('hint-warn', state === 'degraded' || state === 'down');
   }
 
   setStatus(text, { issue = null } = {}) {

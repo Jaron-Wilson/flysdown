@@ -608,8 +608,11 @@ body.is-resizing #map { pointer-events: none; }
 }
 .setup-guide { font-size: 12px; color: var(--ink-2); line-height: 1.5; }
 .setup-guide summary { cursor: pointer; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
-.setup-guide p, .setup-guide ol { margin: 6px 0; }
-.setup-guide ol { padding-left: 18px; }
+.setup-guide p, .setup-guide ol, .setup-guide ul { margin: 6px 0; }
+.setup-guide ol, .setup-guide ul { padding-left: 18px; }
+.setup-guide + .setup-guide { margin-top: 10px; }
+.rx-form { margin: 8px 0; }
+.rx-form input[type="text"] { width: 100%; }
 .setup-guide li { margin-bottom: 4px; }
 .setup-guide code { font-size: 11px; word-break: break-word; background: var(--surface-raised); padding: 0 3px; border-radius: 3px; }
 

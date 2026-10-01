@@ -124,6 +124,29 @@
 
       <section class="block" id="advanced-block">
         <h2 class="block-title">Advanced</h2>
+        <details class="setup-guide" id="receiver-guide">
+          <summary>Use your own receiver <span class="tag-experimental">Experimental</span></summary>
+          <p>Run your own ADS-B receiver, such as a Raspberry Pi with an RTL-SDR? Add it here and its aircraft join the map beside the shared feed, and every alert and detector on this page runs on them too.</p>
+          <p>Your browser reads the receiver directly. It never passes through this site and is saved only in this browser, so a receiver on your home network or your tailnet works without being put on the internet.</p>
+          <form class="rx-form" id="rx-form">
+            <label class="field"><span class="field-label">Receiver address</span>
+              <input type="text" id="rx-url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://your-pi.your-tailnet.ts.net/">
+            </label>
+            <label class="check"><input type="checkbox" id="rx-only"> <span>Only my receiver (stop loading the shared feed)</span></label>
+            <div class="draw-tools">
+              <button class="btn btn-sm" type="submit" id="rx-connect">Connect</button>
+              <button class="btn btn-sm" type="button" id="rx-forget" hidden>Forget it</button>
+            </div>
+            <p class="hint" id="rx-status" role="status" aria-live="polite"></p>
+          </form>
+          <p>Which address to use:</p>
+          <ul>
+            <li><b>tar1090, readsb or an adsb.im / ultrafeeder Pi:</b> the address of its map page. <code>data/aircraft.json</code> is added for you.</li>
+            <li><b>On this same computer:</b> <code>http://localhost:8080/</code>, or for the original dump1090 <code>http://localhost:8080/data.json</code>.</li>
+            <li><b>On another device:</b> this site is https, so browsers block plain <code>http://192.168.x.x</code>. With Tailscale, run <code>sudo tailscale serve --bg 8080</code> on the Pi and use the <code>https://&hellip;.ts.net/</code> address it prints (reachable only from your tailnet). Without it, allow "insecure content" for this site in your browser's site settings.</li>
+          </ul>
+          <p>Your browser may ask to allow access to devices on your local network: say yes. The receiver must allow cross-origin requests; tar1090 already does.</p>
+        </details>
         <details class="setup-guide" id="skywatch-guide">
           <summary>Run the SkyWatch detector yourself <span class="tag-experimental">Experimental</span></summary>
           <p>SkyWatch is the LU AI Club's No-Fly-Zone Detector, a separate detector from this site's alerts. It checks where aircraft within 150 NM of Lynchburg, VA (KLYH) actually were against FAA prohibited areas, and prints a scored report with the arithmetic behind every score.</p>

@@ -29,6 +29,7 @@ import { MapView } from './js/map.js';
 import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
 import { initPanelResize } from './js/resize.js';
+import { ReceiverFeed, mergeAircraft, loadReceiverSettings, saveReceiverSettings } from './js/receiver.js';
 
 const REGIONS = {
   dc: { center: [-77.0369, 38.9072], zoom: 8.2, label: 'Washington DC' },
@@ -53,14 +54,22 @@ const state = {
   horizonSec: 600,
   cpaAlertNm: 1.0,
   selectedKey: null,
-  paused: { aircraft: false, vessels: false },
+  paused: { aircraft: false, vessels: false, receiver: false },
   // Pinned areas keep loading regardless of where the map is scrolled. Empty
   // means follow the viewport, which is the default.
   tracking: [],
   track: { key: null, points: [] },
   coverages: [],
   viewRadiusNm: 0,
-  feeds: { aircraft: { state: 'idle' }, vessels: { state: 'idle' } },
+  feeds: { aircraft: { state: 'idle' }, vessels: { state: 'idle' }, receiver: { state: 'off' } },
+  // A visitor's own receiver, read by this browser only: see js/receiver.js.
+  // `only` hides the shared network feed and stops polling it.
+  receiver: { url: '', only: false },
+  // The latest answer from each aircraft source, merged before every ingest.
+  aircraftParts: {
+    network: { items: [], coverages: [], fetchedAt: 0 },
+    receiver: { items: [], coverages: [], fetchedAt: 0 },
+  },
   evaluation: { alerts: [], byTarget: new Map(), zoneAlertCounts: new Map(), approaches: [] },
   pendingGeometry: null,
   // Set when this file is older than the HTML that loaded it: see BUILD_STAMP.
@@ -208,8 +217,10 @@ const feeds = {
     intervalMs: FEED_INTERVALS.aircraft,
     onData: (payload) => {
       state.coverages = payload.coverages;
-      store.ingest('aircraft', payload.items, payload.fetchedAt, payload.coverages);
-      tick();
+      // Stamped per item so a later receiver-driven ingest keeps their age.
+      const items = payload.items.map((item) => ({ ...item, fetchedAt: payload.fetchedAt }));
+      state.aircraftParts.network = { ...payload, items };
+      ingestAircraft(payload.fetchedAt);
     },
     onStatus: (name, status) => {
       state.feeds[name] = status;
@@ -233,6 +244,75 @@ const feeds = {
     },
   }),
 };
+
+const receiverFeed = new ReceiverFeed({
+  pageProtocol: location.protocol,
+  onData: (payload) => {
+    state.aircraftParts.receiver = payload;
+    ingestAircraft(payload.fetchedAt);
+  },
+  onStatus: (name, status) => {
+    state.feeds.receiver = status;
+    ui.renderFeedToggles(state.paused, state.feeds);
+    ui.renderReceiver(state.receiver, status);
+    updateStatusLine();
+  },
+});
+feeds.receiver = receiverFeed;
+
+/**
+ * One ingest for both aircraft sources. Each poll replaces only its own part,
+ * and the store sees the merged picture, so the detectors run on a visitor's
+ * own aircraft exactly as on the network's.
+ */
+function ingestAircraft(fetchedAt) {
+  const { network, receiver } = state.aircraftParts;
+  const mine = receiverFeed.configured ? receiver.items : [];
+  const only = state.receiver.only && receiverFeed.configured;
+  const items = only ? mine : mergeAircraft(network.items, mine);
+  // Coverage decides what gets pruned. Without the receiver's area here, its
+  // aircraft outside the network's query circle would be dropped each poll.
+  const coverages = only ? receiver.coverages : network.coverages.length ? [...network.coverages, ...(mine.length ? receiver.coverages : [])] : [];
+  store.ingest('aircraft', items, fetchedAt, coverages);
+  tick();
+}
+
+/** Connect, change or forget the visitor's own receiver. */
+function setReceiver({ url = state.receiver.url, only = state.receiver.only } = {}) {
+  const previous = receiverFeed.url;
+  const normalized = url ? receiverFeed.setUrl(url) : receiverFeed.setUrl(null);
+  // A different receiver (or none) means the old one's aircraft are no
+  // longer anyone's report, so they go now rather than when a poll succeeds.
+  const switched = normalized !== previous;
+  state.receiver = { url: url ? normalized || url : '', only: Boolean(url) && only };
+  saveReceiverSettings(normalized ? state.receiver : { url: '' });
+  applyReceiverOnly();
+
+  // Whatever source was just switched off leaves the map now.
+  const networkIds = new Set(state.aircraftParts.network.items.map((t) => t.id));
+  if (!receiverFeed.configured || switched) {
+    state.aircraftParts.receiver = { items: [], coverages: [], fetchedAt: 0 };
+    store.removeWhere((t) => t.kind === 'aircraft' && t.heardByReceiver && !networkIds.has(t.id));
+  } else if (state.receiver.only) {
+    store.removeWhere((t) => t.kind === 'aircraft' && !t.heardByReceiver);
+  }
+  ui.renderReceiver(state.receiver, state.feeds.receiver);
+  ingestAircraft(Date.now());
+}
+
+/** "Only my receiver" stops polling the shared feed rather than hiding it. */
+function applyReceiverOnly() {
+  const only = state.receiver.only && receiverFeed.configured;
+  // Only undo a pause this setting made: a visitor who paused the planes by
+  // hand keeps them paused.
+  if (only && !state.paused.aircraft) {
+    state.pausedForReceiver = true;
+    setFeedPaused('aircraft', true);
+  } else if (!only && state.pausedForReceiver) {
+    state.pausedForReceiver = false;
+    setFeedPaused('aircraft', false);
+  }
+}
 
 /* ---------- flight routes and the selected aircraft's track ---------- */
 
@@ -508,11 +588,13 @@ function describeFeed(label, status) {
 function updateStatusLine() {
   // Folding the health line away must not be able to hide a dead feed, so the
   // worst state travels with the text and lights a dot on the fold button.
-  const issue = worstFeedIssue([state.feeds.aircraft, state.feeds.vessels]);
+  const mine = receiverFeed.configured ? state.feeds.receiver : null;
+  const issue = worstFeedIssue([state.feeds.aircraft, state.feeds.vessels, mine]);
 
   ui.setStatus(
     [
       describeFeed('ADS-B', state.feeds.aircraft),
+      ...(mine ? [describeFeed('Your receiver', { ...mine, source: `${mine.count || 0} aircraft` })] : []),
       describeFeed('AIS', state.feeds.vessels),
       `horizon ${Math.round(state.horizonSec / 60)} min`,
     ].join('  |  '),
@@ -1003,7 +1085,19 @@ function setFeedPaused(kind, paused) {
   updateStatusLine();
 }
 
-ui.on('toggleFeed', (kind) => setFeedPaused(kind, !state.paused[kind]));
+ui.on('toggleFeed', (kind) => {
+  // Resuming the shared feed while "only my receiver" is on means the visitor
+  // wants it back, so that setting goes rather than fighting the click.
+  if (kind === 'aircraft' && state.pausedForReceiver) {
+    setReceiver({ only: false });
+    return;
+  }
+  setFeedPaused(kind, !state.paused[kind]);
+});
+
+ui.on('receiverConnect', ({ url, only }) => setReceiver({ url, only }));
+ui.on('receiverForget', () => setReceiver({ url: '', only: false }));
+ui.on('receiverOnly', (only) => setReceiver({ only }));
 
 ui.on('frameRoute', (key) => {
   const target = store.get(key);
@@ -1109,7 +1203,10 @@ function checkBuildStamp() {
   feeds.aircraft.start();
   feeds.vessels.start();
   ui.setStatus('Waiting for the first feed update');
+  const savedReceiver = loadReceiverSettings();
+  if (savedReceiver.url) setReceiver(savedReceiver);
+  else ui.renderReceiver(state.receiver, state.feeds.receiver);
 })();
 
 // Handy for poking at live state from the console.
-window.flysdown = { state, store, zones, feeds, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };
+window.flysdown = { state, store, zones, feeds, receiverFeed, setReceiver, mapView, ui, tick, applyQueries, routes, buildRouteLegs, routeFit, checkBuildStamp, BUILD_STAMP, hashFor, readHash, requestHash };
