@@ -1016,3 +1016,13 @@ td.num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .bar-fill { transition: none; }
 }
+
+/* Filters > Map layers, and the popup a click on special use airspace opens. */
+.layer-group { margin: 4px 0 8px; }
+.layer-group .field-label { display: block; margin-bottom: 2px; }
+.airspace-popup-wrap .maplibregl-popup-content { background: var(--surface-raised); color: var(--ink-2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 26px 10px 12px; font-size: 12px; line-height: 1.45; }
+.airspace-popup-wrap .maplibregl-popup-tip { border-top-color: var(--surface-raised); border-bottom-color: var(--surface-raised); }
+.airspace-popup-wrap .maplibregl-popup-close-button { color: var(--ink-muted); font-size: 16px; }
+.airspace-popup div { margin-bottom: 8px; }
+.airspace-popup b, .airspace-popup span { display: block; overflow-wrap: anywhere; }
+.airspace-popup small { display: block; color: var(--ink-muted); }

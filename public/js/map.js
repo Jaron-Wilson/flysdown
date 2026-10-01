@@ -6,6 +6,7 @@
  */
 
 import { INK, altitudeBand, ALTITUDE_BANDS, GROUND_COLOR, VESSEL_UNDERWAY, VESSEL_STATIC, SEVERITY, zoneStyle } from './palette.js';
+import { Overlays, describeSua, LAYER_DEFS } from './layers.js';
 import { airportCode } from './route.js';
 import { circleRing } from './geo.js';
 import { targetAgeSec } from './feeds.js';
@@ -96,6 +97,10 @@ export class MapView {
     this.map.on('load', () => {
       this.installIcons();
       this.installLayers();
+      // Optional context layers go under the first of this app's own layers,
+      // so targets and alerting zones always draw on top of them.
+      this.overlays = new Overlays(this.map, { beforeId: 'zone-fill' });
+      for (const id of this.wantedLayers || []) this.overlays.set(id, true);
       this.ready = true;
       this.onViewChange?.(this.viewport());
     });
@@ -423,6 +428,8 @@ export class MapView {
         this.onZoneClick?.(zoneHits[0].properties.id);
         return;
       }
+      const sua = this.overlays?.suaAt(event.point);
+      if (sua) this.showAirspacePopup(event.lngLat, sua);
       this.onSelect?.(null);
     });
 
@@ -431,6 +438,41 @@ export class MapView {
       this.map.getCanvas().style.cursor = hit ? 'pointer' : '';
       this.onHover?.(hit ? hit.properties : null, event.point);
     });
+  }
+
+  /** Which optional layers are on. Safe to call before the map has loaded. */
+  setLayers(ids) {
+    this.wantedLayers = [...ids];
+    if (!this.overlays) return;
+    for (const def of LAYER_DEFS) this.overlays.set(def.id, ids.includes(def.id));
+  }
+
+  /** Overlapping areas are common (a MOA over a restricted area), so list them all. */
+  showAirspacePopup(lngLat, areas) {
+    this.airspacePopup?.remove();
+    const node = document.createElement('div');
+    node.className = 'airspace-popup';
+    for (const area of areas.slice(0, 4)) {
+      const block = document.createElement('div');
+      describeSua(area).forEach((line, i) => {
+        const row = document.createElement(i === 0 ? 'b' : 'span');
+        row.textContent = line;
+        block.append(row);
+      });
+      node.append(block);
+    }
+    if (areas.length > 4) {
+      const more = document.createElement('span');
+      more.textContent = `and ${areas.length - 4} more here`;
+      node.append(more);
+    }
+    const note = document.createElement('small');
+    note.textContent = 'Drawn for context, not alerted on. Check NOTAMs for activation.';
+    node.append(note);
+    this.airspacePopup = new maplibregl.Popup({ closeButton: true, maxWidth: '300px', className: 'airspace-popup-wrap' })
+      .setLngLat(lngLat)
+      .setDOMContent(node)
+      .addTo(this.map);
   }
 
   viewport() {

@@ -30,6 +30,7 @@ import { ZoneDrawer } from './js/draw.js';
 import { UI, fmt } from './js/ui.js';
 import { initPanelResize } from './js/resize.js';
 import { ReceiverFeed, mergeAircraft, loadReceiverSettings, saveReceiverSettings } from './js/receiver.js';
+import { LAYER_DEFS, loadLayerChoice, saveLayerChoice } from './js/layers.js';
 
 const REGIONS = {
   dc: { center: [-77.0369, 38.9072], zoom: 8.2, label: 'Washington DC' },
@@ -65,6 +66,8 @@ const state = {
   // A visitor's own receiver, read by this browser only: see js/receiver.js.
   // `only` hides the shared network feed and stops polling it.
   receiver: { url: '', only: false },
+  // Optional map layers that are switched on: see js/layers.js.
+  layers: [],
   // The latest answer from each aircraft source, merged before every ingest.
   aircraftParts: {
     network: { items: [], coverages: [], fetchedAt: 0 },
@@ -1095,6 +1098,12 @@ ui.on('toggleFeed', (kind) => {
   setFeedPaused(kind, !state.paused[kind]);
 });
 
+ui.on('toggleLayer', (id, on) => {
+  state.layers = on ? [...new Set([...state.layers, id])] : state.layers.filter((l) => l !== id);
+  saveLayerChoice(state.layers);
+  mapView.setLayers(state.layers);
+});
+
 ui.on('receiverConnect', ({ url, only }) => setReceiver({ url, only }));
 ui.on('receiverForget', () => setReceiver({ url: '', only: false }));
 ui.on('receiverOnly', (only) => setReceiver({ only }));
@@ -1192,6 +1201,9 @@ function checkBuildStamp() {
   checkBuildStamp();
   requestHash(readHash());
   loadTracking();
+  state.layers = loadLayerChoice();
+  mapView.setLayers(state.layers);
+  ui.renderLayerControls(LAYER_DEFS, state.layers);
   ui.renderFeedToggles(state.paused, state.feeds);
   ui.renderTracking(state.tracking, MAX_TRACKING_AREAS);
   try {

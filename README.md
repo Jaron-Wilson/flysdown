@@ -148,12 +148,24 @@ alert with nobody watching the page.
 | DC SFRA | 14 CFR 93 subpart V | Defined in regulation as a 30 NM radius of the DCA VOR, so the circle is exact. |
 | Disney TFRs | FDC 9/3799 | Standing restrictions, surface to 3,000 ft AGL. |
 | Basemap | [OpenFreeMap](https://openfreemap.org) | Keyless OSM vector tiles, dark style. |
+| Special use airspace (layer) | FAA Special Use Airspace and Airspace feature services | Restricted, MOA, warning, alert, danger and NSA: 1,545 areas in `public/data/sua.json`. Drawn and clickable, never alerted on. |
+| ARTCC boundaries (layer) | FAA Boundary_Airspace feature service | `public/data/artcc.json`, low-altitude boundaries of the 21 centers. |
+| A2A refueling (layer) | [tar1090](https://github.com/wiedehopf/tar1090) | Fetched from jsDelivr at runtime, not copied (the repo is GPLv2). |
+| NEXRAD (layer) | [Iowa Environmental Mesonet](https://mesonet.agron.iastate.edu) | `nexrad-n0q-900913` tiles, refreshed every 2 minutes. An academic server: do not shorten that. |
+| Radar mosaic, IR satellite (layers) | [NOAA nowCOAST](https://nowcoast.noaa.gov) | WMS used as 256 px tiles. |
+| IFR enroute high (layer) | FAA ArcGIS tile service | Imagery exists only at zooms 7 to 9 (5 and 6 are blank, 10 and up 404), so the source is clamped and overzoomed. |
 
 Zones are regenerated with:
 
 ```bash
 node tools/fetch-zones.mjs     # rewrites public/data/zones.json
+node tools/fetch-airspace.mjs  # rewrites public/data/sua.json and artcc.json
 ```
+
+Only zones alert. The layers under Filters, Map layers (`public/js/layers.js`)
+are context: most restricted areas and MOAs are active at set hours or by
+NOTAM, which no keyless source states in a machine-readable way, and alerting
+on every airliner crossing a MOA would bury the incursions that matter.
 
 The FAA reissues that dataset every 56 days. The script simplifies the
 geometry: the FAA ships P-56B, a one mile circle, as a 6,285 point polygon,

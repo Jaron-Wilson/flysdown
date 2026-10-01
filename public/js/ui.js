@@ -746,6 +746,22 @@ export class UI {
     }
   }
 
+  /** Filters > Map layers: one checkbox per optional layer, grouped. */
+  renderLayerControls(defs, onIds) {
+    const host = $('layer-controls');
+    if (!host) return;
+    const groups = [...new Set(defs.map((d) => d.group))];
+    host.innerHTML = groups
+      .map((group) => `<div class="layer-group"><span class="field-label">${escapeHtml(group)}</span>${defs
+        .filter((d) => d.group === group)
+        .map((d) => `<label class="check" title="${escapeHtml(d.hint || '')}"><input type="checkbox" data-layer="${escapeHtml(d.id)}"${onIds.includes(d.id) ? ' checked' : ''}> <span>${escapeHtml(d.label)}</span></label>`)
+        .join('')}</div>`)
+      .join('');
+    for (const box of host.querySelectorAll('[data-layer]')) {
+      box.addEventListener('change', () => this.handlers.toggleLayer?.(box.dataset.layer, box.checked));
+    }
+  }
+
   /**
    * Advanced > Your own receiver. The form is bound on first render, and the
    * address box is left alone while the visitor is typing in it.
